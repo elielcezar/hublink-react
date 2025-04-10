@@ -25,12 +25,26 @@ model User {
 }
 
 model Page {
-  id        Int      @id @default(autoincrement())
-  title     String
-  slug      String   @unique
-  published Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  id          Int         @id @default(autoincrement())
+  title       String
+  slug        String      @unique
+  published   Boolean     @default(false)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id])
+  components  Component[]
+}
+
+model Component {
+  id          Int      @id @default(autoincrement())
+  type        String   // 'text', 'link', 'banner', 'carousel'
+  order       Int      // Para ordenação dos componentes
+  content     String   @db.Text // JSON com as configurações particulares
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  pageId      Int
+  page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId, order], name: "pageId_order")
 }
