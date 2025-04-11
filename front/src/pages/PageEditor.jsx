@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import React from 'react';
 import axios from 'axios';
@@ -497,6 +497,7 @@ const PageEditor = () => {
   const [components, setComponents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
   const [error, setError] = useState('');
   const [expandedComponent, setExpandedComponent] = useState(null);
   
@@ -559,29 +560,6 @@ const PageEditor = () => {
     } catch (error) {
       console.error('Erro ao adicionar componente:', error);
       setError('Erro ao adicionar componente. Tente novamente.');
-    } finally {
-      setSaving(false);
-    }
-  };
-  
-  const updateComponent = async (componentId, updatedContent) => {
-    try {
-      setSaving(true);
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.put(
-        `http://localhost:3001/api/components/${componentId}`,
-        { content: updatedContent },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      // Atualizar o componente na lista
-      setComponents(components.map(c => 
-        c.id === componentId ? { ...response.data } : c
-      ));
-    } catch (error) {
-      console.error('Erro ao atualizar componente:', error);
-      setError('Erro ao salvar alterações. Tente novamente.');
     } finally {
       setSaving(false);
     }
@@ -682,18 +660,38 @@ const PageEditor = () => {
     }
   };
   
+  // Função de debounce para o auto-save
+  const debouncedSave = useCallback(
+    debounce(async (componentId, newContent) => {
+      try {
+        setSaving(true);
+        const token = localStorage.getItem('token');
+        
+        await axios.put(
+          `http://localhost:3001/api/components/${componentId}`,
+          { content: newContent },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        setLastSaved(new Date());
+      } catch (error) {
+        console.error('Erro ao salvar componente:', error);
+        setError('Erro ao salvar alterações. Tente novamente.');
+      } finally {
+        setSaving(false);
+      }
+    }, 1000), // 1 segundo de delay
+    []
+  );
+
   const handleContentChange = (componentId, newContent) => {
     // Atualizar o conteúdo localmente para uma UI responsiva
     setComponents(components.map(c => 
       c.id === componentId ? { ...c, content: newContent } : c
     ));
-  };
-  
-  const saveChanges = async (componentId) => {
-    const component = components.find(c => c.id === componentId);
-    if (!component) return;
     
-    await updateComponent(componentId, component.content);
+    // Disparar o auto-save
+    debouncedSave(componentId, newContent);
   };
   
   if (loading) {
@@ -739,6 +737,20 @@ const PageEditor = () => {
               </span>
             </div>
             <div className="flex items-center space-x-4">
+              {saving && (
+                <span className="text-sm text-gray-500 flex items-center">
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Salvando...
+                </span>
+              )}
+              {lastSaved && !saving && (
+                <span className="text-sm text-gray-500">
+                  Último salvamento: {lastSaved.toLocaleTimeString()}
+                </span>
+              )}
               <button
                 onClick={togglePublish}
                 disabled={saving}
@@ -892,17 +904,6 @@ const PageEditor = () => {
                           content: component.content,
                           onChange: (newContent) => handleContentChange(component.id, newContent)
                         })}
-                        
-                        <div className="mt-4 flex justify-end">
-                          <button
-                            type="button"
-                            onClick={() => saveChanges(component.id)}
-                            disabled={saving}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                          >
-                            {saving ? 'Salvando...' : 'Salvar Alterações'}
-                          </button>
-                        </div>
                       </div>
                     )}
                   </div>
@@ -958,5 +959,18 @@ const PageEditor = () => {
     </div>
   );
 };
+
+// Função de debounce
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
 export default PageEditor; 
