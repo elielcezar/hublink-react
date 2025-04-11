@@ -1,0 +1,53 @@
+{
+  "users": [
+    {
+      "id": 2,
+      "email": "elielcezar@gmail.com",
+      "name": "Eliel Cezar",
+      "password": "$2b$10$RiiRS3fAv59MmcLDZYflpulW.fc4yzM/BlN3bFuMOpoIrnJki5rw2",
+      "createdAt": "2025-04-10T23:10:17.086Z",
+      "updatedAt": "2025-04-10T23:10:17.086Z",
+      "role": "user"
+    }
+  ],
+  "pages": [
+    {
+      "id": 1,
+      "title": "Teste",
+      "slug": "teste",
+      "published": true,
+      "createdAt": "2025-04-10T23:26:31.451Z",
+      "updatedAt": "2025-04-10T23:33:11.427Z",
+      "userId": 2,
+      "components": [
+        {
+          "id": 2,
+          "type": "banner",
+          "order": 0,
+          "content": "{\"imageUrl\":\"https://www.assai.com.br/sites/default/files/styles/otimizado/public/arrasa_preco_2025_-_10_e_11_04_-_banner_desktop_1920x680.png?itok=5roax4CN\",\"altText\":\"\",\"caption\":\"\"}",
+          "createdAt": "2025-04-10T23:32:19.583Z",
+          "updatedAt": "2025-04-10T23:38:32.179Z",
+          "pageId": 1
+        },
+        {
+          "id": 3,
+          "type": "link",
+          "order": 2,
+          "content": "{\"text\":\"Clique aquiLINK TESTE\",\"url\":\"http://localhost:5173/editor/1\",\"style\":\"primary\",\"width\":\"50\"}",
+          "createdAt": "2025-04-10T23:33:25.291Z",
+          "updatedAt": "2025-04-11T00:37:57.105Z",
+          "pageId": 1
+        },
+        {
+          "id": 4,
+          "type": "link",
+          "order": 3,
+          "content": "{\"text\":\"link 2\",\"url\":\"https://\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"\",\"imagePosition\":\"left\"}",
+          "createdAt": "2025-04-11T00:36:38.654Z",
+          "updatedAt": "2025-04-11T00:37:58.588Z",
+          "pageId": 1
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import React from 'react';
 import axios from 'axios';
+import ImageUploader from '../components/ImageUploader';
+import CarouselComponent from '../components/CarouselComponent';
 
 // Componentes para renderização na prévia
 const componentRenderers = {
@@ -77,22 +79,17 @@ const componentRenderers = {
   ),
   
   carousel: ({ content }) => (
-    <div className="mb-6 relative overflow-hidden rounded-lg">
-      {/* Na versão real, seria implementado um carrossel interativo */}
-      <div className="flex overflow-x-auto pb-4 space-x-4">
-        {content.images.map((image, index) => (
-          <div key={index} className="flex-shrink-0 w-64">
-            <img 
-              src={image.url} 
-              alt={image.altText || ''} 
-              className="w-full h-40 object-cover rounded-lg shadow-sm"
-            />
-            {image.caption && (
-              <p className="mt-1 text-sm text-gray-600">{image.caption}</p>
-            )}
-          </div>
-        ))}
-      </div>
+    <div className="w-full mb-6">
+      <CarouselComponent
+        images={content.images || []}
+        config={content.config || {
+          slidesPerView: 1,
+          showNavigation: true,
+          showPagination: true,
+          spaceBetween: 30,
+          loop: true
+        }}
+      />
     </div>
   )
 };
@@ -178,18 +175,12 @@ const componentForms = {
       
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Imagem (opcional)
+          Imagem
         </label>
-        <input
-          type="url"
-          value={content.imageUrl || ''}
-          onChange={(e) => onChange({ ...content, imageUrl: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="https://exemplo.com/imagem.jpg"
+        <ImageUploader 
+          currentImageUrl={content.imageUrl} 
+          onImageUpload={(imageUrl) => onChange({ ...content, imageUrl })}
         />
-        <p className="mt-1 text-xs text-gray-500">
-          Deixe em branco se não quiser incluir uma imagem
-        </p>
       </div>
       
       {content.imageUrl && (
@@ -215,14 +206,11 @@ const componentForms = {
     <>
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          URL da Imagem
+          Imagem do Banner
         </label>
-        <input
-          type="url"
-          value={content.imageUrl}
-          onChange={(e) => onChange({ ...content, imageUrl: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="https://exemplo.com/imagem.jpg"
+        <ImageUploader 
+          currentImageUrl={content.imageUrl} 
+          onImageUpload={(imageUrl) => onChange({ ...content, imageUrl })}
         />
       </div>
       
@@ -255,28 +243,105 @@ const componentForms = {
   ),
   
   carousel: ({ content, onChange }) => {
+    const handleConfigChange = (key, value) => {
+      onChange({
+        ...content,
+        config: {
+          ...content.config,
+          [key]: value
+        }
+      });
+    };
+
     const addImage = () => {
-      const newImages = [...content.images, { url: '', altText: '', caption: '' }];
+      const newImages = [...(content.images || []), { url: '' }];
       onChange({ ...content, images: newImages });
     };
-    
-    const updateImage = (index, field, value) => {
+
+    const updateImage = (index, url) => {
       const newImages = [...content.images];
-      newImages[index] = { ...newImages[index], [field]: value };
+      newImages[index] = { ...newImages[index], url };
       onChange({ ...content, images: newImages });
     };
-    
+
     const removeImage = (index) => {
       const newImages = content.images.filter((_, i) => i !== index);
       onChange({ ...content, images: newImages });
     };
-    
+
     return (
-      <>
+      <div className="space-y-4">
         <div className="mb-4">
-          <div className="flex justify-between items-center">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Slides por visualização
+          </label>
+          <input
+            type="number"
+            min="1"
+            max="5"
+            value={content.config?.slidesPerView || 1}
+            onChange={(e) => handleConfigChange('slidesPerView', parseInt(e.target.value))}
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Espaçamento entre slides
+          </label>
+          <input
+            type="number"
+            min="0"
+            max="100"
+            value={content.config?.spaceBetween || 30}
+            onChange={(e) => handleConfigChange('spaceBetween', parseInt(e.target.value))}
+            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+          />
+        </div>
+
+        <div className="flex items-center mb-4">
+          <input
+            type="checkbox"
+            id="showNavigation"
+            checked={content.config?.showNavigation ?? true}
+            onChange={(e) => handleConfigChange('showNavigation', e.target.checked)}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+          />
+          <label htmlFor="showNavigation" className="ml-2 block text-sm text-gray-700">
+            Mostrar setas de navegação
+          </label>
+        </div>
+
+        <div className="flex items-center mb-4">
+          <input
+            type="checkbox"
+            id="showPagination"
+            checked={content.config?.showPagination ?? true}
+            onChange={(e) => handleConfigChange('showPagination', e.target.checked)}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+          />
+          <label htmlFor="showPagination" className="ml-2 block text-sm text-gray-700">
+            Mostrar paginação
+          </label>
+        </div>
+
+        <div className="flex items-center mb-4">
+          <input
+            type="checkbox"
+            id="loop"
+            checked={content.config?.loop ?? true}
+            onChange={(e) => handleConfigChange('loop', e.target.checked)}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+          />
+          <label htmlFor="loop" className="ml-2 block text-sm text-gray-700">
+            Loop infinito
+          </label>
+        </div>
+
+        <div className="mb-4">
+          <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-medium text-gray-700">
-              Imagens
+              Imagens do Carrossel
             </label>
             <button
               type="button"
@@ -286,8 +351,8 @@ const componentForms = {
               Adicionar Imagem
             </button>
           </div>
-          
-          {content.images.map((image, index) => (
+
+          {content.images?.map((image, index) => (
             <div key={index} className="mt-4 p-3 border border-gray-200 rounded-md">
               <div className="flex justify-between items-center mb-2">
                 <h4 className="font-medium text-sm">Imagem {index + 1}</h4>
@@ -300,56 +365,20 @@ const componentForms = {
                 </button>
               </div>
               
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs text-gray-700 mb-1">
-                    URL da Imagem
-                  </label>
-                  <input
-                    type="url"
-                    value={image.url}
-                    onChange={(e) => updateImage(index, 'url', e.target.value)}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="https://exemplo.com/imagem.jpg"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-xs text-gray-700 mb-1">
-                    Texto Alternativo
-                  </label>
-                  <input
-                    type="text"
-                    value={image.altText || ''}
-                    onChange={(e) => updateImage(index, 'altText', e.target.value)}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Descrição da imagem"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-xs text-gray-700 mb-1">
-                    Legenda
-                  </label>
-                  <input
-                    type="text"
-                    value={image.caption || ''}
-                    onChange={(e) => updateImage(index, 'caption', e.target.value)}
-                    className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Legenda opcional"
-                  />
-                </div>
-              </div>
+              <ImageUploader
+                currentImage={image.url}
+                onImageUpload={(url) => updateImage(index, url)}
+              />
             </div>
           ))}
-          
-          {content.images.length === 0 && (
+
+          {(!content.images || content.images.length === 0) && (
             <p className="mt-2 text-sm text-gray-500">
               Nenhuma imagem adicionada. Clique em "Adicionar Imagem" para começar.
             </p>
           )}
         </div>
-      </>
+      </div>
     );
   }
 };
@@ -366,7 +395,16 @@ const defaultComponentValues = {
     imagePosition: 'left' // 'left', 'right', 'top', 'none'
   },
   banner: { imageUrl: '', altText: '', caption: '' },
-  carousel: { images: [] }
+  carousel: {
+    images: [],
+    config: {
+      slidesPerView: 1,
+      showNavigation: true,
+      showPagination: true,
+      spaceBetween: 30,
+      loop: true
+    }
+  }
 };
 
 const PageEditor = () => {

@@ -3,15 +3,56 @@ const cors = require('cors');
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3001;
 
+// Configurar o armazenamento de uploads
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Configurar o Multer para upload de imagens
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, 'image-' + uniqueSuffix + ext);
+  }
+});
+
+// Filtro de arquivos para aceitar apenas imagens
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Apenas imagens são permitidas!'), false);
+  }
+};
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // limite de 5MB
+  }
+});
+
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Servir arquivos estáticos da pasta uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware para verificar JWT
 const authenticateToken = (req, res, next) => {
@@ -475,6 +516,42 @@ app.get('/api/public/pages/:slug', async (req, res) => {
   } catch (error) {
     console.error('Erro ao buscar página pública:', error);
     res.status(500).json({ message: 'Erro ao buscar página' });
+  }
+});
+
+// Rota para upload de múltiplas imagens
+app.post('/api/upload', authenticateToken, upload.array('images', 10), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'Nenhuma imagem foi enviada' });
+    }
+
+    const urls = req.files.map(file => {
+      return `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+    });
+
+    res.json({ urls });
+  } catch (error) {
+    console.error('Erro no upload:', error);
+    res.status(500).json({ error: 'Erro ao processar o upload das imagens' });
+  }
+});
+
+// Rota para deletar uma imagem
+app.delete('/api/upload/:filename', authenticateToken, async (req, res) => {
+  try {
+    const filename = req.params.filename;
+    const filePath = path.join(uploadsDir, filename);
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      res.json({ message: 'Imagem deletada com sucesso' });
+    } else {
+      res.status(404).json({ error: 'Imagem não encontrada' });
+    }
+  } catch (error) {
+    console.error('Erro ao deletar imagem:', error);
+    res.status(500).json({ error: 'Erro ao deletar a imagem' });
   }
 });
 

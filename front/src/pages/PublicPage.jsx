@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
 import React from 'react';
+import axios from 'axios';
 
 // Reutilizando os mesmos componentes de renderização da página do editor
 const componentRenderers = {
