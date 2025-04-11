@@ -290,13 +290,13 @@ const componentForms = {
     };
 
     const addImage = () => {
-      const newImages = [...(content.images || []), { url: '' }];
+      const newImages = [...(content.images || []), { url: '', link: '' }];
       onChange({ ...content, images: newImages });
     };
 
-    const updateImage = (index, url) => {
+    const updateImage = (index, field, value) => {
       const newImages = [...content.images];
-      newImages[index] = { ...newImages[index], url };
+      newImages[index] = { ...newImages[index], [field]: value };
       onChange({ ...content, images: newImages });
     };
 
@@ -374,6 +374,54 @@ const componentForms = {
           </label>
         </div>
 
+        <div className="flex items-center mb-4">
+          <input
+            type="checkbox"
+            id="autoplay"
+            checked={content.config?.autoplay ?? false}
+            onChange={(e) => handleConfigChange('autoplay', e.target.checked)}
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+          />
+          <label htmlFor="autoplay" className="ml-2 block text-sm text-gray-700">
+            Reprodução automática
+          </label>
+        </div>
+
+        {content.config?.autoplay && (
+          <div className="ml-6 space-y-4">
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tempo entre slides (ms)
+              </label>
+              <input
+                type="number"
+                min="1000"
+                max="10000"
+                step="500"
+                value={content.config?.autoplayDelay || 3000}
+                onChange={(e) => handleConfigChange('autoplayDelay', parseInt(e.target.value))}
+                className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Tempo em milissegundos (3000 = 3 segundos)
+              </p>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="pauseOnHover"
+                checked={content.config?.pauseOnHover ?? true}
+                onChange={(e) => handleConfigChange('pauseOnHover', e.target.checked)}
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+              />
+              <label htmlFor="pauseOnHover" className="ml-2 block text-sm text-gray-700">
+                Pausar ao passar o mouse
+              </label>
+            </div>
+          </div>
+        )}
+
         <div className="mb-4">
           <div className="flex justify-between items-center mb-2">
             <label className="block text-sm font-medium text-gray-700">
@@ -403,8 +451,24 @@ const componentForms = {
               
               <ImageUploader
                 currentImage={image.url}
-                onImageUpload={(url) => updateImage(index, url)}
+                onImageUpload={(url) => updateImage(index, 'url', url)}
               />
+              
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Link (opcional)
+                </label>
+                <input
+                  type="url"
+                  value={image.link || ''}
+                  onChange={(e) => updateImage(index, 'link', e.target.value)}
+                  placeholder="https://exemplo.com"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Se fornecido, a imagem será clicável e direcionará para este link.
+                </p>
+              </div>
             </div>
           ))}
 
@@ -477,7 +541,10 @@ const defaultComponentValues = {
       showNavigation: true,
       showPagination: true,
       spaceBetween: 30,
-      loop: true
+      loop: true,
+      autoplay: false,
+      autoplayDelay: 3000,
+      pauseOnHover: true
     }
   },
   social: {
