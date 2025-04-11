@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiUpload, FiX } from 'react-icons/fi';
 
 const ImageUploader = ({ onImageUpload, currentImage = '' }) => {
   const [image, setImage] = useState(currentImage);
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    if (currentImage) {
+      setImage(currentImage);
+    }
+  }, [currentImage]);
 
   const onDrop = async (acceptedFiles) => {
     setIsUploading(true);

@@ -13,6 +13,7 @@ const componentRenderers = {
   ),
   
   link: ({ content }) => {
+    // Configuração de largura comum para ambos os estilos
     const width = content.width || '100';
     
     // Define corretamente a classe de largura
@@ -24,6 +25,32 @@ const componentRenderers = {
     } else {
       widthClass = 'w-full md:w-1/3'; // Um terço da largura em telas médias e grandes
     }
+    
+    // Verificar se é um ícone ou botão
+    if (content.styleType === 'icon') {
+      // Estilo de ícone com imagem de fundo
+      return (
+        <div className={`${widthClass} px-2 mb-4`}>
+          <a 
+            href={content.url} 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="block overflow-hidden relative w-full h-32 rounded-lg shadow-md transition-transform hover:scale-105"
+            style={{
+              background: content.imageUrl ? `url(${content.imageUrl}) center/cover no-repeat` : 'linear-gradient(to right, #4f46e5, #6366f1)'
+            }}
+          >
+            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+              <span className="text-white text-lg font-medium px-6 py-2 text-center">
+                {content.text}
+              </span>
+            </div>
+          </a>
+        </div>
+      );
+    }
+    
+    // Estilo de botão (original)
     
     // Verificar se há imagem
     const hasImage = content.imageUrl && content.imageUrl.trim() !== '';
@@ -156,6 +183,20 @@ const componentForms = {
     <>
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
+          Estilo
+        </label>
+        <select
+          value={content.styleType || 'button'}
+          onChange={(e) => onChange({ ...content, styleType: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="button">Botão</option>
+          <option value="icon">Ícone</option>
+        </select>
+      </div>
+      
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Texto do Link
         </label>
         <input
@@ -182,20 +223,6 @@ const componentForms = {
       
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Estilo
-        </label>
-        <select
-          value={content.style}
-          onChange={(e) => onChange({ ...content, style: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="primary">Primário</option>
-          <option value="secondary">Secundário</option>
-        </select>
-      </div>
-      
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
           Largura
         </label>
         <select
@@ -209,17 +236,38 @@ const componentForms = {
         </select>
       </div>
       
+      {content.styleType !== 'icon' && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Cor do Botão
+          </label>
+          <select
+            value={content.style}
+            onChange={(e) => onChange({ ...content, style: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="primary">Primário</option>
+            <option value="secondary">Secundário</option>
+          </select>
+        </div>
+      )}
+      
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Imagem
         </label>
         <ImageUploader 
-          currentImageUrl={content.imageUrl} 
+          currentImage={content.imageUrl} 
           onImageUpload={(imageUrl) => onChange({ ...content, imageUrl })}
         />
+        {content.styleType === 'icon' && content.imageUrl && (
+          <p className="mt-1 text-xs text-gray-500">
+            Esta imagem será usada como fundo do ícone.
+          </p>
+        )}
       </div>
       
-      {content.imageUrl && (
+      {content.imageUrl && content.styleType !== 'icon' && (
         <div className="mb-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Posição da Imagem
@@ -529,9 +577,10 @@ const defaultComponentValues = {
     text: 'Clique aqui', 
     url: 'https://', 
     style: 'primary',
+    styleType: 'button',
     width: '100',
     imageUrl: '',
-    imagePosition: 'left' // 'left', 'right', 'top', 'none'
+    imagePosition: 'left'
   },
   banner: { imageUrl: '', altText: '', caption: '' },
   carousel: {
