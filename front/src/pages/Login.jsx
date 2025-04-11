@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import axios from 'axios';
+import Background from '../assets/bg-login.webp';
 
 const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
@@ -33,7 +34,11 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+    <>
+    <aside className="flex items-center justify-center h-screen w-6/12" style={{ backgroundImage: `url(${Background})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
+    
+    </aside>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 w-6/12">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <div className="text-center">
           <h1 className="text-3xl font-extrabold text-gray-900">
@@ -106,6 +111,7 @@ const Login = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

@@ -10,7 +10,7 @@ import './App.css';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-100">
+      <div className="flex flex-row h-screen">
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />

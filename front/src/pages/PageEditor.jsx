@@ -5,6 +5,9 @@ import axios from 'axios';
 import ImageUploader from '../components/ImageUploader';
 import CarouselComponent from '../components/CarouselComponent';
 import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify } from 'react-icons/fa';
+import LinkForm from '../components/editor/forms/LinkForm';
+import LinkRenderer from '../components/editor/renderers/LinkRenderer';
+import MenuDashboard from '../components/MenuDashboard';
 
 // Componentes para renderização na prévia
 const componentRenderers = {
@@ -12,86 +15,9 @@ const componentRenderers = {
     <div className="prose max-w-none mb-4" dangerouslySetInnerHTML={{ __html: content.text }} />
   ),
   
-  link: ({ content }) => {
-    // Configuração de largura comum para ambos os estilos
-    const width = content.width || '100';
-    
-    // Define corretamente a classe de largura
-    let widthClass;
-    if (width === '100') {
-      widthClass = 'w-full'; // Ocupa toda a largura
-    } else if (width === '50') {
-      widthClass = 'w-full md:w-1/2'; // Metade da largura em telas médias e grandes
-    } else {
-      widthClass = 'w-full md:w-1/3'; // Um terço da largura em telas médias e grandes
-    }
-    
-    // Verificar se é um ícone ou botão
-    if (content.styleType === 'icon') {
-      // Estilo de ícone com imagem de fundo
-      return (
-        <div className={`${widthClass} px-2 mb-4`}>
-          <a 
-            href={content.url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="block overflow-hidden relative w-full h-32 rounded-lg shadow-md transition-transform hover:scale-105"
-            style={{
-              background: content.imageUrl ? `url(${content.imageUrl}) center/cover no-repeat` : 'linear-gradient(to right, #4f46e5, #6366f1)'
-            }}
-          >
-            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-              <span className="text-white text-lg font-medium px-6 py-2 text-center">
-                {content.text}
-              </span>
-            </div>
-          </a>
-        </div>
-      );
-    }
-    
-    // Estilo de botão (original)
-    
-    // Verificar se há imagem
-    const hasImage = content.imageUrl && content.imageUrl.trim() !== '';
-    const imagePosition = content.imagePosition || 'left';
-    
-    return (
-      <div className={`${widthClass} px-2 mb-4`}>
-        <div className={`h-full flex ${hasImage && imagePosition === 'top' ? 'flex-col' : 'items-center'} 
-          ${hasImage && imagePosition === 'right' ? 'flex-row-reverse' : 'flex-row'} 
-          border border-gray-200 rounded-lg p-4 transition-all hover:shadow-md`}>
-          
-          {hasImage && (
-            <div className={`
-              ${imagePosition === 'top' ? 'w-full mb-3' : 'w-1/3 flex-shrink-0 mx-3'} 
-            `}>
-              <img 
-                src={content.imageUrl} 
-                alt="" 
-                className="w-full h-auto rounded-lg"
-              />
-            </div>
-          )}
-          
-          <div className={`${hasImage && imagePosition !== 'top' ? 'w-2/3' : 'w-full'}`}>
-            <a 
-              href={content.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className={`inline-block px-4 py-2 rounded ${
-                content.style === 'primary' 
-                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-              }`}
-            >
-              {content.text}
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  },
+  link: ({ content }) => (
+    <LinkRenderer content={content} />
+  ),
   
   banner: ({ content }) => (
     <div className="mb-4">
@@ -180,110 +106,7 @@ const componentForms = {
   ),
   
   link: ({ content, onChange }) => (
-    <>
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Estilo
-        </label>
-        <select
-          value={content.styleType || 'button'}
-          onChange={(e) => onChange({ ...content, styleType: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="button">Botão</option>
-          <option value="icon">Ícone</option>
-        </select>
-      </div>
-      
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Texto do Link
-        </label>
-        <input
-          type="text"
-          value={content.text}
-          onChange={(e) => onChange({ ...content, text: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="Clique aqui"
-        />
-      </div>
-      
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          URL
-        </label>
-        <input
-          type="url"
-          value={content.url}
-          onChange={(e) => onChange({ ...content, url: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          placeholder="https://exemplo.com"
-        />
-      </div>
-      
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Largura
-        </label>
-        <select
-          value={content.width || '100'}
-          onChange={(e) => onChange({ ...content, width: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="100">100% (Ocupar linha inteira)</option>
-          <option value="50">50% (Metade da linha)</option>
-          <option value="33">33% (Um terço da linha)</option>
-        </select>
-      </div>
-      
-      {content.styleType !== 'icon' && (
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Cor do Botão
-          </label>
-          <select
-            value={content.style}
-            onChange={(e) => onChange({ ...content, style: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="primary">Primário</option>
-            <option value="secondary">Secundário</option>
-          </select>
-        </div>
-      )}
-      
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Imagem
-        </label>
-        <ImageUploader 
-          currentImage={content.imageUrl} 
-          onImageUpload={(imageUrl) => onChange({ ...content, imageUrl })}
-        />
-        {content.styleType === 'icon' && content.imageUrl && (
-          <p className="mt-1 text-xs text-gray-500">
-            Esta imagem será usada como fundo do ícone.
-          </p>
-        )}
-      </div>
-      
-      {content.imageUrl && content.styleType !== 'icon' && (
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Posição da Imagem
-          </label>
-          <select
-            value={content.imagePosition || 'left'}
-            onChange={(e) => onChange({ ...content, imagePosition: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="left">Esquerda</option>
-            <option value="right">Direita</option>
-            <option value="top">Topo</option>
-          </select>
-        </div>
-      )}
-    </>
+    <LinkForm content={content} onChange={onChange} />
   ),
   
   banner: ({ content, onChange }) => (
@@ -840,239 +663,238 @@ const PageEditor = () => {
   }
   
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">
-                Hub<span className="text-blue-600">Link</span>
-              </h1>
-              <span className="ml-4 text-gray-600 truncate max-w-xs">
-                {page?.title}
-              </span>
-            </div>
-            <div className="flex items-center space-x-4">
-              {saving && (
-                <span className="text-sm text-gray-500 flex items-center">
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Salvando...
-                </span>
-              )}
-              {lastSaved && !saving && (
-                <span className="text-sm text-gray-500">
-                  Último salvamento: {lastSaved.toLocaleTimeString()}
-                </span>
-              )}
-              <button
-                onClick={togglePublish}
-                disabled={saving}
-                className={`px-4 py-2 text-sm rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                  page?.published
-                    ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                    : 'bg-green-600 hover:bg-green-700 text-white'
-                }`}
-              >
-                {page?.published ? 'Despublicar' : 'Publicar'}
-              </button>
-              
-              {page?.published && (
-                <a
-                  href={`/p/${page.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 text-sm text-blue-600 border border-blue-300 rounded hover:bg-blue-50"
-                >
-                  Visualizar
-                </a>
-              )}
-              
-              <Link
-                to="/dashboard"
-                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50"
-              >
-                Voltar
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+    <>
+      <MenuDashboard />
 
-      {error && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
-          </div>
-        </div>
-      )}
+      <div className="min-h-screen bg-gray-100 w-11/12">
+        <nav className="bg-white shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex items-center">
+                <h1 className="text-xl font-bold text-gray-900">
+                  Hub<span className="text-blue-600">Link</span>
+                </h1>
+                <span className="ml-4 text-gray-600 truncate max-w-xs">
+                  {page?.title}
+                </span>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col md:flex-row gap-6">
-          {/* Coluna de edição - Esquerda */}
-          <div className="md:w-1/2 space-y-4">
-            <div className="bg-white p-4 rounded-lg shadow-md">
-              <h2 className="text-lg font-medium text-gray-800 mb-4">Componentes Disponíveis</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <button
-                  onClick={() => addComponent('text')}
-                  disabled={saving}
-                  className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Texto
-                </button>
-                <button
-                  onClick={() => addComponent('link')}
-                  disabled={saving}
-                  className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Link
-                </button>
-                <button
-                  onClick={() => addComponent('banner')}
-                  disabled={saving}
-                  className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Banner
-                </button>
-                <button
-                  onClick={() => addComponent('carousel')}
-                  disabled={saving}
-                  className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Carrossel
-                </button>
-                <button
-                  onClick={() => addComponent('social')}
-                  disabled={saving}
-                  className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Redes Sociais
-                </button>
-              </div>
-            </div>
-            
-            {components.length > 0 ? (
-              <div className="space-y-4">
-                {components.map((component, index) => (
-                  <div
-                    key={component.id}
-                    className="bg-white rounded-lg shadow-md overflow-hidden"
+                <div className="flex items-center space-x-4">
+                  {saving && (
+                    <span className="text-sm text-gray-500 flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Salvando...
+                    </span>
+                  )}
+                  {lastSaved && !saving && (
+                    <span className="text-sm text-gray-500">
+                      Último salvamento: {lastSaved.toLocaleTimeString()}
+                    </span>
+                  )}
+                  <button
+                    onClick={togglePublish}
+                    disabled={saving}
+                    className={`px-4 py-2 text-sm rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                      page?.published
+                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                        : 'bg-green-600 hover:bg-green-700 text-white'
+                    }`}
                   >
+                    {page?.published ? 'Despublicar' : 'Publicar'}
+                  </button>
+                                
+                </div>
+              </div>
+              
+            </div>
+          </div>
+        </nav>
+
+        {error && (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+              {error}
+            </div>
+          </div>
+        )}
+
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col md:flex-row gap-x-12">
+            {/* Coluna de edição - Esquerda */}
+            <div className="md:w-8/12 space-y-4">
+              <div className="bg-white p-4 rounded-lg shadow-md">
+                <h2 className="text-lg font-medium text-gray-800 mb-4">Componentes Disponíveis</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button
+                    onClick={() => addComponent('text')}
+                    disabled={saving}
+                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    Texto
+                  </button>
+                  <button
+                    onClick={() => addComponent('link')}
+                    disabled={saving}
+                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    Link
+                  </button>
+                  <button
+                    onClick={() => addComponent('banner')}
+                    disabled={saving}
+                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    Banner
+                  </button>
+                  <button
+                    onClick={() => addComponent('carousel')}
+                    disabled={saving}
+                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    Carrossel
+                  </button>
+                  <button
+                    onClick={() => addComponent('social')}
+                    disabled={saving}
+                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    Redes Sociais
+                  </button>
+                </div>
+              </div>
+              
+              {components.length > 0 ? (
+                <div className="space-y-4">
+                  {components.map((component, index) => (
                     <div
-                      onClick={() => setExpandedComponent(
-                        expandedComponent === component.id ? null : component.id
-                      )}
-                      className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
+                      key={component.id}
+                      className="bg-white rounded-lg shadow-md overflow-hidden"
                     >
-                      <div className="flex items-center">
-                        <span className="text-gray-500 mr-2">
-                          {index + 1}.
-                        </span>
-                        <h3 className="font-medium capitalize">
-                          {component.type}
-                        </h3>
+                      <div
+                        onClick={() => setExpandedComponent(
+                          expandedComponent === component.id ? null : component.id
+                        )}
+                        className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
+                      >
+                        <div className="flex items-center">
+                          <span className="text-gray-500 mr-2">
+                            {index + 1}.
+                          </span>
+                          <h3 className="font-medium capitalize">
+                            {component.type}
+                          </h3>
+                        </div>
+                        
+                        <div className="flex space-x-2">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              moveComponent(component.id, 'up');
+                            }}
+                            disabled={index === 0 || saving}
+                            className={`text-gray-500 hover:text-gray-700 ${index === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            ▲
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              moveComponent(component.id, 'down');
+                            }}
+                            disabled={index === components.length - 1 || saving}
+                            className={`text-gray-500 hover:text-gray-700 ${index === components.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            ▼
+                          </button>
+                          <span className="mx-1 text-gray-300">|</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteComponent(component.id);
+                            }}
+                            disabled={saving}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
                       
-                      <div className="flex space-x-2">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            moveComponent(component.id, 'up');
-                          }}
-                          disabled={index === 0 || saving}
-                          className={`text-gray-500 hover:text-gray-700 ${index === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          ▲
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            moveComponent(component.id, 'down');
-                          }}
-                          disabled={index === components.length - 1 || saving}
-                          className={`text-gray-500 hover:text-gray-700 ${index === components.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                          ▼
-                        </button>
-                        <span className="mx-1 text-gray-300">|</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteComponent(component.id);
-                          }}
-                          disabled={saving}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          ×
-                        </button>
-                      </div>
+                      {expandedComponent === component.id && (
+                        <div className="border-t border-gray-200 p-4">
+                          {componentForms[component.type]({
+                            content: component.content,
+                            onChange: (newContent) => handleContentChange(component.id, newContent)
+                          })}
+                        </div>
+                      )}
                     </div>
-                    
-                    {expandedComponent === component.id && (
-                      <div className="border-t border-gray-200 p-4">
-                        {componentForms[component.type]({
-                          content: component.content,
-                          onChange: (newContent) => handleContentChange(component.id, newContent)
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-white p-8 rounded-lg shadow-md text-center">
+                  <p className="text-gray-600">
+                    Esta página ainda não tem componentes.
+                  </p>
+                  <p className="mt-2 text-gray-600">
+                    Use os botões acima para adicionar conteúdo à sua landing page.
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Prévia - Direita */}
+            <div className="md:w-4/12">
+              <div className="p-4">
+              
+                
+              {page?.published && (
+                <p className="text-sm text-gray-500 mb-4 text-center">                  
+                  <a
+                    href={`/p/${page.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    hublink.app/{page.slug} 
+                  </a>
+                </p>
+                )}
+                
+                <div className="bg-gray-50 border-[15px] border-black rounded-[60px] p-4 min-h-[400px]">
+                  {components.length > 0 ? (
+                    <div>                      
+                      <div className="flex flex-wrap -mx-2">
+                        {components.map((component) => {
+                          const ComponentRenderer = componentRenderers[component.type];
+                          return ComponentRenderer ? (
+                            <React.Fragment key={component.id}>
+                              <ComponentRenderer content={component.content} />
+                            </React.Fragment>
+                          ) : null;
                         })}
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-white p-8 rounded-lg shadow-md text-center">
-                <p className="text-gray-600">
-                  Esta página ainda não tem componentes.
-                </p>
-                <p className="mt-2 text-gray-600">
-                  Use os botões acima para adicionar conteúdo à sua landing page.
-                </p>
-              </div>
-            )}
-          </div>
-          
-          {/* Prévia - Direita */}
-          <div className="md:w-1/2">
-            <div className="bg-white rounded-lg shadow-md p-4">
-              <h2 className="text-lg font-medium text-gray-800 mb-2">Prévia</h2>
-              <p className="text-sm text-gray-500 mb-4">
-                Veja como sua landing page ficará para os visitantes.
-              </p>
-              
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 min-h-[400px]">
-                {components.length > 0 ? (
-                  <div>
-                    <h1 className="text-2xl font-bold text-center mb-6">{page?.title}</h1>
-                    <div className="flex flex-wrap -mx-2">
-                      {components.map((component) => {
-                        const ComponentRenderer = componentRenderers[component.type];
-                        return ComponentRenderer ? (
-                          <React.Fragment key={component.id}>
-                            <ComponentRenderer content={component.content} />
-                          </React.Fragment>
-                        ) : null;
-                      })}
                     </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center">
-                    <p className="text-gray-400 text-center">
-                      Adicione componentes para ver a prévia aqui
-                    </p>
-                  </div>
-                )}
+                  ) : (
+                    <div className="h-full flex items-center justify-center">
+                      <p className="text-gray-400 text-center">
+                        Adicione componentes para ver a prévia aqui
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
+    
   );
 };
 
