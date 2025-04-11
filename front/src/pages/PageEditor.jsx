@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import React from 'react';
 import axios from 'axios';
 
 // Componentes para renderização na prévia
@@ -8,22 +9,59 @@ const componentRenderers = {
     <div className="prose max-w-none mb-4" dangerouslySetInnerHTML={{ __html: content.text }} />
   ),
   
-  link: ({ content }) => (
-    <div className="mb-4">
-      <a 
-        href={content.url} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className={`inline-block px-4 py-2 rounded ${
-          content.style === 'primary' 
-            ? 'bg-blue-600 text-white hover:bg-blue-700' 
-            : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-        }`}
-      >
-        {content.text}
-      </a>
-    </div>
-  ),
+  link: ({ content }) => {
+    const width = content.width || '100';
+    
+    // Define corretamente a classe de largura
+    let widthClass;
+    if (width === '100') {
+      widthClass = 'w-full'; // Ocupa toda a largura
+    } else if (width === '50') {
+      widthClass = 'w-full md:w-1/2'; // Metade da largura em telas médias e grandes
+    } else {
+      widthClass = 'w-full md:w-1/3'; // Um terço da largura em telas médias e grandes
+    }
+    
+    // Verificar se há imagem
+    const hasImage = content.imageUrl && content.imageUrl.trim() !== '';
+    const imagePosition = content.imagePosition || 'left';
+    
+    return (
+      <div className={`${widthClass} px-2 mb-4`}>
+        <div className={`h-full flex ${hasImage && imagePosition === 'top' ? 'flex-col' : 'items-center'} 
+          ${hasImage && imagePosition === 'right' ? 'flex-row-reverse' : 'flex-row'} 
+          border border-gray-200 rounded-lg p-4 transition-all hover:shadow-md`}>
+          
+          {hasImage && (
+            <div className={`
+              ${imagePosition === 'top' ? 'w-full mb-3' : 'w-1/3 flex-shrink-0 mx-3'} 
+            `}>
+              <img 
+                src={content.imageUrl} 
+                alt="" 
+                className="w-full h-auto rounded-lg"
+              />
+            </div>
+          )}
+          
+          <div className={`${hasImage && imagePosition !== 'top' ? 'w-2/3' : 'w-full'}`}>
+            <a 
+              href={content.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`inline-block px-4 py-2 rounded ${
+                content.style === 'primary' 
+                  ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                  : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+              }`}
+            >
+              {content.text}
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  },
   
   banner: ({ content }) => (
     <div className="mb-4">
@@ -122,6 +160,54 @@ const componentForms = {
           <option value="secondary">Secundário</option>
         </select>
       </div>
+      
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Largura
+        </label>
+        <select
+          value={content.width || '100'}
+          onChange={(e) => onChange({ ...content, width: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="100">100% (Ocupar linha inteira)</option>
+          <option value="50">50% (Metade da linha)</option>
+          <option value="33">33% (Um terço da linha)</option>
+        </select>
+      </div>
+      
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Imagem (opcional)
+        </label>
+        <input
+          type="url"
+          value={content.imageUrl || ''}
+          onChange={(e) => onChange({ ...content, imageUrl: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          placeholder="https://exemplo.com/imagem.jpg"
+        />
+        <p className="mt-1 text-xs text-gray-500">
+          Deixe em branco se não quiser incluir uma imagem
+        </p>
+      </div>
+      
+      {content.imageUrl && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Posição da Imagem
+          </label>
+          <select
+            value={content.imagePosition || 'left'}
+            onChange={(e) => onChange({ ...content, imagePosition: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="left">Esquerda</option>
+            <option value="right">Direita</option>
+            <option value="top">Topo</option>
+          </select>
+        </div>
+      )}
     </>
   ),
   
@@ -271,7 +357,14 @@ const componentForms = {
 // Valores padrão para novos componentes
 const defaultComponentValues = {
   text: { text: '<p>Digite seu texto aqui</p>' },
-  link: { text: 'Clique aqui', url: 'https://', style: 'primary' },
+  link: { 
+    text: 'Clique aqui', 
+    url: 'https://', 
+    style: 'primary',
+    width: '100',
+    imageUrl: '',
+    imagePosition: 'left' // 'left', 'right', 'top', 'none'
+  },
   banner: { imageUrl: '', altText: '', caption: '' },
   carousel: { images: [] }
 };
@@ -712,14 +805,16 @@ const PageEditor = () => {
                 {components.length > 0 ? (
                   <div>
                     <h1 className="text-2xl font-bold text-center mb-6">{page?.title}</h1>
-                    {components.map((component) => {
-                      const ComponentRenderer = componentRenderers[component.type];
-                      return ComponentRenderer ? (
-                        <div key={component.id}>
-                          <ComponentRenderer content={component.content} />
-                        </div>
-                      ) : null;
-                    })}
+                    <div className="flex flex-wrap -mx-2">
+                      {components.map((component) => {
+                        const ComponentRenderer = componentRenderers[component.type];
+                        return ComponentRenderer ? (
+                          <React.Fragment key={component.id}>
+                            <ComponentRenderer content={component.content} />
+                          </React.Fragment>
+                        ) : null;
+                      })}
+                    </div>
                   </div>
                 ) : (
                   <div className="h-full flex items-center justify-center">
