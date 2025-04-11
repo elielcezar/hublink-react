@@ -4,6 +4,7 @@ import React from 'react';
 import axios from 'axios';
 import ImageUploader from '../components/ImageUploader';
 import CarouselComponent from '../components/CarouselComponent';
+import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify } from 'react-icons/fa';
 
 // Componentes para renderização na prévia
 const componentRenderers = {
@@ -90,6 +91,41 @@ const componentRenderers = {
           loop: true
         }}
       />
+    </div>
+  ),
+
+  social: ({ content }) => (
+    <div className="w-full mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Object.entries(content).map(([key, value]) => {
+          if (!value) return null;
+          
+          const icons = {
+            instagram: <FaInstagram className="text-pink-600" />,
+            x: <FaTwitter className="text-blue-400" />,
+            youtube: <FaYoutube className="text-red-600" />,
+            tiktok: <FaTiktok className="text-black" />,
+            spotify: <FaSpotify className="text-green-600" />
+          };
+
+          return (
+            <a
+              key={key}
+              href={value}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-3 p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+            >
+              <div className="text-2xl">
+                {icons[key]}
+              </div>
+              <span className="text-gray-700">
+                {key.charAt(0).toUpperCase() + key.slice(1)}
+              </span>
+            </a>
+          );
+        })}
+      </div>
     </div>
   )
 };
@@ -380,6 +416,45 @@ const componentForms = {
         </div>
       </div>
     );
+  },
+
+  social: ({ content, onChange }) => {
+    const handleChange = (key, value) => {
+      onChange({
+        ...content,
+        [key]: value
+      });
+    };
+
+    const socialNetworks = [
+      { key: 'instagram', label: 'Instagram', icon: <FaInstagram className="text-pink-600" /> },
+      { key: 'x', label: 'X (Twitter)', icon: <FaTwitter className="text-blue-400" /> },
+      { key: 'youtube', label: 'YouTube', icon: <FaYoutube className="text-red-600" /> },
+      { key: 'tiktok', label: 'TikTok', icon: <FaTiktok className="text-black" /> },
+      { key: 'spotify', label: 'Spotify', icon: <FaSpotify className="text-green-600" /> }
+    ];
+
+    return (
+      <div className="space-y-4">
+        {socialNetworks.map(({ key, label, icon }) => (
+          <div key={key} className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="flex items-center space-x-2">
+                <span className="text-xl">{icon}</span>
+                <span>{label}</span>
+              </div>
+            </label>
+            <input
+              type="text"
+              value={content[key] || ''}
+              onChange={(e) => handleChange(key, e.target.value)}
+              placeholder={`URL do ${label}`}
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            />
+          </div>
+        ))}
+      </div>
+    );
   }
 };
 
@@ -404,6 +479,13 @@ const defaultComponentValues = {
       spaceBetween: 30,
       loop: true
     }
+  },
+  social: {
+    instagram: '',
+    x: '',
+    youtube: '',
+    tiktok: '',
+    spotify: ''
   }
 };
 
@@ -733,6 +815,13 @@ const PageEditor = () => {
                   className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Carrossel
+                </button>
+                <button
+                  onClick={() => addComponent('social')}
+                  disabled={saving}
+                  className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  Redes Sociais
                 </button>
               </div>
             </div>
