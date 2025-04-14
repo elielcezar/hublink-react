@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import React from 'react';
 import axios from 'axios';
-import CarouselComponent from '../components/CarouselComponent';
+import CarouselComponent from '../components/__DELETE__CarouselComponent';
 import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify } from 'react-icons/fa';
 import LinkRenderer from '../components/editor/renderers/LinkRenderer';
 
@@ -68,10 +68,7 @@ const componentRenderers = {
             >
               <div className="text-2xl">
                 {icons[key]}
-              </div>
-              <span className="text-gray-700">
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </span>
+              </div>             
             </a>
           );
         })}
@@ -86,11 +83,20 @@ const PublicPage = () => {
   const [components, setComponents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [pageStyle, setPageStyle] = useState({
+    backgroundColor: '#ffffff',
+    fontFamily: 'Inter, sans-serif',
+    linkColor: '#3b82f6',
+    textColor: '#333333'
+  });
 
   useEffect(() => {
     const fetchPageData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/public/pages/${slug}`);
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/public/pages/${slug}`);
+        console.log('Resposta da API:', response.data);
+        console.log('Estilo recebido:', response.data.style);
+        
         setPage(response.data);
         
         // Verificar se os componentes já estão formatados corretamente
@@ -100,6 +106,14 @@ const PublicPage = () => {
         }));
         
         setComponents(parsedComponents);
+        
+        // Obter o estilo diretamente da resposta
+        if (response.data.style) {
+          console.log('Aplicando estilo:', response.data.style);
+          setPageStyle(response.data.style);
+        } else {
+          console.log('Nenhum estilo encontrado na resposta');
+        }
       } catch (error) {
         console.error('Erro ao buscar dados da página:', error);
         setError('Esta página não existe ou não está publicada.');
@@ -110,6 +124,29 @@ const PublicPage = () => {
     
     fetchPageData();
   }, [slug]);
+
+  // Aplicar estilo ao body quando o pageStyle mudar
+  useEffect(() => {
+    if (pageStyle) {
+      // Aplicar a cor de fundo ao body
+      document.body.style.backgroundColor = pageStyle.backgroundColor || '#ffffff';
+      document.body.style.color = pageStyle.textColor || '#333333';
+      document.body.style.fontFamily = pageStyle.fontFamily || 'Inter, sans-serif';
+      
+      // Criar variáveis CSS globais
+      document.documentElement.style.setProperty('--link-color', pageStyle.linkColor || '#3b82f6');
+      document.documentElement.style.setProperty('--text-color', pageStyle.textColor || '#333333');
+      
+      // Função de limpeza para restaurar os estilos padrão quando o componente for desmontado
+      return () => {
+        document.body.style.backgroundColor = '';
+        document.body.style.color = '';
+        document.body.style.fontFamily = '';
+        document.documentElement.style.removeProperty('--link-color');
+        document.documentElement.style.removeProperty('--text-color');
+      };
+    }
+  }, [pageStyle]);
 
   if (loading) {
     return (
@@ -140,8 +177,16 @@ const PublicPage = () => {
     );
   }
   
+  console.log('Renderizando com estilo:', pageStyle);
+
   return (
-    <div className="min-h-screen bg-white">
+    <div 
+      className="min-h-screen"
+      style={{ 
+        "--link-color": pageStyle?.linkColor || '#3b82f6',
+        "--text-color": pageStyle?.textColor || '#333333',
+      }}
+    >
       <div className="max-w-4xl mx-auto px-4 py-12">
         {/* Conteúdo da landing page */}
         <header className="text-center mb-10">

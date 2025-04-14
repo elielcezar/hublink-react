@@ -16,7 +16,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/editor/:pageId" element={<PageEditor />} />
-          <Route path="/p/:slug" element={<PublicPage />} />
+          <Route path="/:slug" element={<PublicPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>

@@ -47,11 +47,11 @@ const Dashboard = () => {
     fetchData();
   }, [navigate]);
 
-  /*const handleLogout = () => {
+  const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     navigate('/');
-  };*/
+  };
 
   const handleCreatePage = async (e) => {
     e.preventDefault();
@@ -145,6 +145,23 @@ const Dashboard = () => {
       <MenuDashboard />
 
       <div className="min-h-screen bg-gray-100 w-11/12">
+
+        <nav className="bg-white shadow-md">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between h-16">
+                <div className="flex items-center">
+                  <h1 className="text-xl font-bold text-gray-900">
+                    Hub<span className="text-blue-600">Link</span>
+                  </h1>
+                  <span className="text-gray-700 mr-4">Olá, {user?.name}</span>
+                  <button  onClick={handleLogout} className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Sair
+                  </button>   
+                </div>
+                
+              </div>
+            </div>
+          </nav>
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="bg-white shadow-md rounded-lg p-6">
@@ -274,7 +291,7 @@ const Dashboard = () => {
                           </Link>
                           {page.published && (
                             <a
-                              href={`/p/${page.slug}`}
+                              href={`/${page.slug}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-green-600 hover:text-green-900 mr-2"

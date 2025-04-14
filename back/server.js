@@ -510,9 +510,22 @@ app.get('/api/public/pages/:slug', async (req, res) => {
       content: JSON.parse(component.content)
     }));
     
-    page.components = componentsWithParsedContent;
+    // Criando uma nova resposta com os componentes processados e garantindo o estilo
+    const responseData = {
+      ...page,
+      components: componentsWithParsedContent,
+      style: page.style || {
+        backgroundColor: '#ffffff',
+        fontFamily: 'Inter, sans-serif',
+        linkColor: '#3b82f6',
+        textColor: '#333333'
+      }
+    };
     
-    res.json(page);
+    // Verificar se o estilo está sendo enviado corretamente
+    console.log('Enviando estilo para página pública:', responseData.style);
+    
+    res.json(responseData);
   } catch (error) {
     console.error('Erro ao buscar página pública:', error);
     res.status(500).json({ message: 'Erro ao buscar página' });
@@ -552,6 +565,59 @@ app.delete('/api/upload/:filename', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Erro ao deletar imagem:', error);
     res.status(500).json({ error: 'Erro ao deletar a imagem' });
+  }
+});
+
+// Obter estilo da página
+app.get('/api/pages/:id/style', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const page = await prisma.page.findUnique({
+      where: { 
+        id: parseInt(id),
+        userId: req.user.userId
+      }
+    });
+    
+    if (!page) {
+      return res.status(404).json({ message: 'Página não encontrada' });
+    }
+    
+    // Se o page.style for null, retorne um objeto padrão
+    const defaultStyle = {
+      backgroundColor: '#ffffff',
+      fontFamily: 'Inter, sans-serif',
+      linkColor: '#3b82f6',
+      textColor: '#333333'
+    };
+    
+    res.json({ style: page.style || defaultStyle });
+  } catch (error) {
+    console.error('Erro ao obter estilo da página:', error);
+    res.status(500).json({ message: 'Erro ao obter estilo da página' });
+  }
+});
+
+// Atualizar estilo da página
+app.put('/api/pages/:id/style', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const page = await prisma.page.update({
+      where: { 
+        id: parseInt(id),
+        userId: req.user.userId
+      },
+      data: {
+        style: req.body.style
+      }
+    });
+    
+    res.json({ message: 'Estilo atualizado com sucesso', style: page.style });
+  } catch (error) {
+    console.error('Erro ao atualizar estilo da página:', error);
+    res.status(500).json({ message: 'Erro ao atualizar estilo da página' });
   }
 });
 

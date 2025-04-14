@@ -29,7 +29,7 @@ const LinkRenderer = ({ content }) => {
           }}
         >
           <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-            <span className="text-white text-lg font-medium px-6 py-2 text-center">
+            <span className=" text-lg font-medium px-6 py-2 text-center">
               {content.text}
             </span>
           </div>
@@ -43,11 +43,17 @@ const LinkRenderer = ({ content }) => {
   const hasImage = content.imageUrl && content.imageUrl.trim() !== '';
   const imagePosition = content.imagePosition || 'left';
   
+  // Determinar a cor do texto para botão secundário (usar a cor do texto geral da página)
+  const secondaryTextColor = { color: 'var(--text-color, #333333)' };
+  
   return (
     <div className={`${widthClass} px-2 mb-4`}>
-      <div className={`h-full flex ${hasImage && imagePosition === 'top' ? 'flex-col' : 'items-center'} 
-        ${hasImage && imagePosition === 'right' ? 'flex-row-reverse' : 'flex-row'} 
-        border border-gray-200 rounded-lg p-4 transition-all hover:shadow-md`}>
+      <div 
+        className={`h-full flex ${hasImage && imagePosition === 'top' ? 'flex-col' : 'items-center'} 
+          ${hasImage && imagePosition === 'right' ? 'flex-row-reverse' : 'flex-row'} 
+          border border-gray-200 rounded-lg p-4 transition-all hover:shadow-md`}
+        style={content.style === 'primary' ? { backgroundColor: 'var(--link-color, #3b82f6)' } : {}}
+      >
         
         {hasImage && (
           <div className={`
@@ -68,9 +74,10 @@ const LinkRenderer = ({ content }) => {
             rel="noopener noreferrer"
             className={`inline-block px-4 py-2 rounded ${
               content.style === 'primary' 
-                ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                ? ' hover:opacity-90' 
+                : 'bg-gray-200 hover:bg-gray-300'
             }`}
+            style={content.style === 'primary' ? {} : secondaryTextColor}
           >
             {content.text}
           </a>

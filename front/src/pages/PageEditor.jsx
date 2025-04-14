@@ -3,11 +3,12 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import React from 'react';
 import axios from 'axios';
 import ImageUploader from '../components/ImageUploader';
-import CarouselComponent from '../components/CarouselComponent';
+import CarouselComponent from '../components/__DELETE__CarouselComponent';
 import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify } from 'react-icons/fa';
 import LinkForm from '../components/editor/forms/LinkForm';
 import LinkRenderer from '../components/editor/renderers/LinkRenderer';
 import MenuDashboard from '../components/MenuDashboard';
+import { SketchPicker } from 'react-color';
 
 // Componentes para renderização na prévia
 const componentRenderers = {
@@ -67,14 +68,11 @@ const componentRenderers = {
               href={value}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-3 p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+              className="flex justify-center items-center"
             >
               <div className="text-2xl">
                 {icons[key]}
-              </div>
-              <span className="text-gray-700">
-                {key.charAt(0).toUpperCase() + key.slice(1)}
-              </span>
+              </div>             
             </a>
           );
         })}
@@ -431,7 +429,7 @@ const defaultComponentValues = {
 const PageEditor = () => {
   const { pageId } = useParams();
   const navigate = useNavigate();
-  
+  const [user, setUser] = useState(null);  
   const [page, setPage] = useState(null);
   const [components, setComponents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -439,6 +437,13 @@ const PageEditor = () => {
   const [lastSaved, setLastSaved] = useState(null);
   const [error, setError] = useState('');
   const [expandedComponent, setExpandedComponent] = useState(null);
+  const [pageStyle, setPageStyle] = useState({
+    backgroundColor: '#ffffff',
+    fontFamily: 'Inter, sans-serif',
+    linkColor: '#3b82f6',
+    textColor: '#333333'
+  });
+  const [showColorPicker, setShowColorPicker] = useState(null);
   
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -462,6 +467,9 @@ const PageEditor = () => {
         }));
         
         setComponents(parsedComponents);
+        
+        // Carregar os estilos
+        await loadPageStyle();
       } catch (error) {
         console.error('Erro ao buscar dados da página:', error);
         setError('Erro ao carregar a página. Verifique se você tem permissão para editá-la.');
@@ -633,6 +641,47 @@ const PageEditor = () => {
     debouncedSave(componentId, newContent);
   };
   
+  // Função para carregar os estilos da página do banco de dados
+  const loadPageStyle = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/pages/${pageId}/style`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (response.data && response.data.style) {
+        setPageStyle(response.data.style);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar estilo da página:', error);
+    }
+  }, [pageId]);
+
+  // Função para salvar os estilos
+  const savePageStyle = useCallback(debounce(async () => {
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('token');
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/pages/${pageId}/style`, {
+        style: pageStyle
+      }, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      setSaving(false);
+    } catch (error) {
+      console.error('Erro ao salvar estilo da página:', error);
+      setSaving(false);
+      setError('Erro ao salvar estilo da página');
+    }
+  }, 1000), [pageId, pageStyle]);
+
+  // Atualizar estilo e salvar quando houver mudanças
+  useEffect(() => {
+    if (page) {
+      savePageStyle();
+    }
+  }, [pageStyle, savePageStyle, page]);
+  
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
@@ -661,12 +710,19 @@ const PageEditor = () => {
       </div>
     );
   }
+
+  const handleLogout = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/');
+  };
   
   return (
     <>
       <MenuDashboard />
 
       <div className="min-h-screen bg-gray-100 w-11/12">
+        
         <nav className="bg-white shadow-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
@@ -674,9 +730,12 @@ const PageEditor = () => {
                 <h1 className="text-xl font-bold text-gray-900">
                   Hub<span className="text-blue-600">Link</span>
                 </h1>
-                <span className="ml-4 text-gray-600 truncate max-w-xs">
+
+                <h2 className="text-xl font-bold text-gray-900">
                   {page?.title}
-                </span>
+                </h2>
+
+                <span className="text-gray-700 mr-4">Olá, {user?.name}</span>
 
                 <div className="flex items-center space-x-4">
                   {saving && (
@@ -706,6 +765,10 @@ const PageEditor = () => {
                   </button>
                                 
                 </div>
+
+                <button  onClick={handleLogout} className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Sair
+                  </button> 
               </div>
               
             </div>
@@ -724,6 +787,119 @@ const PageEditor = () => {
           <div className="flex flex-col md:flex-row gap-x-12">
             {/* Coluna de edição - Esquerda */}
             <div className="md:w-8/12 space-y-4">
+              {/* Configurações de estilo da página */}
+              <div className="bg-white p-4 rounded-lg shadow-md">
+                <h2 className="text-lg font-medium text-gray-800 mb-4">Estilo da Página</h2>
+                
+                <div className="space-y-4">
+                  {/* Cor de fundo */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cor de Fundo
+                    </label>
+                    <div className="flex items-center">
+                      <div 
+                        className="w-10 h-10 rounded border cursor-pointer"
+                        style={{ backgroundColor: pageStyle.backgroundColor }}
+                        onClick={() => setShowColorPicker(showColorPicker === 'background' ? null : 'background')}
+                      />
+                      <input
+                        type="text"
+                        value={pageStyle.backgroundColor}
+                        onChange={(e) => setPageStyle({...pageStyle, backgroundColor: e.target.value})}
+                        className="ml-2 w-28 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    {showColorPicker === 'background' && (
+                      <div className="absolute z-10 mt-2">
+                        <div className="fixed inset-0" onClick={() => setShowColorPicker(null)} />
+                        <SketchPicker
+                          color={pageStyle.backgroundColor}
+                          onChange={(color) => setPageStyle({...pageStyle, backgroundColor: color.hex})}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Fonte principal */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fonte Principal
+                    </label>
+                    <select
+                      value={pageStyle.fontFamily}
+                      onChange={(e) => setPageStyle({...pageStyle, fontFamily: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="Inter, sans-serif">Inter</option>
+                      <option value="'Roboto', sans-serif">Roboto</option>
+                      <option value="'Montserrat', sans-serif">Montserrat</option>
+                      <option value="'Open Sans', sans-serif">Open Sans</option>
+                      <option value="'Lato', sans-serif">Lato</option>
+                      <option value="'Poppins', sans-serif">Poppins</option>
+                    </select>
+                  </div>
+
+                  {/* Cor dos links */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cor dos Links
+                    </label>
+                    <div className="flex items-center">
+                      <div 
+                        className="w-10 h-10 rounded border cursor-pointer"
+                        style={{ backgroundColor: pageStyle.linkColor }}
+                        onClick={() => setShowColorPicker(showColorPicker === 'link' ? null : 'link')}
+                      />
+                      <input
+                        type="text"
+                        value={pageStyle.linkColor}
+                        onChange={(e) => setPageStyle({...pageStyle, linkColor: e.target.value})}
+                        className="ml-2 w-28 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    {showColorPicker === 'link' && (
+                      <div className="absolute z-10 mt-2">
+                        <div className="fixed inset-0" onClick={() => setShowColorPicker(null)} />
+                        <SketchPicker
+                          color={pageStyle.linkColor}
+                          onChange={(color) => setPageStyle({...pageStyle, linkColor: color.hex})}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Cor do Texto */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Cor do Texto
+                    </label>
+                    <div className="flex items-center">
+                      <div 
+                        className="w-10 h-10 rounded border cursor-pointer"
+                        style={{ backgroundColor: pageStyle.textColor }}
+                        onClick={() => setShowColorPicker(showColorPicker === 'text' ? null : 'text')}
+                      />
+                      <input
+                        type="text"
+                        value={pageStyle.textColor}
+                        onChange={(e) => setPageStyle({...pageStyle, textColor: e.target.value})}
+                        className="ml-2 w-28 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                    {showColorPicker === 'text' && (
+                      <div className="absolute z-10 mt-2">
+                        <div className="fixed inset-0" onClick={() => setShowColorPicker(null)} />
+                        <SketchPicker
+                          color={pageStyle.textColor}
+                          onChange={(color) => setPageStyle({...pageStyle, textColor: color.hex})}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="bg-white p-4 rounded-lg shadow-md">
                 <h2 className="text-lg font-medium text-gray-800 mb-4">Componentes Disponíveis</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -856,7 +1032,7 @@ const PageEditor = () => {
               {page?.published && (
                 <p className="text-sm text-gray-500 mb-4 text-center">                  
                   <a
-                    href={`/p/${page.slug}`}
+                    href={`/${page.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800"
@@ -866,7 +1042,16 @@ const PageEditor = () => {
                 </p>
                 )}
                 
-                <div className="bg-gray-50 border-[15px] border-black rounded-[60px] p-4 min-h-[400px]">
+                <div 
+                  className="bg-gray-50 border-[15px] border-black rounded-[60px] p-4 min-h-[400px]"
+                  style={{ 
+                    backgroundColor: pageStyle.backgroundColor,
+                    fontFamily: pageStyle.fontFamily,
+                    "--link-color": pageStyle.linkColor,
+                    "--text-color": pageStyle.textColor,
+                    color: pageStyle.textColor
+                  }}
+                >
                   {components.length > 0 ? (
                     <div>                      
                       <div className="flex flex-wrap -mx-2">
