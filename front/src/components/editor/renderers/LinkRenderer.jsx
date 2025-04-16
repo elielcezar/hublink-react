@@ -14,37 +14,16 @@ const LinkRenderer = ({ content }) => {
     widthClass = 'w-full md:w-1/3'; // Um terço da largura em telas médias e grandes
   }
   
-  // Verificar se é um ícone ou botão
-  if (content.styleType === 'icon') {
-    // Estilo de ícone com imagem de fundo
-    return (
-      <div className={`${widthClass} px-2 mb-4`}>
-        <a 
-          href={content.url} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="block overflow-hidden relative w-full h-32 rounded-lg shadow-md transition-transform hover:scale-105"
-          style={{
-            background: content.imageUrl ? `url(${content.imageUrl}) center/cover no-repeat` : 'linear-gradient(to right, #4f46e5, #6366f1)'
-          }}
-        >
-          <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-            <span className=" text-lg font-medium px-6 py-2 text-center">
-              {content.text}
-            </span>
-          </div>
-        </a>
-      </div>
-    );
-  }
-  
-  // Estilo de botão (original)
   // Verificar se há imagem
   const hasImage = content.imageUrl && content.imageUrl.trim() !== '';
   const imagePosition = content.imagePosition || 'left';
   
-  // Determinar a cor do texto para botão secundário (usar a cor do texto geral da página)
-  const secondaryTextColor = { color: 'var(--text-color, #333333)' };
+  // Determinar as cores a serem usadas
+  const backgroundColor = content.backgroundColor || 
+    (content.style === 'primary' ? 'var(--link-color, #3b82f6)' : '#f3f4f6');
+  
+  const textColor = content.textColor || 
+    (content.style === 'primary' ? '#ffffff' : 'var(--text-color, #333333)');
   
   return (
     <div className={`${widthClass} px-2 mb-4`}>
@@ -52,7 +31,7 @@ const LinkRenderer = ({ content }) => {
         className={`h-full flex ${hasImage && imagePosition === 'top' ? 'flex-col' : 'items-center'} 
           ${hasImage && imagePosition === 'right' ? 'flex-row-reverse' : 'flex-row'} 
           border border-gray-200 rounded-lg p-4 transition-all hover:shadow-md`}
-        style={content.style === 'primary' ? { backgroundColor: 'var(--link-color, #3b82f6)' } : {}}
+        style={{ backgroundColor }}
       >
         
         {hasImage && (
@@ -72,12 +51,11 @@ const LinkRenderer = ({ content }) => {
             href={content.url} 
             target="_blank" 
             rel="noopener noreferrer"
-            className={`inline-block px-4 py-2 rounded ${
-              content.style === 'primary' 
-                ? ' hover:opacity-90' 
-                : 'bg-gray-200 hover:bg-gray-300'
-            }`}
-            style={content.style === 'primary' ? {} : secondaryTextColor}
+            className="inline-block px-4 py-2 rounded hover:opacity-90"
+            style={{ 
+              color: textColor,
+              backgroundColor: backgroundColor
+            }}
           >
             {content.text}
           </a>

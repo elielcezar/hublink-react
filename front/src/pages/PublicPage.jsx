@@ -2,79 +2,26 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import React from 'react';
 import axios from 'axios';
-import CarouselComponent from '../components/__DELETE__CarouselComponent';
-import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify } from 'react-icons/fa';
 import LinkRenderer from '../components/editor/renderers/LinkRenderer';
+import IconRenderer from '../components/editor/renderers/IconRenderer';
+import TextRenderer from '../components/editor/renderers/TextRenderer';
+import CarouselRenderer from '../components/editor/renderers/CarouselRenderer';
+import BannerRenderer from '../components/editor/renderers/BannerRenderer';
+import SocialRenderer from '../components/editor/renderers/SocialRenderer';
 
 // Reutilizando os mesmos componentes de renderização da página do editor
 const componentRenderers = {
-  text: ({ content }) => (
-    <div className="prose max-w-none mb-4" dangerouslySetInnerHTML={{ __html: content.text }} />
-  ),
+  text: ({ content }) => <TextRenderer content={content} />,
   
-  link: ({ content }) => (
-    <LinkRenderer content={content} />
-  ),
+  link: ({ content }) => <LinkRenderer content={content} />,
   
-  banner: ({ content }) => (
-    <div className="mb-4">
-      <img 
-        src={content.imageUrl} 
-        alt={content.altText || ''} 
-        className="w-full h-auto rounded-lg shadow-md"
-      />
-      {content.caption && (
-        <p className="mt-2 text-sm text-gray-600 text-center">{content.caption}</p>
-      )}
-    </div>
-  ),
+  banner: ({ content }) => <BannerRenderer content={content} />,
   
-  carousel: ({ content }) => (
-    <div className="w-full mb-6">
-      <CarouselComponent
-        images={content.images || []}
-        config={content.config || {
-          slidesPerView: 1,
-          showNavigation: true,
-          showPagination: true,
-          spaceBetween: 30,
-          loop: true
-        }}
-      />
-    </div>
-  ),
+  carousel: ({ content }) => <CarouselRenderer content={content} />,
 
-  social: ({ content }) => (
-    <div className="w-full mb-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {Object.entries(content).map(([key, value]) => {
-          if (!value) return null;
-          
-          const icons = {
-            instagram: <FaInstagram className="text-pink-600" />,
-            x: <FaTwitter className="text-blue-400" />,
-            youtube: <FaYoutube className="text-red-600" />,
-            tiktok: <FaTiktok className="text-black" />,
-            spotify: <FaSpotify className="text-green-600" />
-          };
+  social: ({ content }) => <SocialRenderer content={content} />,
 
-          return (
-            <a
-              key={key}
-              href={value}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-3 p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="text-2xl">
-                {icons[key]}
-              </div>             
-            </a>
-          );
-        })}
-      </div>
-    </div>
-  )
+  icon: ({ content }) => <IconRenderer content={content} />
 };
 
 const PublicPage = () => {
