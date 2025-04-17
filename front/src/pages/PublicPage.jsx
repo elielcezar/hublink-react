@@ -148,7 +148,7 @@ const PublicPage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="px-4 py-6 w-full max-w-[40vw] mx-auto">
+      <div className="px-4 py-6 w-full lg:max-w-[40vw] mx-auto">
         {/* Conteúdo da landing page */}
         <header className="text-center mb-6">
           {pageStyle.logo && (

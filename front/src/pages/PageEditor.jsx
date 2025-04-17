@@ -672,10 +672,10 @@ const PageEditor = () => {
                 
                 <div 
                   id="page-preview-container"
-                  className="bg-gray-50 border-[15px] border-black rounded-[60px] p-4 min-h-[400px]"
+                  className="bg-gray-50 border-[15px] border-black rounded-[60px] h-[75vh] overflow-hidden"
                 >
                   {components.length > 0 ? (
-                    <div>
+                    <div className="h-[75vh] p-6 overflow-y-scroll overflow-x-hidden">
                       {/* Adicionar o logo aqui, similar ao PublicPage */}
                       {page?.style?.logo && (
                         <header className="text-center mb-6">
