@@ -75,10 +75,21 @@ const PublicPage = () => {
   // Aplicar estilo ao body quando o pageStyle mudar
   useEffect(() => {
     if (pageStyle) {
-      // Aplicar a cor de fundo ao body
-      document.body.style.backgroundColor = pageStyle.backgroundColor || '#ffffff';
+      // Aplicar a fonte e cor do texto
       document.body.style.color = pageStyle.textColor || '#333333';
       document.body.style.fontFamily = pageStyle.fontFamily || 'Inter, sans-serif';
+      
+      // Aplicar fundo com base no tipo selecionado
+      if (pageStyle.backgroundType === 'image' && pageStyle.backgroundImage) {
+        document.body.style.backgroundImage = `url(${pageStyle.backgroundImage})`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'fixed';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundColor = ''; // Limpar a cor de fundo
+      } else {
+        document.body.style.backgroundImage = ''; // Limpar a imagem de fundo
+        document.body.style.backgroundColor = pageStyle.backgroundColor || '#ffffff';
+      }
       
       // Criar variáveis CSS globais
       document.documentElement.style.setProperty('--link-color', pageStyle.linkColor || '#3b82f6');
@@ -86,6 +97,7 @@ const PublicPage = () => {
       
       // Função de limpeza para restaurar os estilos padrão quando o componente for desmontado
       return () => {
+        document.body.style.backgroundImage = '';
         document.body.style.backgroundColor = '';
         document.body.style.color = '';
         document.body.style.fontFamily = '';
@@ -126,19 +138,28 @@ const PublicPage = () => {
   
   console.log('Renderizando com estilo:', pageStyle);
 
+  const backgroundStyle = pageStyle.backgroundType === 'image' && pageStyle.backgroundImage 
+    ? { 
+        backgroundImage: `url(${pageStyle.backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }
+    : { backgroundColor: pageStyle.backgroundColor || '#ffffff' };
+
   return (
-    <div 
-      className="min-h-screen"
-      style={{ 
-        "--link-color": pageStyle?.linkColor || '#3b82f6',
-        "--text-color": pageStyle?.textColor || '#333333',
-      }}
-    >
-      <div className="max-w-4xl mx-auto px-4 py-12">
+    <div className="min-h-screen">
+      <div className="px-4 py-6 w-full max-w-[40vw] mx-auto">
         {/* Conteúdo da landing page */}
-        <header className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{page?.title}</h1>
-          <div className="w-16 h-1 bg-blue-600 mx-auto"></div>
+        <header className="text-center mb-6">
+          {pageStyle.logo && (
+            <div className="flex justify-center">
+              <img 
+                src={pageStyle.logo} 
+                alt="Logo" 
+                className="max-h-36 object-contain"
+              />
+            </div>
+          )}                    
         </header>
         
         <main>

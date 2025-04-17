@@ -9,8 +9,7 @@ import './App.css';
 
 function App() {
   return (
-    <Router>
-      <div className="flex flex-row h-screen">
+    <Router>      
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -18,8 +17,7 @@ function App() {
           <Route path="/editor/:pageId" element={<PageEditor />} />
           <Route path="/:slug" element={<PublicPage />} />
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+        </Routes>      
     </Router>
   );
 }

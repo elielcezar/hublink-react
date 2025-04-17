@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ImageUploader from '../../ImageUploader';
 import TitleField from './TitleField';
+import { SketchPicker } from 'react-color';
 
 const CarouselForm = ({ content, onChange }) => {
   const [images, setImages] = useState(content.images || []);
@@ -14,6 +15,7 @@ const CarouselForm = ({ content, onChange }) => {
     autoplayDelay: 3000,
     pauseOnHover: true
   });
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   // Atualiza o componente pai quando as imagens ou configuração mudam
   useEffect(() => {
@@ -175,6 +177,41 @@ const CarouselForm = ({ content, onChange }) => {
           </div>
         )}
 
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Cor dos Controles
+          </label>
+          <div className="flex items-center gap-3">
+            <div 
+              className="h-10 w-10 rounded border cursor-pointer"
+              style={{ backgroundColor: config.controlsColor || '#000000' }}
+              onClick={() => setShowColorPicker(!showColorPicker)}
+            ></div>
+            <input
+              type="text"
+              value={config.controlsColor || '#000000'}
+              onChange={(e) => handleConfigChange('controlsColor', e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+            />
+          </div>
+          
+          {showColorPicker && (
+            <div className="absolute z-10 mt-2">
+              <div 
+                className="fixed inset-0" 
+                onClick={() => setShowColorPicker(false)}
+              ></div>
+              <SketchPicker 
+                color={config.controlsColor || '#000000'} 
+                onChange={(color) => handleConfigChange('controlsColor', color.hex)}
+              />
+            </div>
+          )}
+          <p className="mt-1 text-xs text-gray-500">
+            Cor dos botões de navegação e indicadores de paginação
+          </p>
+        </div>
+
         <h3 className="font-medium text-gray-800 mt-6 mb-3">Imagens do Carrossel</h3>
         
         <button
@@ -203,7 +240,7 @@ const CarouselForm = ({ content, onChange }) => {
                 URL da Imagem
               </label>
               <ImageUploader 
-                currentImageUrl={image.url} 
+                currentImage={image.url} 
                 onImageUpload={(url) => updateImage(index, 'url', url)}
               />
             </div>

@@ -39,20 +39,49 @@ const LinkForm = ({ content, onChange }) => {
           placeholder="https://example.com"
         />
       </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Largura
+        </label>
+        <select
+          value={content.width || '100'}
+          onChange={(e) => onChange({ ...content, width: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="100">100% (Largura Total)</option>
+          <option value="50">50% (Metade)</option>
+          <option value="33">33% (Um Terço)</option>
+        </select>
+      </div>
+
+      {content.imageUrl && content.imageUrl.trim() !== '' && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Posição da Imagem
+          </label>
+          <select
+            value={content.imagePosition || 'left'}
+            onChange={(e) => onChange({ ...content, imagePosition: e.target.value })}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="left">Esquerda</option>
+            <option value="right">Direita</option>
+            <option value="top">Topo</option>
+          </select>
+        </div>
+      )}
       
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Estilo
+          Imagem (Opcional)
         </label>
-        <select
-          value={content.style || 'primary'}
-          onChange={(e) => onChange({ ...content, style: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="primary">Primário</option>
-          <option value="secondary">Secundário</option>
-        </select>
-      </div>
+        <ImageUploader 
+          onImageUpload={(imageUrl) => onChange({ ...content, imageUrl })}
+          currentImage={content.imageUrl || ''} 
+        />
+        
+      </div>     
       
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -116,49 +145,8 @@ const LinkForm = ({ content, onChange }) => {
         <p className="mt-1 text-xs text-gray-500">
           Deixe em branco para usar a cor padrão do estilo selecionado
         </p>
-      </div>
+      </div>     
       
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Largura
-        </label>
-        <select
-          value={content.width || '100'}
-          onChange={(e) => onChange({ ...content, width: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="100">100% (Largura Total)</option>
-          <option value="50">50% (Metade)</option>
-          <option value="33">33% (Um Terço)</option>
-        </select>
-      </div>
-      
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Imagem (Opcional)
-        </label>
-        <ImageUploader 
-          currentImageUrl={content.imageUrl} 
-          onImageUpload={(imageUrl) => onChange({ ...content, imageUrl })}
-        />
-      </div>
-      
-      {content.imageUrl && content.imageUrl.trim() !== '' && (
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Posição da Imagem
-          </label>
-          <select
-            value={content.imagePosition || 'left'}
-            onChange={(e) => onChange({ ...content, imagePosition: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="left">Esquerda</option>
-            <option value="right">Direita</option>
-            <option value="top">Topo</option>
-          </select>
-        </div>
-      )}
     </>
   );
 };

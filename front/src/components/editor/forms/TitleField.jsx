@@ -4,7 +4,7 @@ const TitleField = ({ title, onChange }) => {
   return (
     <div className="mb-4">
       <label className="block text-sm font-medium text-gray-700 mb-1">
-        Título do Componente
+        Título
       </label>
       <input
         type="text"

@@ -1,19 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import React from 'react';
 import axios from 'axios';
-import ImageUploader from '../components/ImageUploader';
 import CarouselRenderer from '../components/editor/renderers/CarouselRenderer';
-import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify } from 'react-icons/fa';
 import LinkForm from '../components/editor/forms/LinkForm';
 import LinkRenderer from '../components/editor/renderers/LinkRenderer';
 import MenuDashboard from '../components/MenuDashboard';
-import { SketchPicker } from 'react-color';
 import SocialRenderer from '../components/editor/renderers/SocialRenderer';
 import BannerRenderer from '../components/editor/renderers/BannerRenderer';
 import IconForm from '../components/editor/forms/IconForm';
 import IconRenderer from '../components/editor/renderers/IconRenderer';
-import TitleField from '../components/editor/forms/TitleField';
 import TextForm from '../components/editor/forms/TextForm';
 import TextRenderer from '../components/editor/renderers/TextRenderer';
 import BannerForm from '../components/editor/forms/BannerForm';
@@ -74,7 +70,8 @@ const defaultComponentValues = {
       loop: true,
       autoplay: false,
       autoplayDelay: 3000,
-      pauseOnHover: true
+      pauseOnHover: true,
+      controlsColor: '#000000'
     }
   },
   social: {
@@ -83,7 +80,9 @@ const defaultComponentValues = {
     x: '',
     youtube: '',
     tiktok: '',
-    spotify: ''
+    kwai: '',
+    spotify: '',
+    iconColor: '#0077B5'
   },
   icon: {
     title: 'Ícone',
@@ -108,6 +107,7 @@ const PageEditor = () => {
   const [lastSaved, setLastSaved] = useState(null);
   const [error, setError] = useState('');
   const [expandedComponent, setExpandedComponent] = useState(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -118,11 +118,20 @@ const PageEditor = () => {
     
     const fetchPageData = async () => {
       try {
-        const response = await axios.get(`http://localhost:3001/api/pages/${pageId}`, {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/pages/${pageId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        setPage(response.data);
+        // Garantir que a página tenha um objeto style, mesmo que vazio
+        setPage({
+          ...response.data,
+          style: response.data.style || {
+            backgroundColor: '#ffffff',
+            fontFamily: 'Inter, sans-serif',
+            linkColor: '#3b82f6',
+            textColor: '#333333'
+          }
+        });
         
         // Converter os componentes para objetos com content parseado
         const parsedComponents = response.data.components.map(comp => ({
@@ -146,6 +155,31 @@ const PageEditor = () => {
     fetchPageData();
   }, [pageId, navigate]);
   
+  useEffect(() => {
+    if (page?.style) {
+      // Buscar o elemento de preview 
+      const previewElement = document.getElementById('page-preview-container');
+      
+      if (previewElement) {
+        // Aplicar cor de fundo ou imagem de fundo
+        if (page.style.backgroundType === 'image' && page.style.backgroundImage) {
+          previewElement.style.backgroundImage = `url(${page.style.backgroundImage})`;
+          previewElement.style.backgroundSize = 'cover';
+          previewElement.style.backgroundPosition = 'center';
+          previewElement.style.backgroundRepeat = 'no-repeat';
+          previewElement.style.backgroundColor = '';
+        } else {
+          previewElement.style.backgroundImage = '';
+          previewElement.style.backgroundColor = page.style.backgroundColor || '#ffffff';
+        }
+        
+        // Aplicar fonte e cor do texto
+        previewElement.style.fontFamily = page.style.fontFamily || 'Inter, sans-serif';
+        previewElement.style.color = page.style.textColor || '#333333';
+      }
+    }
+  }, [page?.style]);
+  
   const addComponent = async (type) => {
     try {
       setSaving(true);
@@ -165,6 +199,7 @@ const PageEditor = () => {
       
       // Expandir o componente recém-adicionado para edição
       setExpandedComponent(response.data.id);
+      setHasUnsavedChanges(true);
     } catch (error) {
       console.error('Erro ao adicionar componente:', error);
       setError('Erro ao adicionar componente. Tente novamente.');
@@ -193,6 +228,7 @@ const PageEditor = () => {
       if (expandedComponent === componentId) {
         setExpandedComponent(null);
       }
+      setHasUnsavedChanges(true);
     } catch (error) {
       console.error('Erro ao excluir componente:', error);
       setError('Erro ao excluir componente. Tente novamente.');
@@ -240,6 +276,7 @@ const PageEditor = () => {
     } finally {
       setSaving(false);
     }
+    setHasUnsavedChanges(true);
   };
   
   const togglePublish = async () => {
@@ -268,12 +305,99 @@ const PageEditor = () => {
     }
   };
   
-  const handleContentChange = (componentId, newContent) => {
-    // Atualizar o conteúdo localmente para uma UI responsiva
-    setComponents(components.map(c => 
-      c.id === componentId ? { ...c, content: newContent } : c
+  const handleComponentUpdate = (componentId, newContent) => {
+    setComponents(components.map(component => 
+      component.id === componentId 
+        ? { ...component, content: newContent } 
+        : component
     ));
+    setHasUnsavedChanges(true);
   };
+  
+  const saveComponents = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { 
+        Authorization: `Bearer ${token}` 
+      };
+      
+      // Para cada componente, fazer uma requisição separada
+      for (const component of components) {
+        // Normalizar o conteúdo para garantir que seja uma string JSON
+        const contentToSave = typeof component.content === 'object' 
+          ? component.content
+          : JSON.parse(component.content);
+        
+        if (component.id && !isNaN(component.id)) {
+          // Se o componente já existe, atualize-o
+          await axios.put(
+            `${import.meta.env.VITE_API_URL}/api/components/${component.id}`,
+            {
+              type: component.type,
+              content: contentToSave
+            },
+            { headers }
+          );
+        } else {
+          // Se é um componente novo, crie-o
+          await axios.post(
+            `${import.meta.env.VITE_API_URL}/api/pages/${pageId}/components`,
+            {
+              type: component.type,
+              content: contentToSave
+            },
+            { headers }
+          );
+        }
+      }
+      
+      setSaving(false);
+      setHasUnsavedChanges(false);
+      alert('Alterações salvas com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar componentes:', error);
+      setSaving(false);
+      setError('Erro ao salvar. Por favor, tente novamente.');
+    }
+  };
+  
+  const fetchPageStyle = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/pages/${pageId}/style`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Atualizar apenas o estilo, mantendo os outros dados da página
+      setPage(prevPage => ({
+        ...prevPage,
+        style: response.data.style || {
+          backgroundColor: '#ffffff',
+          fontFamily: 'Inter, sans-serif',
+          linkColor: '#3b82f6',
+          textColor: '#333333'
+        }
+      }));
+    } catch (error) {
+      console.error('Erro ao buscar estilo da página:', error);
+    }
+  };
+  
+  useEffect(() => {
+    // Adicione um event listener para quando a janela recebe foco novamente
+    const handleFocus = () => {
+      // Recarregar o estilo da página quando a janela recebe foco
+      fetchPageStyle();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [pageId]);
   
   if (loading) {
     return (
@@ -312,6 +436,8 @@ const PageEditor = () => {
   
   return (
     <>
+    <div className="flex flex-row min-h-screen">
+    
       <MenuDashboard />
 
       <div className="min-h-screen bg-gray-100 w-11/12">
@@ -331,20 +457,30 @@ const PageEditor = () => {
                 <span className="text-gray-700 mr-4">Olá, {user?.name}</span>
 
                 <div className="flex items-center space-x-4">
-                  {saving && (
-                    <span className="text-sm text-gray-500 flex items-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Salvando...
-                    </span>
-                  )}
-                  {lastSaved && !saving && (
-                    <span className="text-sm text-gray-500">
-                      Último salvamento: {lastSaved.toLocaleTimeString()}
-                    </span>
-                  )}
+                  <button
+                      onClick={saveComponents}
+                      disabled={saving || !hasUnsavedChanges}
+                      className={`px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center ${
+                        hasUnsavedChanges
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      }`}
+                    >
+                      {saving ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Salvando...
+                        </>
+                      ) : hasUnsavedChanges ? (
+                        'Salvar Alterações'
+                      ) : (
+                        'Alterações Salvas'
+                      )}
+                    </button>
+                                    
                   <button
                     onClick={togglePublish}
                     disabled={saving}
@@ -381,7 +517,12 @@ const PageEditor = () => {
             {/* Coluna de edição - Esquerda */}
             <div className="md:w-8/12 space-y-4">
               <div className="bg-white p-4 rounded-lg shadow-md">
-                <h2 className="text-lg font-medium text-gray-800 mb-4">Componentes Disponíveis</h2>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-800">
+                    Editor de Componentes
+                  </h2>
+                  
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     onClick={() => addComponent('text')}
@@ -492,7 +633,7 @@ const PageEditor = () => {
                         <div className="border-t border-gray-200 p-4">
                           {componentForms[component.type]({
                             content: component.content,
-                            onChange: (newContent) => handleContentChange(component.id, newContent)
+                            onChange: (newContent) => handleComponentUpdate(component.id, newContent)
                           })}
                         </div>
                       )}
@@ -530,10 +671,24 @@ const PageEditor = () => {
                 )}
                 
                 <div 
+                  id="page-preview-container"
                   className="bg-gray-50 border-[15px] border-black rounded-[60px] p-4 min-h-[400px]"
                 >
                   {components.length > 0 ? (
-                    <div>                      
+                    <div>
+                      {/* Adicionar o logo aqui, similar ao PublicPage */}
+                      {page?.style?.logo && (
+                        <header className="text-center mb-6">
+                          <div className="flex justify-center">
+                            <img 
+                              src={page.style.logo} 
+                              alt="Logo" 
+                              className="max-h-36 object-contain"
+                            />
+                          </div>
+                        </header>
+                      )}
+                      
                       <div className="flex flex-wrap -mx-2">
                         {components.map((component) => {
                           const ComponentRenderer = componentRenderers[component.type];
@@ -557,6 +712,7 @@ const PageEditor = () => {
             </div>
           </div>
         </main>
+      </div>
       </div>
     </>
     

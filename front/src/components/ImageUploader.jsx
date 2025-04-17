@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FiUpload, FiX } from 'react-icons/fi';
 
-const ImageUploader = ({ onImageUpload, currentImage = '' }) => {
+const ImageUploader = ({ onImageUpload, currentImage }) => {
   const [image, setImage] = useState(currentImage);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -56,29 +56,7 @@ const ImageUploader = ({ onImageUpload, currentImage = '' }) => {
   };
 
   return (
-    <div className="space-y-4">
-      <div
-        {...getRootProps()}
-        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-          ${isDragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-indigo-500'}`}
-      >
-        <input {...getInputProps()} />
-        <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
-        <p className="mt-2 text-sm text-gray-600">
-          {isDragActive
-            ? 'Solte a imagem aqui...'
-            : 'Arraste e solte uma imagem aqui, ou clique para selecionar'}
-        </p>
-        <p className="mt-1 text-xs text-gray-500">
-          Suporta JPEG, PNG, GIF
-        </p>
-      </div>
-
-      {isUploading && (
-        <div className="text-center text-sm text-gray-600">
-          Fazendo upload da imagem...
-        </div>
-      )}
+    <div className="flex items-center justify-start gap-4"> 
 
       {image && (
         <div className="relative group">
@@ -96,6 +74,40 @@ const ImageUploader = ({ onImageUpload, currentImage = '' }) => {
           </button>
         </div>
       )}
+
+      {isUploading && (
+        <div className="text-center text-sm text-gray-600">
+          Fazendo upload da imagem...
+        </div>
+      )}
+
+      <input {...getInputProps()} />
+
+      <div
+        {...getRootProps()}
+        className={`max-h-min border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
+          ${isDragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-indigo-500'}`}
+      >
+        
+
+        {!image ? (
+          <>
+            <FiUpload className="mx-auto h-12 w-12 text-gray-400" />
+            <p className="mt-2 text-sm text-gray-600">
+              {isDragActive
+                ? 'Solte a imagem aqui...'
+                : 'Arraste e solte uma imagem aqui, ou clique para selecionar'}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              Suporta JPEG, PNG, GIF
+            </p>
+          </>
+        ) : (
+          <p>Alterar imagem</p>
+        )}
+
+      </div>
+      
     </div>
   );
 };

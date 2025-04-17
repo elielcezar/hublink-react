@@ -44,6 +44,21 @@ const Dashboard = () => {
     { name: 'Old Standard TT', value: '"Old Standard TT", serif' }
   ];
 
+  // Adicione um novo estado para rastrear páginas com alterações não salvas
+  const [unsavedChanges, setUnsavedChanges] = useState({});
+
+  // Adicione esta propriedade a todos os objetos de estilo padrão
+  // Modifique o estilo padrão em vários lugares no código
+  const defaultStyle = {
+    backgroundColor: '#ffffff',
+    fontFamily: 'Inter, sans-serif',
+    linkColor: '#3b82f6',
+    textColor: '#333333',
+    backgroundImage: null,
+    logo: null,
+    backgroundType: 'color' // Novo campo: 'color' ou 'image'
+  };
+
   useEffect(() => {
     // Carregar fontes do Google
     const link = document.createElement('link');
@@ -87,29 +102,18 @@ const Dashboard = () => {
               });
               
               if (styleResponse.data && styleResponse.data.style) {
-                stylesObj[page.id] = styleResponse.data.style;
+                stylesObj[page.id] = {
+                  ...styleResponse.data.style,
+                  backgroundType: styleResponse.data.style.backgroundType || 'color'
+                };
               } else {
                 // Estilo padrão
-                stylesObj[page.id] = {
-                  backgroundColor: '#ffffff',
-                  fontFamily: 'Inter, sans-serif',
-                  linkColor: '#3b82f6',
-                  textColor: '#333333',
-                  backgroundImage: null,
-                  logo: null
-                };
+                stylesObj[page.id] = defaultStyle;
               }
             } catch (styleError) {
               console.error(`Erro ao carregar estilo da página ${page.id}:`, styleError);
               // Estilo padrão em caso de erro
-              stylesObj[page.id] = {
-                backgroundColor: '#ffffff',
-                fontFamily: 'Inter, sans-serif',
-                linkColor: '#3b82f6',
-                textColor: '#333333',
-                backgroundImage: null,
-                logo: null
-              };
+              stylesObj[page.id] = defaultStyle;
             }
           }
           setPageStyles(stylesObj);
@@ -139,7 +143,7 @@ const Dashboard = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Feedback visual (opcional)
+      // Feedback visual
       const styleSection = document.getElementById(`style-section-${pageId}`);
       if (styleSection) {
         styleSection.classList.add('bg-green-50');
@@ -147,6 +151,14 @@ const Dashboard = () => {
           styleSection.classList.remove('bg-green-50');
         }, 1000);
       }
+      
+      // Limpar status de alterações não salvas para esta página
+      const newUnsavedChanges = { ...unsavedChanges };
+      delete newUnsavedChanges[pageId];
+      setUnsavedChanges(newUnsavedChanges);
+      
+      // Feedback ao usuário
+      alert('Alterações salvas com sucesso!');
       
     } catch (error) {
       console.error('Erro ao salvar estilo:', error);
@@ -166,8 +178,11 @@ const Dashboard = () => {
         }
       });
       
-      // Salvar o estilo atualizado
-      await savePageStyle(pageId);
+      // Marcar esta página como tendo alterações não salvas
+      setUnsavedChanges({
+        ...unsavedChanges,
+        [pageId]: true
+      });
       
     } catch (error) {
       console.error('Erro ao atualizar imagem de fundo:', error);
@@ -187,8 +202,11 @@ const Dashboard = () => {
         }
       });
       
-      // Salvar o estilo atualizado
-      await savePageStyle(pageId);
+      // Marcar esta página como tendo alterações não salvas
+      setUnsavedChanges({
+        ...unsavedChanges,
+        [pageId]: true
+      });
       
     } catch (error) {
       console.error('Erro ao atualizar logo:', error);
@@ -204,6 +222,12 @@ const Dashboard = () => {
         ...pageStyles[pageId],
         [property]: value
       }
+    });
+    
+    // Marcar esta página como tendo alterações não salvas
+    setUnsavedChanges({
+      ...unsavedChanges,
+      [pageId]: true
     });
   };
 
@@ -356,9 +380,30 @@ const Dashboard = () => {
 
   return (
     <>
+      <div className="flex flex-row min-h-screen">
+      
       <MenuDashboard />
 
       <div className="min-h-screen bg-gray-100 w-11/12">
+      <nav className="bg-white shadow-md">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between h-16">
+              <div className="flex items-center">
+                <h1 className="text-xl font-bold text-gray-900">
+                  Hub<span className="text-blue-600">Link</span>
+                </h1>               
+
+                <span className="text-gray-700 mr-4">Olá, {user?.name}</span>
+
+                <button  onClick={handleLogout} className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Sair
+                  </button> 
+              </div>
+              
+            </div>
+          </div>
+        </nav>
+
         <main className="py-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-8 flex justify-between items-center">
@@ -409,7 +454,7 @@ const Dashboard = () => {
                       URL Personalizada
                     </label>
                     <div className="flex items-center">
-                      <span className="text-gray-500 mr-2">hublink.com/</span>
+                      <span className="text-gray-500 mr-2">hublink.app/</span>
                       <input
                         type="text"
                         id="slug"
@@ -442,7 +487,7 @@ const Dashboard = () => {
               <div className="space-y-4">
                 {pages.map((page) => (
                   <div key={page.id} className="bg-white rounded-lg shadow overflow-hidden">
-                    {/* Cabeçalho do acordeão */}
+                    {/* Cabeçalho do acordeon */}
                     <div 
                       className="px-4 py-5 border-b border-gray-200 cursor-pointer hover:bg-gray-50"
                       onClick={() => togglePageExpansion(page.id)}
@@ -454,6 +499,44 @@ const Dashboard = () => {
                             {page.published ? 'Publicada' : 'Rascunho'}
                           </span>
                         </div>
+                        {/* Detalhes da página */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                          <div>
+                            <h4 className="text-sm font-medium text-gray-500 mb-1">Data de Criação</h4>
+                            <p className="text-gray-900">
+                              {new Date(page.createdAt).toLocaleDateString('pt-BR')}
+                            </p>
+                          </div>  
+                          
+                          <div className="flex space-x-4">
+                            <Link
+                              to={`/editor/${page.id}`}
+                              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                              Editar Conteúdo
+                            </Link>
+                            
+                            {page.published && (
+                              <a
+                                href={`/${page.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                              >
+                                Visualizar Página
+                              </a>
+                            )}
+                            
+                            <button
+                              onClick={() => handleDeletePage(page.id)}
+                              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+                            >
+                              Excluir
+                            </button>
+                          </div> 
+
+                        </div>
                         <div className="flex items-center">
                           {expandedPageId === page.id ? (
                             <FiChevronUp className="h-5 w-5 text-gray-500" />
@@ -464,14 +547,18 @@ const Dashboard = () => {
                       </div>
                     </div>
                     
-                    {/* Conteúdo do acordeão */}
+                    {/* Conteúdo do acordeon */}
                     {expandedPageId === page.id && (
                       <div className="px-4 py-5 sm:p-6 space-y-6">
-                        {/* Detalhes da página */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-1">URL</h4>
-                            {editingSlug === page.id ? (
+                        {/* NOVA SEÇÃO: Personalização da Página */}
+                        <div 
+                          id={`style-section-${page.id}`} 
+                          className={`mt-6 p-4 ${unsavedChanges[page.id] ? 'bg-yellow-50' : 'bg-gray-50'} rounded-lg transition-colors duration-300`}
+                        >
+                          <h3 className="text-lg font-medium mb-4">Personalização da Página</h3>
+
+                          <h4 className="font-medium text-gray-700 mb-2">URL</h4>
+                          {editingSlug === page.id ? (
                               <div>
                                 <div className="flex items-center">
                                   <span className="text-gray-500 mr-2">hublink.com/</span>
@@ -501,81 +588,87 @@ const Dashboard = () => {
                                   </button>
                                 </div>
                               </div>
-                            ) : (
-                              <div className="flex items-center">
-                                <p className="text-gray-900">/{page.slug}</p>
-                                <button
-                                  onClick={() => startEditingSlug(page)}
-                                  className="ml-2 text-blue-600 hover:text-blue-800 text-sm"
-                                >
-                                  Editar
-                                </button>
-                              </div>
-                            )}
+                            ) : null }
+                          <div className="flex items-center">
+                            <p className="text-gray-900">/{page.slug}</p>
+                            <button
+                              onClick={() => startEditingSlug(page)}
+                              className="ml-2 text-blue-600 hover:text-blue-800 text-sm"
+                            >
+                              Editar
+                            </button>
                           </div>
-                          
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-1">Data de Criação</h4>
-                            <p className="text-gray-900">
-                              {new Date(page.createdAt).toLocaleDateString('pt-BR')}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* NOVA SEÇÃO: Personalização da Página */}
-                        <div id={`style-section-${page.id}`} className="mt-6 p-4 bg-gray-50 rounded-lg transition-colors duration-300">
-                          <h3 className="text-lg font-medium mb-4">Personalização da Página</h3>
-                          
-                          {/* Seção de Cor de Fundo */}
+
+
+                          {/* Seção de Logo */}
                           <div className="mb-6">
-                            <h4 className="font-medium text-gray-700 mb-2">Cor de Fundo</h4>
-                            <div className="flex items-center gap-3">
-                              <div 
-                                className="h-10 w-10 rounded border cursor-pointer"
-                                style={{ backgroundColor: pageStyles[page.id]?.backgroundColor || '#ffffff' }}
-                                onClick={() => setShowColorPicker(page.id)}
-                              ></div>
-                              <input
-                                type="text"
-                                value={pageStyles[page.id]?.backgroundColor || '#ffffff'}
-                                onChange={(e) => updatePageStyle(page.id, 'backgroundColor', e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
-                              />
-                              <button
-                                onClick={() => savePageStyle(page.id)}
-                                className="ml-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                              >
-                                Aplicar
-                              </button>
-                            </div>
+                            <h4 className="font-medium text-gray-700 mb-2">Sua Marca</h4>
+                            <ImageUploader 
+                              onImageUpload={(imageUrl) => handleLogoUpload(page.id, imageUrl)}
+                              currentImage={pageStyles[page.id]?.logo || ''}
+                            />
+                          </div>                         
+                          
+                          {/* Seção de Fundo de Tela */}
+                          <div className="mb-6">
+                            <h4 className="font-medium text-gray-700 mb-2">Fundo de Tela</h4>
+                            <select
+                              value={pageStyles[page.id]?.backgroundType || 'color'}
+                              onChange={(e) => updatePageStyle(page.id, 'backgroundType', e.target.value)}
+                              className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded mb-4"
+                            >
+                              <option value="color">Cor de Fundo</option>
+                              <option value="image">Imagem de Fundo</option>
+                            </select>
                             
-                            {showColorPicker === page.id && (
-                              <div className="absolute z-10 mt-2">
-                                <div 
-                                  className="fixed inset-0" 
-                                  onClick={() => setShowColorPicker(null)}
-                                ></div>
-                                <SketchPicker 
-                                  color={pageStyles[page.id]?.backgroundColor || '#ffffff'}
-                                  onChange={(color) => {
-                                    updatePageStyle(page.id, 'backgroundColor', color.hex);
-                                  }}
-                                  onChangeComplete={(color) => {
-                                    updatePageStyle(page.id, 'backgroundColor', color.hex);
-                                    savePageStyle(page.id);
-                                  }}
+                            {/* Exibir o componente apropriado com base na seleção */}
+                            {(pageStyles[page.id]?.backgroundType === 'image' || !pageStyles[page.id]?.backgroundType) && (
+                              <div className="mb-6">
+                                <h4 className="font-medium text-gray-700 mb-2">Imagem de Fundo</h4>
+                                <ImageUploader 
+                                  onImageUpload={(imageUrl) => handleBackgroundImageUpload(page.id, imageUrl)}
+                                  currentImage={pageStyles[page.id]?.backgroundImage || ''}
                                 />
                               </div>
                             )}
-                          </div>
-                          
-                          {/* Seção de Imagem de Fundo */}
-                          <div className="mb-6">
-                            <h4 className="font-medium text-gray-700 mb-2">Imagem de Fundo</h4>
-                            <ImageUploader 
-                              onImageUpload={(imageUrl) => handleBackgroundImageUpload(page.id, imageUrl)}
-                              currentImage={pageStyles[page.id]?.backgroundImage || ''}
-                            />
+                            
+                            {(pageStyles[page.id]?.backgroundType === 'color' || !pageStyles[page.id]?.backgroundType) && (
+                              <div className="mb-6">
+                                <h4 className="font-medium text-gray-700 mb-2">Cor de Fundo</h4>
+                                <div className="flex items-center gap-3">
+                                  <div 
+                                    className="h-10 w-10 rounded border cursor-pointer"
+                                    style={{ backgroundColor: pageStyles[page.id]?.backgroundColor || '#ffffff' }}
+                                    onClick={() => setShowColorPicker(page.id)}
+                                  ></div>
+                                  <input
+                                    type="text"
+                                    value={pageStyles[page.id]?.backgroundColor || '#ffffff'}
+                                    onChange={(e) => updatePageStyle(page.id, 'backgroundColor', e.target.value)}
+                                    className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+                                  />
+                                </div>
+                                
+                                {showColorPicker === page.id && (
+                                  <div className="absolute z-10 mt-2">
+                                    <div 
+                                      className="fixed inset-0" 
+                                      onClick={() => setShowColorPicker(null)}
+                                    ></div>
+                                    <SketchPicker 
+                                      color={pageStyles[page.id]?.backgroundColor || '#ffffff'}
+                                      onChange={(color) => {
+                                        updatePageStyle(page.id, 'backgroundColor', color.hex);
+                                      }}
+                                      onChangeComplete={(color) => {
+                                        updatePageStyle(page.id, 'backgroundColor', color.hex);
+                                        // Não salvar automaticamente
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                           
                           {/* Seção de Fonte */}
@@ -597,12 +690,6 @@ const Dashboard = () => {
                                   </option>
                                 ))}
                               </select>
-                              <button
-                                onClick={() => savePageStyle(page.id)}
-                                className="ml-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                              >
-                                Aplicar
-                              </button>
                             </div>
                             
                             {/* Visualização da fonte */}
@@ -615,43 +702,18 @@ const Dashboard = () => {
                             </div>
                           </div>
                           
-                          {/* Seção de Logo */}
-                          <div className="mb-6">
-                            <h4 className="font-medium text-gray-700 mb-2">Logo da Marca</h4>
-                            <ImageUploader 
-                              onImageUpload={(imageUrl) => handleLogoUpload(page.id, imageUrl)}
-                              currentImage={pageStyles[page.id]?.logo || ''}
-                            />
-                          </div>
-                        </div>
-                        
-                        {/* Botões de ação */}
-                        <div className="flex space-x-4">
-                          <Link
-                            to={`/pages/${page.id}/edit`}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          >
-                            Editar Conteúdo
-                          </Link>
-                          
-                          {page.published && (
-                            <a
-                              href={`/${page.slug}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                          {/* Botão único de salvar alterações */}
+                          <div className="mt-6 flex justify-end">
+                            <button
+                              onClick={() => savePageStyle(page.id)}
+                              className={`px-4 py-2 ${unsavedChanges[page.id] ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                              disabled={!unsavedChanges[page.id]}
                             >
-                              Visualizar Página
-                            </a>
-                          )}
-                          
-                          <button
-                            onClick={() => handleDeletePage(page.id)}
-                            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                          >
-                            Excluir
-                          </button>
-                        </div>
+                              {unsavedChanges[page.id] ? 'Salvar Alterações' : 'Alterações Salvas'}
+                            </button>
+                          </div>
+                        </div>                      
+                        
                       </div>
                     )}
                   </div>
@@ -672,6 +734,7 @@ const Dashboard = () => {
             )}
           </div>
         </main>
+      </div>
       </div>
     </>
   );

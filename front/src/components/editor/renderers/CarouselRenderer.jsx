@@ -1,49 +1,59 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { register } from 'swiper/element/bundle';
 // Registrar os componentes do Swiper
 register();
 
 const CarouselRenderer = ({ content }) => {
   const swiperRef = useRef(null);
-  const { images = [], config = {} } = content;
+  // Gerar um ID único para cada instância do carrossel
+  const [carouselId] = useState(`carousel-${Math.random().toString(36).substr(2, 9)}`);
   
-  // Configuração padrão com fallbacks
-  const {
-    slidesPerView = 1,
-    showNavigation = true,
-    showPagination = true,
-    spaceBetween = 30,
-    loop = true,
-    autoplay = false,
-    autoplayDelay = 3000,
-    pauseOnHover = true
-  } = config;
+  // Garantir que content.images e content.config existam com valores padrão
+  const images = content.images || [];
+  const config = content.config || {};
+  
+  // Use valores padrão para safeConfig
+  const safeConfig = {
+    slidesPerView: 1,
+    showNavigation: true,
+    showPagination: true,
+    spaceBetween: 30,
+    loop: true,
+    autoplay: false,
+    autoplayDelay: 3000,
+    pauseOnHover: true,
+    controlsColor: '#000000',
+    ...config  // Sobrescreve os valores padrão com os que vêm do content.config
+  };
 
   useEffect(() => {
-    // Configurar o Swiper
+    // Definir a variável CSS personalizada diretamente no container
     const swiperContainer = swiperRef.current;
-    const params = {
-      slidesPerView,
-      spaceBetween,
-      navigation: showNavigation,
-      pagination: showPagination ? { clickable: true } : false,
-      loop,
-    };
-
-    // Adicionar autoplay se estiver habilitado
-    if (autoplay) {
-      params.autoplay = {
-        delay: autoplayDelay,
-        disableOnInteraction: pauseOnHover
-      };
-    }
-
-    // Aplicar os parâmetros
-    Object.assign(swiperContainer, params);
     
-    // Inicializar o Swiper
-    swiperContainer.initialize();
-  }, [slidesPerView, showNavigation, showPagination, spaceBetween, loop, autoplay, autoplayDelay, pauseOnHover]);
+    if (swiperContainer) {
+      // Definir a variável CSS diretamente no elemento do Swiper
+      swiperContainer.style.setProperty('--swiper-theme-color', safeConfig.controlsColor);
+      
+      // Configuração do Swiper
+      const swiperConfig = {
+        slidesPerView: safeConfig.slidesPerView || 1,
+        spaceBetween: safeConfig.spaceBetween || 30,
+        loop: Boolean(safeConfig.loop),
+        autoplay: safeConfig.autoplay ? {
+          delay: safeConfig.autoplayDelay || 3000,
+          disableOnInteraction: safeConfig.pauseOnHover || true
+        } : false,
+        pagination: safeConfig.showPagination ? {
+          clickable: true,
+        } : false,
+        navigation: safeConfig.showNavigation,
+      };
+      
+      // Aplicar os parâmetros e inicializar
+      Object.assign(swiperContainer, swiperConfig);
+      swiperContainer.initialize();
+    }
+  }, [safeConfig, carouselId]);
 
   // Se não houver imagens, mostrar mensagem
   if (!images || images.length === 0) {
@@ -57,8 +67,13 @@ const CarouselRenderer = ({ content }) => {
   }
 
   return (
-    <div className="w-full mb-6">
-      <swiper-container ref={swiperRef} init="false" class="h-full w-full">
+    <div className="w-full mb-6" id={carouselId}>
+      <swiper-container 
+        ref={swiperRef} 
+        init="false" 
+        class="h-full w-full"
+        style={{ "--swiper-theme-color": safeConfig.controlsColor }}
+      >
         {images.map((image, index) => (
           <swiper-slide key={index} class="flex justify-center">
             {image.link ? (

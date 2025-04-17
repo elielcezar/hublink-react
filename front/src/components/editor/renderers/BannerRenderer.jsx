@@ -2,7 +2,7 @@ import React from 'react';
 
 const BannerRenderer = ({ content }) => {
   return (
-    <div className="w-full mb-6">
+    <div className="w-full mb-4 px-1">
       <div className="relative">
         {content.imageUrl ? (
           <img 

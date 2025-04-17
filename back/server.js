@@ -621,6 +621,81 @@ app.put('/api/pages/:id/style', authenticateToken, async (req, res) => {
   }
 });
 
+// Adicione esta rota para atualizar todos os componentes de uma página
+app.put('/api/pages/:id/components', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { components } = req.body;
+    
+    // Verificar se a página existe e pertence ao usuário
+    const page = await prisma.page.findUnique({
+      where: { 
+        id,
+        userId: req.user.userId
+      }
+    });
+    
+    if (!page) {
+      return res.status(404).json({ error: 'Página não encontrada ou acesso negado' });
+    }
+    
+    // Para cada componente, atualizar ou criar
+    const updatedComponents = [];
+    
+    for (const component of components) {
+      // Se o componente já tem ID no banco, atualize-o
+      if (component.id && !isNaN(component.id)) {
+        const existingComponent = await prisma.component.findUnique({
+          where: { 
+            id: component.id,
+            pageId: id
+          }
+        });
+        
+        if (existingComponent) {
+          // Normalizar o conteúdo para garantir que seja uma string JSON
+          const contentToSave = typeof component.content === 'object' 
+            ? JSON.stringify(component.content) 
+            : component.content;
+            
+          const updatedComponent = await prisma.component.update({
+            where: { id: parseInt(component.id) },
+            data: {
+              type: component.type,
+              content: contentToSave,
+              order: component.order
+            }
+          });
+          
+          updatedComponents.push(updatedComponent);
+        }
+      } 
+      // Se for um componente novo, crie-o
+      else {
+        const contentToSave = typeof component.content === 'object' 
+          ? JSON.stringify(component.content) 
+          : component.content;
+          
+        const newComponent = await prisma.component.create({
+          data: {
+            pageId: id,
+            type: component.type,
+            content: contentToSave,
+            order: component.order
+          }
+        });
+        
+        updatedComponents.push(newComponent);
+      }
+    }
+    
+    res.json(updatedComponents);
+  } catch (error) {
+    console.error('Erro ao atualizar componentes:', error);
+    res.status(500).json({ error: 'Erro ao atualizar componentes' });
+  }
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);

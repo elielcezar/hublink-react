@@ -13,6 +13,11 @@ const LinkRenderer = ({ content }) => {
   } else {
     widthClass = 'w-full md:w-1/3'; // Um terço da largura em telas médias e grandes
   }
+
+  console.log(content);
+
+  //Verificar se há texto
+  const hasText = content.text && content.text.trim() !== '';
   
   // Verificar se há imagem
   const hasImage = content.imageUrl && content.imageUrl.trim() !== '';
@@ -26,40 +31,47 @@ const LinkRenderer = ({ content }) => {
     (content.style === 'primary' ? '#ffffff' : 'var(--text-color, #333333)');
   
   return (
-    <div className={`${widthClass} px-2 mb-4`}>
+    <div className={`${widthClass} mb-4 px-1`}>
       <div 
-        className={`h-full flex ${hasImage && imagePosition === 'top' ? 'flex-col' : 'items-center'} 
+        className={`h-full flex 
+          ${hasImage && imagePosition === 'top' ? 'flex-col' : 'items-center'} 
           ${hasImage && imagePosition === 'right' ? 'flex-row-reverse' : 'flex-row'} 
-          border border-gray-200 rounded-lg p-4 transition-all hover:shadow-md`}
+          ${!hasText ? 'flex items-center justify-center' : null}
+          rounded-lg transition-all hover:shadow-md p-1`}
         style={{ backgroundColor }}
       >
         
         {hasImage && (
           <div className={`
-            ${imagePosition === 'top' ? 'w-full mb-3' : 'w-1/3 flex-shrink-0 mx-3'} 
+            ${imagePosition === 'top' ? 'w-full' : 'flex-shrink-0'} 
           `}>
             <img 
               src={content.imageUrl} 
               alt="" 
-              className="w-full h-auto rounded-lg"
+              className={`${imagePosition === 'left' ? 'w-[5vw]' : null} w-full h-auto rounded-lg`}
             />
           </div>
         )}
-        
-        <div className={`${hasImage && imagePosition !== 'top' ? 'w-2/3' : 'w-full'}`}>
-          <a 
-            href={content.url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-block px-4 py-2 rounded hover:opacity-90"
-            style={{ 
-              color: textColor,
-              backgroundColor: backgroundColor
-            }}
-          >
-            {content.text}
-          </a>
-        </div>
+
+
+
+        {hasText && (
+          <div className={`text-center w-full ${imagePosition === 'top' ? 'mt-2 mb-1' : null} `}>
+            <a 
+              href={content.url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-block hover:opacity-90 font-bold"
+              style={{ 
+                color: textColor,
+                backgroundColor: backgroundColor
+              }}
+            >
+              {content.text}
+            </a>
+          </div>          
+        )}
+
       </div>
     </div>
   );
