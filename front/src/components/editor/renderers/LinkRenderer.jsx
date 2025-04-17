@@ -31,7 +31,7 @@ const LinkRenderer = ({ content }) => {
     (content.style === 'primary' ? '#ffffff' : 'var(--text-color, #333333)');
   
   return (
-    <div className={`${widthClass} mb-4 px-1`}>
+    <div className={`${widthClass} mb-4 px-2`}>
       <div 
         className={`h-full flex 
           ${hasImage && imagePosition === 'top' ? 'flex-col' : 'items-center'} 
@@ -43,17 +43,17 @@ const LinkRenderer = ({ content }) => {
         
         {hasImage && (
           <div className={`
-            ${imagePosition === 'top' ? 'w-full' : 'flex-shrink-0'} 
+            ${imagePosition === 'top' ? 'w-full flex justify-center' : 'flex-shrink-0'} 
           `}>
             <img 
               src={content.imageUrl} 
               alt="" 
-              className={`${imagePosition === 'left' ? 'w-[5vw]' : null} w-full h-auto rounded-lg`}
+              className={`${imagePosition === 'top' ? 'max-h-[9vw] w-auto mt-2' : ''} 
+                ${imagePosition === 'left' || imagePosition === 'right' ? 'w-[5vw] h-auto' : ''} 
+                 rounded-lg`}
             />
           </div>
         )}
-
-
 
         {hasText && (
           <div className={`text-center w-full ${imagePosition === 'top' ? 'mt-2 mb-1' : null} `}>

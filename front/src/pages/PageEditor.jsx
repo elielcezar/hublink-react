@@ -654,7 +654,7 @@ const PageEditor = () => {
             
             {/* Prévia - Direita */}
             <div className="md:w-4/12">
-              <div className="p-4">
+              <div className="px-4">
               
                 
               {page?.published && (
@@ -672,10 +672,10 @@ const PageEditor = () => {
                 
                 <div 
                   id="page-preview-container"
-                  className="bg-gray-50 border-[15px] border-black rounded-[60px] h-[75vh] overflow-hidden"
+                  className="bg-gray-50 border-[12px] border-black rounded-[30px] w-[20vw] h-[75vh] overflow-hidden"
                 >
                   {components.length > 0 ? (
-                    <div className="h-[75vh] p-6 overflow-y-scroll overflow-x-hidden">
+                    <div className="h-[75vh] py-6 px-3 overflow-y-scroll overflow-x-hidden">
                       {/* Adicionar o logo aqui, similar ao PublicPage */}
                       {page?.style?.logo && (
                         <header className="text-center mb-6">
@@ -689,7 +689,7 @@ const PageEditor = () => {
                         </header>
                       )}
                       
-                      <div className="flex flex-wrap -mx-2">
+                      <div className="flex flex-wrap">
                         {components.map((component) => {
                           const ComponentRenderer = componentRenderers[component.type];
                           return ComponentRenderer ? (

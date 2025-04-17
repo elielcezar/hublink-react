@@ -34,7 +34,7 @@ const Login = () => {
   };
 
   return (
-    <>
+    <div className="flex">    
     <aside className="flex items-center justify-center h-screen w-6/12" style={{ backgroundImage: `url(${Background})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
     
     </aside>
@@ -111,7 +111,7 @@ const Login = () => {
         </div>
       </div>
     </div>
-    </>
+    </div>
   );
 };
 
