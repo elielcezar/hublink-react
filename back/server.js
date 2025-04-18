@@ -1383,6 +1383,17 @@ app.put('/api/user/ga-config', authenticateToken, async (req, res) => {
   }
 });
 
+// Rota de health check para diagnóstico
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    version: '1.0.0',
+    cors: 'enabled'
+  });
+});
+
 // Iniciar servidor
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);

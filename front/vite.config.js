@@ -15,5 +15,9 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    // Garantir que os caminhos relativos sejam preservados
+    assetsInlineLimit: 0
   }
 })

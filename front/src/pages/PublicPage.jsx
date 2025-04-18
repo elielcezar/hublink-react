@@ -37,11 +37,32 @@ const PublicPage = () => {
     linkColor: '#3b82f6',
     textColor: '#333333'
   });
+  
+  // Detectar se estamos em um dispositivo móvel
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+  
+  // Log para diagnóstico
+  useEffect(() => {
+    console.log('PublicPage carregada:', {
+      slug,
+      isMobile,
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      apiUrl: import.meta.env.VITE_API_URL || 'Não definido'
+    });
+  }, [slug]);
 
   useEffect(() => {
     const fetchPageData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/public/pages/${slug}`);
+        // Log da URL completa para diagnóstico
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+        const url = `${apiUrl}/api/public/pages/${slug}`;
+        console.log(`Fazendo requisição GET para: ${url}`);
+        
+        const response = await axios.get(url);
         console.log('Resposta da API:', response.data);
         
         setPage(response.data);
@@ -73,7 +94,32 @@ const PublicPage = () => {
         }
       } catch (error) {
         console.error('Erro ao buscar dados da página:', error);
-        setError('Esta página não existe ou não está publicada.');
+        // Informação mais detalhada sobre o erro
+        let errorMessage = 'Esta página não existe ou não está publicada.';
+        
+        if (error.response) {
+          // O servidor respondeu com um código de status diferente de 2xx
+          console.error('Detalhes do erro:', {
+            status: error.response.status,
+            statusText: error.response.statusText,
+            data: error.response.data
+          });
+          
+          if (error.response.status === 404) {
+            errorMessage = `A página "${slug}" não foi encontrada.`;
+          } else if (error.response.status === 403) {
+            errorMessage = 'Esta página existe, mas não está publicada.';
+          }
+        } else if (error.request) {
+          // A requisição foi feita mas não houve resposta
+          console.error('Sem resposta do servidor:', error.request);
+          errorMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão.';
+        } else {
+          // Algo aconteceu ao configurar a requisição
+          console.error('Erro ao configurar requisição:', error.message);
+        }
+        
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -123,6 +169,7 @@ const PublicPage = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-700">Carregando...</p>
+          <p className="text-xs text-gray-500 mt-2">Buscando: {slug}</p>
         </div>
       </div>
     );
@@ -135,6 +182,9 @@ const PublicPage = () => {
           <div className="text-red-600 text-5xl mb-4">⚠️</div>
           <h2 className="text-xl font-bold text-gray-800 mb-2">Página não encontrada</h2>
           <p className="text-gray-600 mb-4">{error}</p>
+          <div className="text-xs text-gray-500 mb-4">
+            Slug: {slug} | Dispositivo: {isMobile ? 'Mobile' : 'Desktop'}
+          </div>
           <Link
             to="/"
             className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -162,6 +212,10 @@ const PublicPage = () => {
                 src={pageStyle.logo} 
                 alt="Logo" 
                 className="max-h-36 object-contain"
+                onError={(e) => {
+                  console.error(`Erro ao carregar logo: ${pageStyle.logo}`);
+                  e.target.style.display = 'none';
+                }}
               />
             </div>
           )}                    

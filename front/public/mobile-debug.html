@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Mobile - HubLink</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 0;
+            padding: 16px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 100%;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        h2 {
+            font-size: 18px;
+            margin: 20px 0 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        .button {
+            background: #3b82f6;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            margin: 5px 0;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .button-small {
+            font-size: 12px;
+            padding: 6px 10px;
+        }
+        .alert {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            background-color: #fcf8e3;
+            border: 1px solid #faebcc;
+            color: #8a6d3b;
+        }
+        .result {
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        .success {
+            color: #3c763d;
+        }
+        .error {
+            color: #a94442;
+        }
+        .url-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .log-container {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Diagnóstico Mobile HubLink</h1>
+        
+        <div class="alert">
+            Esta página é usada para diagnosticar problemas em dispositivos móveis.
+        </div>
+        
+        <h2>Informações do Dispositivo</h2>
+        <pre id="device-info"></pre>
+        
+        <h2>URL e Ambiente</h2>
+        <pre id="url-info"></pre>
+        
+        <h2>Teste de Conectividade</h2>
+        <div>
+            <select id="test-type" class="url-input">
+                <option value="ping">Ping do API (GET /api/health)</option>
+                <option value="login">Teste Login (POST /api/login)</option>
+                <option value="public">Teste Página Pública (GET /api/public/pages/[slug])</option>
+                <option value="custom">URL Personalizada</option>
+            </select>
+            
+            <div id="custom-url-container" style="display: none;">
+                <input type="text" id="custom-url" class="url-input" placeholder="Digite a URL personalizada" />
+            </div>
+            
+            <div id="slug-container" style="display: none;">
+                <input type="text" id="slug-input" class="url-input" placeholder="Digite o slug da página" value="teste" />
+            </div>
+            
+            <div id="login-container" style="display: none;">
+                <input type="email" id="email-input" class="url-input" placeholder="Email" value="test@example.com" />
+                <input type="password" id="password-input" class="url-input" placeholder="Senha" value="password123" />
+            </div>
+            
+            <button id="test-button" class="button">Testar Conexão</button>
+            <div id="test-result" class="result"></div>
+        </div>
+        
+        <h2>Registro de Atividades</h2>
+        <button id="clear-log" class="button button-small">Limpar</button>
+        <div id="log-container" class="log-container">
+            <pre id="activity-log">Nenhuma atividade registrada ainda.</pre>
+        </div>
+        
+        <h2>Ações</h2>
+        <div>
+            <a href="/" class="button">Página Principal</a>
+            <a href="/login" class="button">Página de Login</a>
+            <a href="#" class="button" id="clear-cache">Limpar Cache do Navegador</a>
+        </div>
+    </div>
+    
+    <script>
+        // Função para registrar atividades
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('activity-log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logItem = `[${timestamp}] [${type}] ${message}`;
+            
+            if (logElement.textContent === 'Nenhuma atividade registrada ainda.') {
+                logElement.textContent = '';
+            }
+            
+            logElement.textContent = logItem + '\n' + logElement.textContent;
+            
+            console.log(`[${type}] ${message}`);
+        }
+        
+        // Exibir informações do dispositivo
+        function showDeviceInfo() {
+            const deviceInfo = document.getElementById('device-info');
+            const info = {
+                userAgent: navigator.userAgent,
+                platform: navigator.platform,
+                vendor: navigator.vendor,
+                screenWidth: window.screen.width,
+                screenHeight: window.screen.height,
+                devicePixelRatio: window.devicePixelRatio,
+                cookiesEnabled: navigator.cookieEnabled,
+                language: navigator.language
+            };
+            
+            deviceInfo.textContent = Object.entries(info)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join('\n');
+            
+            log('Informações do dispositivo carregadas');
+        }
+        
+        // Exibir informações da URL
+        function showUrlInfo() {
+            const urlInfo = document.getElementById('url-info');
+            const info = {
+                href: window.location.href,
+                hostname: window.location.hostname,
+                pathname: window.location.pathname,
+                protocol: window.location.protocol,
+                apiBase: 'http://localhost:3002',
+                corsEnabled: 'Verificando...'
+            };
+            
+            // Tentar descobrir a API base do localStorage
+            try {
+                const apiFromLocalStorage = localStorage.getItem('api_base_url');
+                if (apiFromLocalStorage) {
+                    info.apiBase = apiFromLocalStorage;
+                }
+            } catch (e) {
+                info.apiBase += ' (erro ao ler localStorage)';
+            }
+            
+            urlInfo.textContent = Object.entries(info)
+                .map(([key, value]) => `${key}: ${value}`)
+                .join('\n');
+            
+            log('Informações da URL carregadas');
+        }
+        
+        // Testar conexão
+        async function testConnection() {
+            const resultElement = document.getElementById('test-result');
+            const testType = document.getElementById('test-type').value;
+            let url = '';
+            let method = 'GET';
+            let body = null;
+            let contentType = 'application/json';
+            
+            resultElement.textContent = 'Testando...';
+            resultElement.className = 'result';
+            
+            try {
+                if (testType === 'ping') {
+                    url = 'http://localhost:3002/api/health';
+                    log(`Testando ping para ${url}`);
+                } 
+                else if (testType === 'login') {
+                    url = 'http://localhost:3002/api/login';
+                    method = 'POST';
+                    const email = document.getElementById('email-input').value;
+                    const password = document.getElementById('password-input').value;
+                    body = JSON.stringify({ email, password });
+                    log(`Testando login para ${email}`);
+                } 
+                else if (testType === 'public') {
+                    const slug = document.getElementById('slug-input').value;
+                    url = `http://localhost:3002/api/public/pages/${slug}`;
+                    log(`Testando página pública ${slug}`);
+                } 
+                else if (testType === 'custom') {
+                    url = document.getElementById('custom-url').value;
+                    log(`Testando URL personalizada ${url}`);
+                }
+                
+                const startTime = Date.now();
+                
+                const options = {
+                    method,
+                    headers: {}
+                };
+                
+                if (body) {
+                    options.body = body;
+                    options.headers['Content-Type'] = contentType;
+                }
+                
+                const response = await fetch(url, options);
+                const endTime = Date.now();
+                const responseTime = endTime - startTime;
+                
+                let responseData;
+                try {
+                    responseData = await response.json();
+                } catch (e) {
+                    responseData = await response.text();
+                }
+                
+                if (response.ok) {
+                    resultElement.textContent = `Sucesso! Código: ${response.status} | Tempo: ${responseTime}ms`;
+                    resultElement.className = 'result success';
+                    log(`Teste de conexão bem-sucedido para ${url} (${responseTime}ms)`, 'success');
+                    
+                    // Exibir dados de resposta
+                    const dataStr = typeof responseData === 'object' 
+                        ? JSON.stringify(responseData, null, 2)
+                        : responseData;
+                    
+                    log(`Resposta: ${dataStr}`, 'success');
+                } else {
+                    resultElement.textContent = `Erro! Código: ${response.status} | Tempo: ${responseTime}ms`;
+                    resultElement.className = 'result error';
+                    log(`Teste de conexão falhou para ${url}: ${response.status} ${response.statusText}`, 'error');
+                    
+                    // Exibir dados de erro
+                    const dataStr = typeof responseData === 'object' 
+                        ? JSON.stringify(responseData, null, 2)
+                        : responseData;
+                    
+                    log(`Erro: ${dataStr}`, 'error');
+                }
+                
+            } catch (error) {
+                resultElement.textContent = `Erro de conexão: ${error.message}`;
+                resultElement.className = 'result error';
+                log(`Erro ao testar conexão: ${error.message}`, 'error');
+            }
+        }
+        
+        // Limpar cache do navegador
+        function clearBrowserCache() {
+            const cacheNames = [
+                'hublink-cache',
+                'hublink-app-cache',
+                'hublink-assets',
+                'hublink-api'
+            ];
+            
+            // Limpar localStorage
+            try {
+                localStorage.clear();
+                log('LocalStorage limpo com sucesso', 'success');
+            } catch (e) {
+                log(`Erro ao limpar localStorage: ${e.message}`, 'error');
+            }
+            
+            // Limpar sessionStorage
+            try {
+                sessionStorage.clear();
+                log('SessionStorage limpo com sucesso', 'success');
+            } catch (e) {
+                log(`Erro ao limpar sessionStorage: ${e.message}`, 'error');
+            }
+            
+            // Limpar service workers
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations()
+                    .then(registrations => {
+                        for (let registration of registrations) {
+                            registration.unregister();
+                        }
+                        log('Service workers removidos', 'success');
+                    })
+                    .catch(e => {
+                        log(`Erro ao remover service workers: ${e.message}`, 'error');
+                    });
+            }
+            
+            // Limpar caches
+            if ('caches' in window) {
+                Promise.all(cacheNames.map(cacheName => {
+                    return caches.delete(cacheName);
+                }))
+                .then(() => {
+                    log('Caches limpos com sucesso', 'success');
+                })
+                .catch(e => {
+                    log(`Erro ao limpar caches: ${e.message}`, 'error');
+                });
+            }
+            
+            log('Tentativa de limpar cache iniciada');
+        }
+        
+        // Configurar eventos
+        document.addEventListener('DOMContentLoaded', () => {
+            showDeviceInfo();
+            showUrlInfo();
+            
+            document.getElementById('test-button').addEventListener('click', testConnection);
+            document.getElementById('clear-log').addEventListener('click', () => {
+                document.getElementById('activity-log').textContent = 'Nenhuma atividade registrada ainda.';
+                log('Registro limpo');
+            });
+            document.getElementById('clear-cache').addEventListener('click', (e) => {
+                e.preventDefault();
+                clearBrowserCache();
+            });
+            
+            const testTypeSelect = document.getElementById('test-type');
+            testTypeSelect.addEventListener('change', () => {
+                const customUrlContainer = document.getElementById('custom-url-container');
+                const slugContainer = document.getElementById('slug-container');
+                const loginContainer = document.getElementById('login-container');
+                
+                customUrlContainer.style.display = testTypeSelect.value === 'custom' ? 'block' : 'none';
+                slugContainer.style.display = testTypeSelect.value === 'public' ? 'block' : 'none';
+                loginContainer.style.display = testTypeSelect.value === 'login' ? 'block' : 'none';
+            });
+            
+            log('Página de diagnóstico inicializada', 'success');
+        });
+    </script>
+</body>
+</html> 
