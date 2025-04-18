@@ -50,8 +50,8 @@ const defaultComponentValues = {
     width: '100',
     imageUrl: '',
     imagePosition: 'left',
-    backgroundColor: '',
-    textColor: ''
+    backgroundColor: '#ffffff',
+    textColor: '#000000'
   },
   banner: { 
     title: 'Banner',

@@ -203,7 +203,7 @@ const PublicPage = () => {
       {/* Adicionar o componente de rastreamento */}
       {page && <AnalyticsTracker pageId={page.id} gaId={page.user?.gaId} pageComponents={components} />}
       
-      <div className="px-4 py-6 w-full lg:max-w-[40vw] mx-auto">
+      <div className="px-4 py-6 w-full sm:max-w-[40vw] mx-auto">
         {/* Conteúdo da landing page */}
         <header className="text-center mb-6">
           {pageStyle.logo && (
