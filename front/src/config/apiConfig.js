@@ -5,7 +5,6 @@ console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
 // Criar instância do axios com URL base do ambiente
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3002',
-    const apiUrl = baseUrl.endsWith('/api') || baseUrl.endsWith('/api/') 
     headers: {
         'Content-Type': 'application/json'
     }
