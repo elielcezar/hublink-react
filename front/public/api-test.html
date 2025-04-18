@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HubLink API Tester</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #3b82f6;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .endpoint {
+            background-color: #f9fafb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+        }
+        .endpoint h2 {
+            margin-top: 0;
+            color: #1f2937;
+        }
+        .buttons {
+            margin-top: 10px;
+        }
+        button {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+        .result {
+            background-color: #f3f4f6;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            font-family: monospace;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], 
+        input[type="password"],
+        input[type="email"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+        }
+        .method {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        .get { background-color: #10b981; color: white; }
+        .post { background-color: #f59e0b; color: white; }
+        .put { background-color: #3b82f6; color: white; }
+        .delete { background-color: #ef4444; color: white; }
+    </style>
+</head>
+<body>
+    <h1>HubLink API Tester</h1>
+    
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <h2>/api/health</h2>
+        <p>Verifica a saúde da API e exibe informações de diagnóstico.</p>
+        <div class="buttons">
+            <button onclick="testHealth()">Testar Health Check</button>
+        </div>
+        <div class="result" id="healthResult">Resultado aparecerá aqui...</div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method post">POST</span>
+        <h2>/api/login</h2>
+        <p>Faz login e retorna um token JWT.</p>
+        <div class="input-group">
+            <label for="loginEmail">Email:</label>
+            <input type="email" id="loginEmail" value="usuario@exemplo.com">
+        </div>
+        <div class="input-group">
+            <label for="loginPassword">Senha:</label>
+            <input type="password" id="loginPassword" value="senha123">
+        </div>
+        <div class="buttons">
+            <button onclick="testLogin()">Testar Login</button>
+        </div>
+        <div class="result" id="loginResult">Resultado aparecerá aqui...</div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <h2>/api/me</h2>
+        <p>Obtém informações do usuário autenticado (requer token).</p>
+        <div class="input-group">
+            <label for="token">Token JWT:</label>
+            <input type="text" id="token" placeholder="Cole o token do login aqui">
+        </div>
+        <div class="buttons">
+            <button onclick="testMe()">Testar Autenticação</button>
+        </div>
+        <div class="result" id="meResult">Resultado aparecerá aqui...</div>
+    </div>
+
+    <div class="endpoint">
+        <span class="method get">GET</span>
+        <h2>/api/public/pages/:slug</h2>
+        <p>Obtém uma página pública pelo slug.</p>
+        <div class="input-group">
+            <label for="slug">Slug da página:</label>
+            <input type="text" id="slug" placeholder="minha-pagina">
+        </div>
+        <div class="buttons">
+            <button onclick="testPublicPage()">Testar Página Pública</button>
+        </div>
+        <div class="result" id="publicPageResult">Resultado aparecerá aqui...</div>
+    </div>
+
+    <script>
+        // Função para formatar JSON
+        function formatJSON(json) {
+            return JSON.stringify(json, null, 2);
+        }
+
+        // URL da API (ajuste conforme necessário)
+        const apiUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3002' 
+            : 'https://api.hublink.com.br';
+
+        // Testa o health check
+        async function testHealth() {
+            const resultElement = document.getElementById('healthResult');
+            resultElement.textContent = 'Carregando...';
+            
+            try {
+                const response = await fetch(`${apiUrl}/api/health`);
+                const data = await response.json();
+                resultElement.textContent = formatJSON(data);
+            } catch (error) {
+                resultElement.textContent = `Erro: ${error.message}`;
+            }
+        }
+
+        // Testa o login
+        async function testLogin() {
+            const resultElement = document.getElementById('loginResult');
+            resultElement.textContent = 'Carregando...';
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const response = await fetch(`${apiUrl}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                resultElement.textContent = formatJSON(data);
+                
+                // Se login bem-sucedido, preencher o campo de token
+                if (response.ok && data.token) {
+                    document.getElementById('token').value = data.token;
+                }
+            } catch (error) {
+                resultElement.textContent = `Erro: ${error.message}`;
+            }
+        }
+
+        // Testa a rota /api/me
+        async function testMe() {
+            const resultElement = document.getElementById('meResult');
+            resultElement.textContent = 'Carregando...';
+            
+            const token = document.getElementById('token').value;
+            
+            if (!token) {
+                resultElement.textContent = 'Erro: Token não fornecido. Faça login primeiro.';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${apiUrl}/api/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                resultElement.textContent = formatJSON(data);
+            } catch (error) {
+                resultElement.textContent = `Erro: ${error.message}`;
+            }
+        }
+
+        // Testa a rota de página pública
+        async function testPublicPage() {
+            const resultElement = document.getElementById('publicPageResult');
+            resultElement.textContent = 'Carregando...';
+            
+            const slug = document.getElementById('slug').value;
+            
+            if (!slug) {
+                resultElement.textContent = 'Erro: Slug não fornecido.';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${apiUrl}/api/public/pages/${slug}`);
+                const data = await response.json();
+                resultElement.textContent = formatJSON(data);
+            } catch (error) {
+                resultElement.textContent = `Erro: ${error.message}`;
+            }
+        }
+
+        // Inicializar com o teste de health
+        testHealth();
+    </script>
+</body>
+</html> 
