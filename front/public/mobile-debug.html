@@ -104,7 +104,10 @@
                     <input type="checkbox" id="use-direct-ip" />
                     Usar IP direto do servidor backend 
                 </label>
-                <input type="text" id="backend-ip" class="url-input" placeholder="Ex: http://192.168.1.100:3002" style="display: none;" />
+                <input type="text" id="backend-ip" class="url-input" placeholder="Ex: http://82.29.59.125:3002" style="display: none;" />
+                <p class="text-xs text-gray-500 mt-1">
+                    Se estiver em ambiente de produção, tente usar o IP direto do servidor: <button type="button" id="use-server-ip" class="text-blue-600 underline">Usar IP 82.29.59.125:3002</button>
+                </p>
             </div>
             
             <select id="test-type" class="url-input">
@@ -488,6 +491,17 @@
             document.getElementById('clear-cache').addEventListener('click', (e) => {
                 e.preventDefault();
                 clearBrowserCache();
+            });
+            
+            // Botão para usar IP direto do servidor
+            document.getElementById('use-server-ip').addEventListener('click', () => {
+                const useDirectIpCheckbox = document.getElementById('use-direct-ip');
+                const backendIpInput = document.getElementById('backend-ip');
+                
+                useDirectIpCheckbox.checked = true;
+                backendIpInput.style.display = 'block';
+                backendIpInput.value = 'http://82.29.59.125:3002';
+                showUrlInfo();
             });
             
             const testTypeSelect = document.getElementById('test-type');

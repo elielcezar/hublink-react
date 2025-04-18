@@ -50,10 +50,14 @@ const upload = multer({
 
 // Middleware
 app.use(cors({
-  origin: '*', // Permite todas as origens
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  origin: ['https://hublink.ecwd.pro', 'http://localhost:3000', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
   credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
   optionsSuccessStatus: 204,
+  preflightContinue: false,
+  maxAge: 86400 // 24 horas
 }));
 app.use(express.json());
 
@@ -67,18 +71,25 @@ app.use('/uploads', (req, res, next) => {
 
 // Middleware para verificar JWT
 const authenticateToken = (req, res, next) => {
+  console.log(`[Auth] Verificando token para rota: ${req.method} ${req.originalUrl}`);
+  
   const authHeader = req.headers['authorization'];
+  console.log(`[Auth] Header de autorização: ${authHeader ? 'presente' : 'ausente'}`);
+  
   const token = authHeader && authHeader.split(' ')[1];
   
   if (!token) {
-    return res.status(401).json({ message: 'Acesso negado' });
+    console.log('[Auth] Acesso negado: Token não fornecido');
+    return res.status(401).json({ message: 'Acesso negado: Token não fornecido' });
   }
   
   jwt.verify(token, process.env.JWT_SECRET || 'seu_jwt_secret_aqui', (err, user) => {
     if (err) {
-      return res.status(403).json({ message: 'Token inválido' });
+      console.log(`[Auth] Token inválido: ${err.message}`);
+      return res.status(403).json({ message: 'Token inválido', error: err.message });
     }
     
+    console.log(`[Auth] Token válido para usuário ID: ${user.userId}`);
     req.user = user;
     next();
   });
@@ -524,10 +535,12 @@ app.get('/api/public/pages/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
     
+    // Log para diagnosticar o problema
+    console.log(`Buscando página pública com slug: ${slug}`);
+    
     const page = await prisma.page.findUnique({
       where: { 
-        slug,
-        published: true 
+        slug
       },
       include: {
         components: {
@@ -541,35 +554,60 @@ app.get('/api/public/pages/:slug', async (req, res) => {
       }
     });
     
+    // Adicionar mais logs para diagnóstico
     if (!page) {
-      return res.status(404).json({ message: 'Página não encontrada ou não publicada' });
+      console.log(`Página com slug '${slug}' não encontrada`);
+      return res.status(404).json({ message: 'Página não encontrada' });
     }
     
-    // Converter o conteúdo JSON para objeto em todos os componentes
-    const componentsWithParsedContent = page.components.map(component => ({
-      ...component,
-      content: JSON.parse(component.content)
-    }));
+    // Verificar se a página está publicada
+    if (!page.published) {
+      console.log(`Página com slug '${slug}' encontrada, mas não está publicada`);
+      return res.status(403).json({ message: 'Página não publicada' });
+    }
+
+    console.log(`Página encontrada: ${page.id}, título: ${page.title}`);
+    console.log(`Encontrados ${page.components.length} componentes`);
     
-    // Criando uma nova resposta com os componentes processados e garantindo o estilo
-    const responseData = {
-      ...page,
-      components: componentsWithParsedContent,
-      style: page.style || {
-        backgroundColor: '#ffffff',
-        fontFamily: 'Inter, sans-serif',
-        linkColor: '#3b82f6',
-        textColor: '#333333'
-      }
-    };
-    
-    // Verificar se o estilo está sendo enviado corretamente
-    console.log('Enviando estilo para página pública:', responseData.style);
-    
-    res.json(responseData);
+    try {
+      // Converter o conteúdo JSON para objeto em todos os componentes
+      const componentsWithParsedContent = page.components.map(component => {
+        try {
+          const parsedContent = JSON.parse(component.content);
+          return {
+            ...component,
+            content: parsedContent
+          };
+        } catch (parseError) {
+          console.error(`Erro ao converter JSON do componente ${component.id}:`, parseError);
+          // Se não conseguir converter, retorne o conteúdo original
+          return component;
+        }
+      });
+      
+      // Criando uma nova resposta com os componentes processados e garantindo o estilo
+      const responseData = {
+        ...page,
+        components: componentsWithParsedContent,
+        style: page.style || {
+          backgroundColor: '#ffffff',
+          fontFamily: 'Inter, sans-serif',
+          linkColor: '#3b82f6',
+          textColor: '#333333'
+        }
+      };
+      
+      // Verificar se o estilo está sendo enviado corretamente
+      console.log('Enviando estilo para página pública:', responseData.style);
+      
+      res.json(responseData);
+    } catch (processingError) {
+      console.error('Erro ao processar os componentes:', processingError);
+      res.status(500).json({ message: 'Erro ao processar dados da página' });
+    }
   } catch (error) {
     console.error('Erro ao buscar página pública:', error);
-    res.status(500).json({ message: 'Erro ao buscar página' });
+    res.status(500).json({ message: 'Erro ao buscar página', error: error.message });
   }
 });
 
@@ -1385,12 +1423,65 @@ app.put('/api/user/ga-config', authenticateToken, async (req, res) => {
 
 // Rota de health check para diagnóstico
 app.get('/api/health', (req, res) => {
+  const authHeader = req.headers['authorization'] || 'Não fornecido';
+  const cookies = req.headers.cookie || 'Não fornecido';
+  
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
     version: '1.0.0',
-    cors: 'enabled'
+    cors: 'enabled',
+    headers: {
+      authorization: authHeader.startsWith('Bearer ') ? 'Bearer Token fornecido' : authHeader,
+      cookie: cookies,
+      'user-agent': req.headers['user-agent'],
+      origin: req.headers.origin || 'Não fornecido',
+      referer: req.headers.referer || 'Não fornecido'
+    }
+  });
+});
+
+// Rota para diagnosticar cookies e sessão
+app.get('/api/debug/auth', (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  let tokenInfo = { válido: false };
+  
+  if (token) {
+    try {
+      const decoded = jwt.decode(token);
+      tokenInfo = {
+        válido: true,
+        expiração: decoded.exp ? new Date(decoded.exp * 1000).toISOString() : 'Não definida',
+        userId: decoded.userId || 'Não definido',
+        emitidoEm: decoded.iat ? new Date(decoded.iat * 1000).toISOString() : 'Não definido'
+      };
+    } catch (e) {
+      tokenInfo.erro = e.message;
+    }
+  }
+  
+  res.json({
+    headers: {
+      authorization: authHeader ? 'Presente' : 'Ausente',
+      cookie: req.headers.cookie || 'Ausente',
+      'content-type': req.headers['content-type'] || 'Não definido',
+      origin: req.headers.origin || 'Não definido',
+      referer: req.headers.referer || 'Não definido'
+    },
+    token: tokenInfo,
+    env: {
+      NODE_ENV: process.env.NODE_ENV || 'Não definido',
+      PORT: process.env.PORT || 'Não definido',
+      JWT_SECRET: process.env.JWT_SECRET ? 'Definido (valor não mostrado)' : 'Não definido'
+    },
+    clienteInfo: {
+      ip: req.ip || req.connection.remoteAddress,
+      userAgent: req.headers['user-agent'] || 'Não definido',
+      isSecure: req.secure,
+      protocol: req.protocol
+    }
   });
 });
 

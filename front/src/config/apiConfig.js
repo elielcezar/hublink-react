@@ -29,7 +29,52 @@ const getApiBaseUrl = () => {
 };
 
 /**
+ * Adiciona cabeçalhos de autenticação às requisições
+ */
+export const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  console.log(`Token disponível: ${token ? 'Sim' : 'Não'}`);
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+}
+
+/**
+ * Configuração para axios 
+ */
+export const getAxiosConfig = (includeAuth = true) => {
+  const config = {
+    baseURL: getApiBaseUrl(),
+    headers: {
+      'Content-Type': 'application/json',
+      ...(includeAuth ? getAuthHeaders() : {})
+    }
+  };
+  console.log('Configuração de requisição: ', config);
+  return config;
+};
+
+/**
+ * Opções para fetch API
+ */
+export const getFetchOptions = (method = 'GET', data = null, includeAuth = true) => {
+  const options = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(includeAuth ? getAuthHeaders() : {})
+    },
+    credentials: 'include', // Importante para cookies/CORS
+  };
+
+  if (data) {
+    options.body = JSON.stringify(data);
+  }
+
+  return options;
+};
+
+/**
  * Configuração para axios e fetch
+ * @deprecated Use getAxiosConfig ou getFetchOptions
  */
 export const API_CONFIG = {
   baseURL: getApiBaseUrl(),

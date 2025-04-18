@@ -18,7 +18,7 @@ import html2pdf from 'html2pdf.js';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import getApiBaseUrl from '../config/apiConfig';
+import getApiBaseUrl, { getAxiosConfig } from '../config/apiConfig';
 
 // Corrigir o problema de ícones no Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -64,17 +64,18 @@ const PageAnalytics = () => {
           return;
         }
         
-        // Buscar informações da página
-        const pageResponse = await axios.get(`${API_BASE_URL}/api/pages/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // Buscar informações da página com a nova configuração
+        const pageResponse = await axios.get(`${API_BASE_URL}/api/pages/${id}`, getAxiosConfig());
         setPage(pageResponse.data);
         
-        // Buscar dados de analytics
-        const analyticsResponse = await axios.get(`${API_BASE_URL}/api/pages/${id}/analytics`, {
-          params: { period },
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        // Buscar dados de analytics com a nova configuração
+        const analyticsResponse = await axios.get(
+          `${API_BASE_URL}/api/pages/${id}/analytics`, 
+          { 
+            ...getAxiosConfig(),
+            params: { period }
+          }
+        );
         
         console.log('Dados de analytics recebidos:', analyticsResponse.data);
         

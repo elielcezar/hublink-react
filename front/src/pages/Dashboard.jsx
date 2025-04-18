@@ -75,18 +75,25 @@ const Dashboard = () => {
       return;
     }
 
+    console.log('Dashboard: Iniciando carregamento de dados');
+    console.log('Token presente:', token ? 'Sim' : 'Não');
+    
     const fetchData = async () => {
       try {
         // Buscar dados do usuário
+        console.log('Buscando dados do usuário...');
         const userResponse = await axios.get(`${API_BASE_URL}/api/me`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log('Dados do usuário recebidos com sucesso');
         setUser(userResponse.data);
         
         // Buscar páginas do usuário
+        console.log('Buscando páginas do usuário...');
         const pagesResponse = await axios.get(`${API_BASE_URL}/api/pages`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log(`${pagesResponse.data.length} páginas encontradas`);
         setPages(pagesResponse.data);
         
         // Carregar estilos para cada página
