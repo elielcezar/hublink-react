@@ -9,9 +9,9 @@ const LinkRenderer = ({ content }) => {
   if (width === '100') {
     widthClass = 'w-full'; // Ocupa toda a largura
   } else if (width === '50') {
-    widthClass = 'w-full md:w-1/2'; // Metade da largura em telas médias e grandes
+    widthClass = 'w-full w-1/2'; // Metade da largura em telas médias e grandes
   } else {
-    widthClass = 'w-full md:w-1/3'; // Um terço da largura em telas médias e grandes
+    widthClass = 'w-full w-1/3'; // Um terço da largura em telas médias e grandes
   }
 
   console.log(content);
@@ -48,8 +48,8 @@ const LinkRenderer = ({ content }) => {
             <img 
               src={content.imageUrl} 
               alt="" 
-              className={`${imagePosition === 'top' ? 'max-h-[9vw] w-auto mt-2' : ''} 
-                ${imagePosition === 'left' || imagePosition === 'right' ? 'w-[5vw] h-auto' : ''} 
+              className={`${imagePosition === 'top' ? 'max-h-[20vw] md:max-h-[9vw] w-auto mt-2' : ''} 
+                ${imagePosition === 'left' || imagePosition === 'right' ? 'w-[14vw] md:w-[5vw] h-auto' : ''} 
                  rounded-lg`}
             />
           </div>

@@ -871,6 +871,168 @@ const PageAnalytics = () => {
             </div>
           </div>
           
+          {/* Fontes de Tráfego */}
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="px-6 py-5 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">Fontes de Tráfego</h2>
+            </div>
+            <div className="p-6">
+              {analytics?.trafficSources && analytics.trafficSources?.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Gráfico de Tipos de Fontes */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-4">Tipos de Origem</h3>
+                    <div className="space-y-4">
+                      {analytics.trafficSources
+                        .filter(item => item.type === 'category')
+                        .map((item, index) => {
+                          const percentage = analytics.summary.totalVisits > 0 
+                            ? (item.count / analytics.summary.totalVisits) * 100 
+                            : 0;
+                          
+                          // Cores para os diferentes tipos de tráfego
+                          const colors = {
+                            direct: 'bg-blue-500',
+                            social: 'bg-pink-500',
+                            search: 'bg-green-500',
+                            referral: 'bg-purple-500',
+                            email: 'bg-yellow-500',
+                            unknown: 'bg-gray-500'
+                          };
+                          
+                          // Tradução dos tipos
+                          const typeNames = {
+                            direct: 'Acesso Direto',
+                            social: 'Redes Sociais',
+                            search: 'Buscadores',
+                            referral: 'Sites Referência',
+                            email: 'Email/Newsletter',
+                            unknown: 'Desconhecido'
+                          };
+                          
+                          return (
+                            <div key={index}>
+                              <div className="flex justify-between mb-1">
+                                <span className="text-sm font-medium text-gray-700">
+                                  {typeNames[item.source] || item.source}
+                                </span>
+                                <span className="text-sm font-medium text-gray-700">
+                                  {Math.round(percentage)}% ({item.count})
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                <div 
+                                  className={`${colors[item.source] || 'bg-gray-500'} h-2.5 rounded-full`} 
+                                  style={{ width: `${percentage}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+
+                  {/* Tabela de Referenciadores Específicos */}
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-700 mb-4">Sites Referenciadores</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead>
+                          <tr>
+                            <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Origem
+                            </th>
+                            <th className="px-4 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Visitas
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {analytics.trafficSources
+                            .filter(item => item.type === 'referrer')
+                            .sort((a, b) => b.count - a.count)
+                            .slice(0, 10)
+                            .map((referer, i) => (
+                              <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                <td className="px-4 py-3 text-sm text-gray-900 truncate max-w-[220px]">
+                                  {referer.source || 'Direto'}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                                  {formatNumber(referer.count)}
+                                </td>
+                              </tr>
+                            ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Campanhas UTM */}
+                  <div className="lg:col-span-2 mt-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-4">Campanhas (UTM)</h3>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead>
+                          <tr>
+                            <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Campanha
+                            </th>
+                            <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Fonte
+                            </th>
+                            <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Meio
+                            </th>
+                            <th className="px-4 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Visitas
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {analytics.trafficSources
+                            .filter(item => item.type === 'campaign')
+                            .sort((a, b) => b.count - a.count)
+                            .slice(0, 10)
+                            .map((campaign, i) => (
+                              <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  {campaign.campaign || '-'}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  {campaign.source || '-'}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900">
+                                  {campaign.medium || '-'}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                                  {formatNumber(campaign.count)}
+                                </td>
+                              </tr>
+                            ))}
+                            {analytics.trafficSources.filter(item => item.type === 'campaign').length === 0 && (
+                              <tr>
+                                <td colSpan="4" className="px-4 py-4 text-sm text-gray-500 text-center">
+                                  Nenhuma campanha UTM detectada no período
+                                </td>
+                              </tr>
+                            )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                  <p>Nenhum dado de origem de tráfego disponível para este período</p>
+                  <p className="text-sm mt-2">As origens de tráfego começarão a ser coletadas a partir de agora</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
           {/* Mapa de Visitantes */}
           <div className="bg-white rounded-lg shadow mb-6">
             <div className="px-6 py-5 border-b border-gray-200">
