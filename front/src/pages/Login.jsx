@@ -15,7 +15,7 @@ const Login = () => {
     setLoginError('');
     
     try {
-      const response = await axios.post('http://localhost:3001/api/login', data);
+      const response = await axios.post('http://localhost:3002/api/login', data);
       
       // Salvar token no localStorage
       localStorage.setItem('token', response.data.token);

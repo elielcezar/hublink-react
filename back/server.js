@@ -11,7 +11,7 @@ require('dotenv').config();
 
 const app = express();
 const prisma = new PrismaClient();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 
 // Configurar o armazenamento de uploads
 const uploadsDir = path.join(__dirname, 'uploads');
@@ -49,11 +49,21 @@ const upload = multer({
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*', // Permite todas as origens
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,
+  optionsSuccessStatus: 204,
+}));
 app.use(express.json());
 
-// Servir arquivos estáticos da pasta uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Servir arquivos estáticos da pasta uploads com cabeçalhos otimizados
+app.use('/uploads', (req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  res.header('Cache-Control', 'public, max-age=31536000'); // Cache por 1 ano
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 // Middleware para verificar JWT
 const authenticateToken = (req, res, next) => {
@@ -570,8 +580,9 @@ app.post('/api/upload', authenticateToken, upload.array('images', 10), async (re
       return res.status(400).json({ error: 'Nenhuma imagem foi enviada' });
     }
 
+    // Usar caminhos relativos
     const urls = req.files.map(file => {
-      return `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+      return `/uploads/${file.filename}`;
     });
 
     res.json({ urls });

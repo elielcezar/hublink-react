@@ -6,7 +6,7 @@ import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { SketchPicker } from 'react-color';
 import ImageUploader from '../components/ImageUploader';
 
-const API_BASE_URL = 'http://localhost:3001';
+const API_BASE_URL = 'http://localhost:3002';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);

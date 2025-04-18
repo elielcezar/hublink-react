@@ -16,8 +16,14 @@ const Register = () => {
     setIsLoading(true);
     setRegisterError('');
     
+    if (data.password !== data.confirmPassword) {
+      setRegisterError('As senhas não correspondem');
+      setIsLoading(false);
+      return;
+    }
+    
     try {
-      await axios.post('http://localhost:3001/api/register', {
+      await axios.post('http://localhost:3002/api/register', {
         name: data.name,
         email: data.email,
         password: data.password

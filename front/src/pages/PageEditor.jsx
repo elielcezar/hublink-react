@@ -180,60 +180,40 @@ const PageEditor = () => {
     }
   }, [page?.style]);
   
-  const addComponent = async (type) => {
+  const addComponent = async (type, content) => {
     try {
-      setSaving(true);
+      // Resetar qualquer erro anterior
+      setError('');
+      
       const token = localStorage.getItem('token');
       
       const response = await axios.post(
-        `http://localhost:3001/api/pages/${pageId}/components`,
-        {
-          type,
-          content: defaultComponentValues[type]
-        },
+        `http://localhost:3002/api/pages/${pageId}/components`,
+        { type, content },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      // Adicionar o novo componente à lista
-      setComponents([...components, response.data]);
-      
-      // Expandir o componente recém-adicionado para edição
-      setExpandedComponent(response.data.id);
-      setHasUnsavedChanges(true);
+      setComponents(prevComponents => [...prevComponents, response.data]);
     } catch (error) {
       console.error('Erro ao adicionar componente:', error);
-      setError('Erro ao adicionar componente. Tente novamente.');
-    } finally {
-      setSaving(false);
+      setError('Falha ao adicionar componente. Por favor, tente novamente.');
     }
   };
   
   const deleteComponent = async (componentId) => {
-    if (!confirm('Tem certeza que deseja excluir este componente?')) {
-      return;
-    }
-    
     try {
-      setSaving(true);
       const token = localStorage.getItem('token');
       
-      await axios.delete(`http://localhost:3001/api/components/${componentId}`, {
+      await axios.delete(`http://localhost:3002/api/components/${componentId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Remover o componente da lista
-      setComponents(components.filter(c => c.id !== componentId));
-      
-      // Se o componente excluído estava expandido, colapsar
-      if (expandedComponent === componentId) {
-        setExpandedComponent(null);
-      }
-      setHasUnsavedChanges(true);
+      setComponents(prevComponents => 
+        prevComponents.filter(component => component.id !== componentId)
+      );
     } catch (error) {
       console.error('Erro ao excluir componente:', error);
-      setError('Erro ao excluir componente. Tente novamente.');
-    } finally {
-      setSaving(false);
+      setError('Falha ao excluir componente. Por favor, tente novamente.');
     }
   };
   
@@ -266,7 +246,7 @@ const PageEditor = () => {
       const token = localStorage.getItem('token');
       
       await axios.put(
-        `http://localhost:3001/api/pages/${pageId}/reorder`,
+        `http://localhost:3002/api/pages/${pageId}/reorder`,
         { componentIds },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -287,7 +267,7 @@ const PageEditor = () => {
       const token = localStorage.getItem('token');
       
       const response = await axios.put(
-        `http://localhost:3001/api/pages/${pageId}`,
+        `http://localhost:3002/api/pages/${pageId}`,
         {
           title: page.title,
           slug: page.slug,
@@ -525,42 +505,42 @@ const PageEditor = () => {
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
-                    onClick={() => addComponent('text')}
+                    onClick={() => addComponent('text', defaultComponentValues.text)}
                     disabled={saving}
                     className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     Texto
                   </button>
                   <button
-                    onClick={() => addComponent('link')}
+                    onClick={() => addComponent('link', defaultComponentValues.link)}
                     disabled={saving}
                     className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     Link
                   </button>
                   <button
-                    onClick={() => addComponent('banner')}
+                    onClick={() => addComponent('banner', defaultComponentValues.banner)}
                     disabled={saving}
                     className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     Banner
                   </button>
                   <button
-                    onClick={() => addComponent('carousel')}
+                    onClick={() => addComponent('carousel', defaultComponentValues.carousel)}
                     disabled={saving}
                     className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     Carrossel
                   </button>
                   <button
-                    onClick={() => addComponent('social')}
+                    onClick={() => addComponent('social', defaultComponentValues.social)}
                     disabled={saving}
                     className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     Redes Sociais
                   </button>
                   <button
-                    onClick={() => addComponent('icon')}
+                    onClick={() => addComponent('icon', defaultComponentValues.icon)}
                     disabled={saving}
                     className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
