@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../config/apiConfig';
 import MenuDashboard from '../components/MenuDashboard';
 import { 
   Chart as ChartJS, 
@@ -18,7 +18,6 @@ import html2pdf from 'html2pdf.js';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import getApiBaseUrl, { getAxiosConfig } from '../config/apiConfig';
 
 // Corrigir o problema de ícones no Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -41,8 +40,6 @@ ChartJS.register(
   Legend
 );
 
-const API_BASE_URL = getApiBaseUrl();
-
 const PageAnalytics = () => {
   const { id } = useParams();
   const [page, setPage] = useState(null);
@@ -64,15 +61,14 @@ const PageAnalytics = () => {
           return;
         }
         
-        // Buscar informações da página com a nova configuração
-        const pageResponse = await axios.get(`${API_BASE_URL}/api/pages/${id}`, getAxiosConfig());
+        // Buscar informações da página usando a API centralizada
+        const pageResponse = await api.get(`/api/pages/${id}`);
         setPage(pageResponse.data);
         
-        // Buscar dados de analytics com a nova configuração
-        const analyticsResponse = await axios.get(
-          `${API_BASE_URL}/api/pages/${id}/analytics`, 
+        // Buscar dados de analytics usando a API centralizada
+        const analyticsResponse = await api.get(
+          `/api/pages/${id}/analytics`, 
           { 
-            ...getAxiosConfig(),
             params: { period }
           }
         );
