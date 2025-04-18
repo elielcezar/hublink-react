@@ -15,7 +15,8 @@ const Login = () => {
     setLoginError('');
     
     try {
-      const response = await axios.post('http://localhost:3002/api/login', data);
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+      const response = await axios.post(`${API_URL}/api/login`, data);
       
       // Salvar token no localStorage
       localStorage.setItem('token', response.data.token);

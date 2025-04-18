@@ -95,9 +95,18 @@
         
         <h2>URL e Ambiente</h2>
         <pre id="url-info"></pre>
+        <div id="api-base-actions"></div>
         
         <h2>Teste de Conectividade</h2>
         <div>
+            <div>
+                <label>
+                    <input type="checkbox" id="use-direct-ip" />
+                    Usar IP direto do servidor backend 
+                </label>
+                <input type="text" id="backend-ip" class="url-input" placeholder="Ex: http://192.168.1.100:3002" style="display: none;" />
+            </div>
+            
             <select id="test-type" class="url-input">
                 <option value="ping">Ping do API (GET /api/health)</option>
                 <option value="login">Teste Login (POST /api/login)</option>
@@ -176,12 +185,21 @@
         // Exibir informações da URL
         function showUrlInfo() {
             const urlInfo = document.getElementById('url-info');
+            const useDirectIp = document.getElementById('use-direct-ip').checked;
+            const backendIp = document.getElementById('backend-ip').value;
+            
+            let apiBase = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
+            if (useDirectIp && backendIp) {
+                apiBase = backendIp;
+            }
+            
             const info = {
                 href: window.location.href,
                 hostname: window.location.hostname,
                 pathname: window.location.pathname,
                 protocol: window.location.protocol,
-                apiBase: 'http://localhost:3002',
+                apiBase: apiBase,
+                usandoIpDireto: useDirectIp ? 'Sim' : 'Não',
                 corsEnabled: 'Verificando...'
             };
             
@@ -189,10 +207,10 @@
             try {
                 const apiFromLocalStorage = localStorage.getItem('api_base_url');
                 if (apiFromLocalStorage) {
-                    info.apiBase = apiFromLocalStorage;
+                    info.apiBaseStorage = apiFromLocalStorage;
                 }
             } catch (e) {
-                info.apiBase += ' (erro ao ler localStorage)';
+                info.apiBaseStorage = "Erro ao ler localStorage: " + e.message;
             }
             
             urlInfo.textContent = Object.entries(info)
@@ -200,12 +218,59 @@
                 .join('\n');
             
             log('Informações da URL carregadas');
+            
+            // Testar CORS com a API
+            fetch(`${apiBase}/api/health`)
+                .then(response => {
+                    if (response.ok) {
+                        const newInfo = {...info, corsEnabled: 'Sim (API acessível)'};
+                        urlInfo.textContent = Object.entries(newInfo)
+                            .map(([key, value]) => `${key}: ${value}`)
+                            .join('\n');
+                        log('CORS está habilitado com a API', 'success');
+                        
+                        // Adicionar botão para salvar API
+                        if (useDirectIp && backendIp) {
+                            const saveApiButton = document.createElement('button');
+                            saveApiButton.className = 'button';
+                            saveApiButton.textContent = 'Salvar esta API no localStorage';
+                            saveApiButton.onclick = () => saveApiConfig(backendIp);
+                            
+                            const apiBaseElement = document.getElementById('api-base-actions');
+                            apiBaseElement.innerHTML = '';
+                            apiBaseElement.appendChild(saveApiButton);
+                        }
+                    }
+                })
+                .catch(error => {
+                    const newInfo = {...info, corsEnabled: 'Não (Erro: ' + error.message + ')'};
+                    urlInfo.textContent = Object.entries(newInfo)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join('\n');
+                    log('Erro de CORS com a API: ' + error.message, 'error');
+                });
+        }
+        
+        // Salvar configuração de API no localStorage
+        function saveApiConfig(apiUrl) {
+            try {
+                localStorage.setItem('api_base_url', apiUrl);
+                log(`API URL salva no localStorage: ${apiUrl}`, 'success');
+                
+                // Atualizar informações
+                showUrlInfo();
+            } catch (e) {
+                log(`Erro ao salvar API URL: ${e.message}`, 'error');
+            }
         }
         
         // Testar conexão
         async function testConnection() {
             const resultElement = document.getElementById('test-result');
             const testType = document.getElementById('test-type').value;
+            const useDirectIp = document.getElementById('use-direct-ip').checked;
+            const backendIp = document.getElementById('backend-ip').value;
+            
             let url = '';
             let method = 'GET';
             let body = null;
@@ -215,12 +280,19 @@
             resultElement.className = 'result';
             
             try {
+                // Definir API base
+                let apiBase = location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '');
+                if (useDirectIp && backendIp) {
+                    apiBase = backendIp;
+                    log(`Usando IP direto do servidor: ${apiBase}`, 'info');
+                }
+                
                 if (testType === 'ping') {
-                    url = 'http://localhost:3002/api/health';
+                    url = `${apiBase}/api/health`;
                     log(`Testando ping para ${url}`);
                 } 
                 else if (testType === 'login') {
-                    url = 'http://localhost:3002/api/login';
+                    url = `${apiBase}/api/login`;
                     method = 'POST';
                     const email = document.getElementById('email-input').value;
                     const password = document.getElementById('password-input').value;
@@ -229,11 +301,14 @@
                 } 
                 else if (testType === 'public') {
                     const slug = document.getElementById('slug-input').value;
-                    url = `http://localhost:3002/api/public/pages/${slug}`;
+                    url = `${apiBase}/api/public/pages/${slug}`;
                     log(`Testando página pública ${slug}`);
                 } 
                 else if (testType === 'custom') {
                     url = document.getElementById('custom-url').value;
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                        url = apiBase + (url.startsWith('/') ? url : '/' + url);
+                    }
                     log(`Testando URL personalizada ${url}`);
                 }
                 
@@ -241,7 +316,9 @@
                 
                 const options = {
                     method,
-                    headers: {}
+                    headers: {},
+                    // Adicionar credentials para verificar problemas de CORS com cookies
+                    credentials: 'include'
                 };
                 
                 if (body) {
@@ -249,15 +326,67 @@
                     options.headers['Content-Type'] = contentType;
                 }
                 
+                // Log da requisição para diagnóstico
+                log(`Enviando requisição ${method} para ${url}`, 'info');
+                if (body) {
+                    log(`Corpo da requisição: ${body}`, 'info');
+                }
+                
+                try {
+                    // Tenta primeiro verificar o CORS usando o método OPTIONS (preflight)
+                    if (method !== 'GET') {
+                        log(`Verificando preflight CORS para ${url}`, 'info');
+                        const preflightResponse = await fetch(url, { 
+                            method: 'OPTIONS',
+                            headers: {
+                                'Access-Control-Request-Method': method,
+                                'Access-Control-Request-Headers': 'Content-Type'
+                            }
+                        });
+                        
+                        log(`Preflight response: ${preflightResponse.status} ${preflightResponse.statusText}`, 
+                            preflightResponse.ok ? 'success' : 'error');
+                        
+                        // Registrar os headers CORS do preflight
+                        const corsHeaders = {};
+                        [
+                            'access-control-allow-origin',
+                            'access-control-allow-methods',
+                            'access-control-allow-headers',
+                            'access-control-allow-credentials',
+                            'access-control-max-age'
+                        ].forEach(header => {
+                            corsHeaders[header] = preflightResponse.headers.get(header) || '(não definido)';
+                        });
+                        
+                        log(`Headers CORS do preflight: ${JSON.stringify(corsHeaders, null, 2)}`, 'info');
+                    }
+                } catch (preflightError) {
+                    log(`Erro no preflight CORS: ${preflightError.message}`, 'error');
+                }
+                
+                // Realizar a requisição principal
                 const response = await fetch(url, options);
                 const endTime = Date.now();
                 const responseTime = endTime - startTime;
+                
+                // Registrar headers recebidos
+                log(`Headers da resposta:`, 'info');
+                const responseHeaders = {};
+                response.headers.forEach((value, name) => {
+                    responseHeaders[name] = value;
+                });
+                log(JSON.stringify(responseHeaders, null, 2), 'info');
                 
                 let responseData;
                 try {
                     responseData = await response.json();
                 } catch (e) {
-                    responseData = await response.text();
+                    try {
+                        responseData = await response.text();
+                    } catch (textError) {
+                        responseData = `(Erro ao ler corpo da resposta: ${textError.message})`;
+                    }
                 }
                 
                 if (response.ok) {
@@ -371,6 +500,17 @@
                 slugContainer.style.display = testTypeSelect.value === 'public' ? 'block' : 'none';
                 loginContainer.style.display = testTypeSelect.value === 'login' ? 'block' : 'none';
             });
+            
+            // Adicionar evento para exibir/ocultar campo de IP
+            const useDirectIpCheckbox = document.getElementById('use-direct-ip');
+            const backendIpInput = document.getElementById('backend-ip');
+            
+            useDirectIpCheckbox.addEventListener('change', () => {
+                backendIpInput.style.display = useDirectIpCheckbox.checked ? 'block' : 'none';
+                showUrlInfo(); // Atualizar informações da URL
+            });
+            
+            backendIpInput.addEventListener('input', showUrlInfo);
             
             log('Página de diagnóstico inicializada', 'success');
         });

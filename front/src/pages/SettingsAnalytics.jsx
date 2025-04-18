@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import MenuDashboard from '../components/MenuDashboard';
+import getApiBaseUrl from '../config/apiConfig';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+const API_BASE_URL = getApiBaseUrl();
 
 const SettingsAnalytics = () => {
   const [gaId, setGaId] = useState('');

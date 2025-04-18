@@ -18,6 +18,7 @@ import html2pdf from 'html2pdf.js';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import getApiBaseUrl from '../config/apiConfig';
 
 // Corrigir o problema de ícones no Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -40,7 +41,7 @@ ChartJS.register(
   Legend
 );
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+const API_BASE_URL = getApiBaseUrl();
 
 const PageAnalytics = () => {
   const { id } = useParams();
