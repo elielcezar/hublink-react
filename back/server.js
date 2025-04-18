@@ -1367,12 +1367,185 @@ app.get('/api/pages/:id/analytics', authenticateToken, async (req, res) => {
       distinct: ['latitude', 'longitude']
     });
     
+    // Processar fontes de tráfego com base nos referers
+    let trafficSources = [];
+
+    // Buscar visitas com referrer
+    const visitsByReferer = await prisma.pageVisit.findMany({
+      where: {
+        pageId: parseInt(id),
+        timestamp: {
+          gte: startDate,
+          lte: today
+        },
+        referer: { not: null }
+      },
+      select: {
+        referer: true
+      }
+    });
+
+    // Contar visitas diretas (sem referer)
+    const directVisits = await prisma.pageVisit.count({
+      where: {
+        pageId: parseInt(id),
+        timestamp: {
+          gte: startDate,
+          lte: today
+        },
+        OR: [
+          { referer: null },
+          { referer: "" },
+          { referer: "about:blank" }
+        ]
+      }
+    });
+
+    // Adicionar fontes diretas
+    if (directVisits > 0) {
+      trafficSources.push({
+        type: 'category',
+        source: 'direct',
+        count: directVisits
+      });
+    }
+
+    // Criar mapas para contar referers
+    const refererMap = new Map();
+    const categoryMap = new Map([
+      ['direct', 0],
+      ['social', 0],
+      ['search', 0],
+      ['referral', 0],
+      ['email', 0],
+      ['unknown', 0]
+    ]);
+    
+    // Classificar referers e contá-los
+    visitsByReferer.forEach(visit => {
+      if (!visit.referer) return;
+      
+      let referer = visit.referer.toLowerCase();
+      let category = 'unknown';
+      
+      // Processar URL para extrair domínio
+      try {
+        const url = new URL(referer);
+        referer = url.hostname;
+        
+        // Classificar por categoria
+        if (referer.includes('facebook.com') || 
+            referer.includes('instagram.com') || 
+            referer.includes('twitter.com') || 
+            referer.includes('linkedin.com') || 
+            referer.includes('youtube.com') ||
+            referer.includes('tiktok.com')) {
+          category = 'social';
+        } else if (referer.includes('google.') || 
+                  referer.includes('bing.com') || 
+                  referer.includes('yahoo.com') ||
+                  referer.includes('search.')) {
+          category = 'search';
+        } else if (referer.includes('mail.') || 
+                  referer.includes('outlook.') || 
+                  referer.includes('gmail.') ||
+                  referer.includes('newsletter')) {
+          category = 'email';
+        } else if (referer) {
+          category = 'referral';
+        }
+      } catch (e) {
+        console.error('Erro ao processar referer URL:', e);
+        // Em caso de erro, manter o referer original
+      }
+      
+      // Contar cada referer específico
+      if (!refererMap.has(referer)) {
+        refererMap.set(referer, 1);
+      } else {
+        refererMap.set(referer, refererMap.get(referer) + 1);
+      }
+      
+      // Contar categorias
+      categoryMap.set(category, categoryMap.get(category) + 1);
+    });
+    
+    // Adicionar estatísticas por categoria
+    categoryMap.forEach((count, source) => {
+      if (count > 0) {
+        trafficSources.push({
+          type: 'category',
+          source,
+          count
+        });
+      }
+    });
+    
+    // Adicionar referrers específicos
+    refererMap.forEach((count, source) => {
+      trafficSources.push({
+        type: 'referrer',
+        source,
+        count
+      });
+    });
+    
+    // Adicionar campanhas UTM (se disponíveis)
+    // Este é um exemplo simples - você precisa extrair esses dados do referer
+    const utmData = {};
+    try {
+      // Este código pode ser expandido para extrair parâmetros UTM dos referers
+      visitsByReferer.forEach(visit => {
+        if (!visit.referer) return;
+        
+        try {
+          const url = new URL(visit.referer);
+          const utm_source = url.searchParams.get('utm_source');
+          const utm_medium = url.searchParams.get('utm_medium');
+          const utm_campaign = url.searchParams.get('utm_campaign');
+          
+          if (utm_source || utm_medium || utm_campaign) {
+            const key = `${utm_campaign || ''}|${utm_source || ''}|${utm_medium || ''}`;
+            
+            if (!utmData[key]) {
+              utmData[key] = {
+                campaign: utm_campaign,
+                source: utm_source,
+                medium: utm_medium,
+                count: 1
+              };
+            } else {
+              utmData[key].count++;
+            }
+          }
+        } catch (e) {
+          // Ignorar URLs inválidas
+        }
+      });
+      
+      // Adicionar dados de UTM às fontes de tráfego
+      Object.values(utmData).forEach(utm => {
+        trafficSources.push({
+          type: 'campaign',
+          source: utm.source,
+          medium: utm.medium,
+          campaign: utm.campaign,
+          count: utm.count
+        });
+      });
+    } catch (e) {
+      console.error('Erro ao processar UTMs:', e);
+    }
+    
+    console.log(`Processadas ${trafficSources.length} fontes de tráfego`);
+    
     // Se não existem estatísticas, retornar dados vazios formatados
     if (dailyStats.length === 0) {
       const emptyStats = {
         dailyStats: [],
         deviceStats: [],
         componentClicks: [],
+        trafficSources: [],
         summary: {
           totalVisits: 0,
           totalClicks: 0,
@@ -1391,6 +1564,7 @@ app.get('/api/pages/:id/analytics', authenticateToken, async (req, res) => {
       cityStats: formattedCityStats,
       geoData,
       componentClicks: Object.values(clicksByComponent),
+      trafficSources,
       summary: {
         totalVisits,
         totalClicks,
