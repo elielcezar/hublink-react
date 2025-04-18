@@ -18,6 +18,7 @@ model User {
   email     String   @unique
   name      String
   password  String
+  gaId      String?  // ID do Google Analytics
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   role      String   @default("user")
@@ -35,6 +36,8 @@ model Page {
   style       Json?
   user        User        @relation(fields: [userId], references: [id])
   components  Component[]
+  pageVisits  PageVisit[]
+  analytics   Analytics[]
 }
 
 model Component {
@@ -46,6 +49,53 @@ model Component {
   updatedAt   DateTime @updatedAt
   pageId      Int
   page        Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  events      Event[]  // Eventos associados a este componente
 
   @@index([pageId, order], name: "pageId_order")
+}
+
+model PageVisit {
+  id          Int       @id @default(autoincrement())
+  pageId      Int
+  visitorId   String    // ID anônimo para rastrear usuários únicos
+  timestamp   DateTime  @default(now())
+  device      String?   // desktop, mobile, tablet
+  browser     String?
+  os          String?
+  referer     String?   // de onde o usuário veio
+  country     String?
+  city        String?
+  page        Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+  events      Event[]
+
+  @@index([pageId, timestamp])
+  @@index([visitorId])
+}
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  visitId     Int
+  eventType   String    // pageview, click, scroll
+  componentId Int?      // para clicks em componentes específicos
+  timestamp   DateTime  @default(now())
+  data        Json?     // dados adicionais do evento (posição do scroll, etc)
+  visit       PageVisit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  component   Component? @relation(fields: [componentId], references: [id], onDelete: SetNull)
+
+  @@index([visitId, eventType])
+  @@index([componentId])
+}
+
+model Analytics {
+  id          Int       @id @default(autoincrement())
+  pageId      Int
+  date        DateTime  @db.Date
+  visits      Int       @default(0)     // total de visitas
+  uniqueUsers Int       @default(0)     // visitantes únicos
+  clicks      Int       @default(0)     // total de cliques 
+  avgTimeSpent Float     @default(0)    // tempo médio na página (segundos)
+  bounceRate  Float     @default(0)     // taxa de rejeição (%)
+  page        Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, date])
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import MenuDashboard from '../components/MenuDashboard';
 import axios from 'axios';
@@ -26,9 +26,6 @@ const Dashboard = () => {
   // Novos estados para estilo da página
   const [pageStyles, setPageStyles] = useState({}); // Armazena estilos por ID da página
   const [showColorPicker, setShowColorPicker] = useState(null);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  const logoInputRef = useRef(null);
-  const backgroundImageInputRef = useRef(null);
   
   // Lista de fontes disponíveis
   const availableFonts = [
@@ -499,50 +496,109 @@ const Dashboard = () => {
                             {page.published ? 'Publicada' : 'Rascunho'}
                           </span>
                         </div>
-                        {/* Detalhes da página */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                          <div>
-                            <h4 className="text-sm font-medium text-gray-500 mb-1">Data de Criação</h4>
-                            <p className="text-gray-900">
-                              {new Date(page.createdAt).toLocaleDateString('pt-BR')}
-                            </p>
-                          </div>  
-                          
-                          <div className="flex space-x-4">
-                            <Link
-                              to={`/editor/${page.id}`}
-                              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        
+                        <div className="flex items-center space-x-2" onClick={(e) => e.stopPropagation()}>
+                          <Link 
+                            to={`/analytics/${page.id}`}
+                            className="inline-flex items-center px-3 py-1 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
+                          >
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            Analytics
+                          </Link>
+                          <Link 
+                            to={`/editor/${page.id}`}
+                            className="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+                          >
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                            Editar
+                          </Link>
+                          <button
+                            onClick={() => handleDeletePage(page.id)}
+                            className="inline-flex items-center px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+                          >
+                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Excluir
+                          </button>
+                          {page.published ? (
+                            <a
+                              href={`/${page.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
                             >
-                              Editar Conteúdo
-                            </Link>
-                            
-                            {page.published && (
-                              <a
-                                href={`/${page.slug}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                              >
-                                Visualizar Página
-                              </a>
-                            )}
-                            
-                            <button
-                              onClick={() => handleDeletePage(page.id)}
-                              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-                            >
-                              Excluir
-                            </button>
-                          </div> 
-
-                        </div>
-                        <div className="flex items-center">
-                          {expandedPageId === page.id ? (
-                            <FiChevronUp className="h-5 w-5 text-gray-500" />
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              </svg>
+                              Visualizar
+                            </a>
                           ) : (
-                            <FiChevronDown className="h-5 w-5 text-gray-500" />
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  await axios.put(
+                                    `${API_BASE_URL}/api/pages/${page.id}/publish`,
+                                    { published: true },
+                                    { headers: { Authorization: `Bearer ${token}` } }
+                                  );
+                                  
+                                  // Atualizar a página na lista
+                                  setPages(pages.map(p => 
+                                    p.id === page.id ? { ...p, published: true } : p
+                                  ));
+                                } catch (error) {
+                                  console.error('Erro ao publicar página:', error);
+                                  alert('Erro ao publicar a página');
+                                }
+                              }}
+                              className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                            >
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                              Publicar
+                            </button>
                           )}
+                          {page.published && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  await axios.put(
+                                    `${API_BASE_URL}/api/pages/${page.id}/publish`,
+                                    { published: false },
+                                    { headers: { Authorization: `Bearer ${token}` } }
+                                  );
+                                  
+                                  // Atualizar a página na lista
+                                  setPages(pages.map(p => 
+                                    p.id === page.id ? { ...p, published: false } : p
+                                  ));
+                                } catch (error) {
+                                  console.error('Erro ao despublicar página:', error);
+                                  alert('Erro ao despublicar a página');
+                                }
+                              }}
+                              className="inline-flex items-center px-3 py-1 bg-orange-600 text-white text-sm rounded hover:bg-orange-700"
+                            >
+                              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                              </svg>
+                              Despublicar
+                            </button>
+                          )}
+                          <button
+                            onClick={() => togglePageExpansion(page.id)}
+                            className="inline-flex items-center px-2 py-1 text-gray-500 hover:text-gray-700"
+                          >
+                            {expandedPageId === page.id ? <FiChevronUp size={20} /> : <FiChevronDown size={20} />}
+                          </button>
                         </div>
                       </div>
                     </div>

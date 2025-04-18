@@ -8,6 +8,7 @@ import TextRenderer from '../components/editor/renderers/TextRenderer';
 import CarouselRenderer from '../components/editor/renderers/CarouselRenderer';
 import BannerRenderer from '../components/editor/renderers/BannerRenderer';
 import SocialRenderer from '../components/editor/renderers/SocialRenderer';
+import AnalyticsTracker from '../components/AnalyticsTracker';
 
 // Reutilizando os mesmos componentes de renderização da página do editor
 const componentRenderers = {
@@ -42,15 +43,24 @@ const PublicPage = () => {
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/public/pages/${slug}`);
         console.log('Resposta da API:', response.data);
-        console.log('Estilo recebido:', response.data.style);
         
         setPage(response.data);
         
-        // Verificar se os componentes já estão formatados corretamente
-        const parsedComponents = response.data.components.map(comp => ({
-          ...comp,
-          content: typeof comp.content === 'string' ? JSON.parse(comp.content) : comp.content
-        }));
+        // Verificar e preparar componentes com IDs válidos para rastreamento
+        const parsedComponents = response.data.components.map(comp => {
+          const content = typeof comp.content === 'string' ? JSON.parse(comp.content) : comp.content;
+          
+          // Verificar se o componente tem ID válido
+          if (!comp.id || isNaN(parseInt(comp.id, 10))) {
+            console.warn('Componente sem ID válido:', comp);
+          }
+          
+          return {
+            ...comp,
+            id: comp.id,  // Garantir que o ID está definido
+            content: content
+          };
+        }).filter(comp => comp.type && comp.content); // Filtrar componentes inválidos
         
         setComponents(parsedComponents);
         
@@ -138,16 +148,11 @@ const PublicPage = () => {
   
   console.log('Renderizando com estilo:', pageStyle);
 
-  const backgroundStyle = pageStyle.backgroundType === 'image' && pageStyle.backgroundImage 
-    ? { 
-        backgroundImage: `url(${pageStyle.backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      }
-    : { backgroundColor: pageStyle.backgroundColor || '#ffffff' };
-
   return (
     <div className="min-h-screen">
+      {/* Adicionar o componente de rastreamento */}
+      {page && <AnalyticsTracker pageId={page.id} gaId={page.user?.gaId} pageComponents={components} />}
+      
       <div className="px-4 py-6 w-full lg:max-w-[40vw] mx-auto">
         {/* Conteúdo da landing page */}
         <header className="text-center mb-6">
@@ -165,12 +170,24 @@ const PublicPage = () => {
         <main>
           <div className="flex flex-wrap -mx-2">
             {components.map((component) => {
+              // Verificar se o componente é válido
+              if (!component || !component.type || !component.id) {
+                console.warn('Componente inválido:', component);
+                return null;
+              }
+              
               const ComponentRenderer = componentRenderers[component.type];
-              return ComponentRenderer ? (
+              
+              if (!ComponentRenderer) {
+                console.warn(`Renderer não encontrado para o tipo: ${component.type}`);
+                return null;
+              }
+              
+              return (
                 <React.Fragment key={component.id}>
-                  <ComponentRenderer content={component.content} />
+                  <ComponentRenderer content={component.content || {}} />
                 </React.Fragment>
-              ) : null;
+              );
             })}
           </div>
         </main>
