@@ -1,0 +1,163 @@
+{
+  "users": [
+    {
+      "id": 2,
+      "email": "elielcezar@gmail.com",
+      "name": "Eliel Cezar",
+      "password": "$2b$10$RiiRS3fAv59MmcLDZYflpulW.fc4yzM/BlN3bFuMOpoIrnJki5rw2",
+      "gaId": null,
+      "createdAt": "2025-04-10T23:10:17.086Z",
+      "updatedAt": "2025-04-10T23:10:17.086Z",
+      "role": "user"
+    }
+  ],
+  "pages": [
+    {
+      "id": 1,
+      "title": "Teste",
+      "slug": "teste",
+      "published": true,
+      "createdAt": "2025-04-10T23:26:31.451Z",
+      "updatedAt": "2025-04-17T17:50:05.623Z",
+      "userId": 2,
+      "style": {
+        "logo": "http://localhost:3001/uploads/image-1744894105692-318105443.png",
+        "linkColor": "#ffffff",
+        "textColor": "#ecf80c",
+        "fontFamily": "Montserrat, sans-serif",
+        "backgroundType": "color",
+        "backgroundColor": "#9b9b9b",
+        "backgroundImage": ""
+      },
+      "components": [
+        {
+          "id": 4,
+          "type": "link",
+          "order": 2,
+          "content": "{\"text\":\"LOREM ISPM\",\"url\":\"https://www.mondelezinternational.com/brazil/\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"http://localhost:3001/uploads/image-1744909624205-37615213.png\",\"imagePosition\":\"top\",\"styleType\":\"icon\",\"textColor\":\"#000000\",\"backgroundColor\":\"#ffffff\",\"title\":\"Link Mondelez\"}",
+          "createdAt": "2025-04-11T00:36:38.654Z",
+          "updatedAt": "2025-04-18T11:20:42.627Z",
+          "pageId": 1
+        },
+        {
+          "id": 6,
+          "type": "banner",
+          "order": 6,
+          "content": "{\"imageUrl\":\"http://localhost:3001/uploads/image-1744361937990-213528988.png\",\"altText\":\"\",\"caption\":\"\"}",
+          "createdAt": "2025-04-11T08:58:25.068Z",
+          "updatedAt": "2025-04-18T11:20:43.298Z",
+          "pageId": 1
+        },
+        {
+          "id": 15,
+          "type": "social",
+          "order": 0,
+          "content": "{\"instagram\":\"https://www.instagram.com/\",\"x\":\"www.x.com\",\"youtube\":\"https://www.youtube.com/\",\"tiktok\":\"https://www.tiktok.com/\",\"spotify\":\"www.x.com\",\"title\":\"Redes 2\",\"kwai\":\"www.x.com\",\"iconColor\":\"#000000\"}",
+          "createdAt": "2025-04-11T10:39:35.281Z",
+          "updatedAt": "2025-04-18T11:20:42.206Z",
+          "pageId": 1
+        },
+        {
+          "id": 16,
+          "type": "carousel",
+          "order": 7,
+          "content": "{\"images\":[{\"url\":\"http://localhost:3001/uploads/image-1744380830095-858323991.png\",\"link\":\"https://www.pepsico.com.br/\"},{\"url\":\"http://localhost:3001/uploads/image-1744380853409-48987714.png\",\"link\":\"\"},{\"url\":\"http://localhost:3001/uploads/image-1744380860776-424751488.png\",\"link\":\"\"},{\"url\":\"http://localhost:3001/uploads/image-1744380866058-557321540.png\",\"link\":\"\"}],\"config\":{\"slidesPerView\":3,\"showNavigation\":true,\"showPagination\":true,\"spaceBetween\":30,\"loop\":true,\"autoplay\":true,\"controlsColor\":\"#00ffc7\"},\"title\":\"Carrossel de Marcas\"}",
+          "createdAt": "2025-04-11T14:10:53.915Z",
+          "updatedAt": "2025-04-18T11:20:43.459Z",
+          "pageId": 1
+        },
+        {
+          "id": 19,
+          "type": "icon",
+          "order": 8,
+          "content": "{\"text\":\"\",\"url\":\"http://localhost:5173/\",\"imageUrl\":\"http://localhost:3001/uploads/image-1744827143308-15206304.png\",\"height\":\"medium\",\"width\":\"33\",\"overlayColor\":\"rgba(138, 58, 58, 0)\",\"textColor\":\"#ffffff\"}",
+          "createdAt": "2025-04-16T18:12:11.139Z",
+          "updatedAt": "2025-04-18T11:20:43.634Z",
+          "pageId": 1
+        },
+        {
+          "id": 20,
+          "type": "icon",
+          "order": 9,
+          "content": "{\"text\":\"Texto do Ícone\",\"url\":\"https://\",\"imageUrl\":\"\",\"height\":\"medium\",\"width\":\"33\",\"overlayColor\":\"rgba(0, 0, 0, 0.4)\",\"textColor\":\"#ffffff\"}",
+          "createdAt": "2025-04-16T18:16:57.690Z",
+          "updatedAt": "2025-04-18T11:20:43.796Z",
+          "pageId": 1
+        },
+        {
+          "id": 21,
+          "type": "link",
+          "order": 3,
+          "content": "{\"title\":\"Link Muffato\",\"text\":\"Clique aqui\",\"url\":\"https://www.supermuffato.com.br/\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"http://localhost:3001/uploads/image-1744908771991-957387336.png\",\"imagePosition\":\"top\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-04-17T16:52:15.213Z",
+          "updatedAt": "2025-04-18T11:20:42.799Z",
+          "pageId": 1
+        },
+        {
+          "id": 22,
+          "type": "carousel",
+          "order": 1,
+          "content": "{\"title\":\"Carrossel - Banners Top\",\"images\":[{\"url\":\"http://localhost:3001/uploads/image-1744911294371-624474453.png\",\"link\":\"https://onehub.megamidia.com.br/\"},{\"url\":\"http://localhost:3001/uploads/image-1744911303092-461963877.png\",\"link\":\"https://onehub.megamidia.com.br/\"}],\"config\":{\"slidesPerView\":1,\"showNavigation\":true,\"showPagination\":true,\"spaceBetween\":30,\"loop\":true,\"autoplay\":true,\"autoplayDelay\":3000,\"pauseOnHover\":true,\"controlsColor\":\"#ffffff\"}}",
+          "createdAt": "2025-04-17T17:28:53.794Z",
+          "updatedAt": "2025-04-18T11:20:42.475Z",
+          "pageId": 1
+        },
+        {
+          "id": 25,
+          "type": "link",
+          "order": 4,
+          "content": "{\"title\":\"Link Atendimento\",\"text\":\"Atendimento\",\"url\":\"https://hublink.app/atendimento\",\"style\":\"primary\",\"width\":\"100\",\"imageUrl\":\"http://localhost:3001/uploads/image-1744930613090-848491041.png\",\"imagePosition\":\"left\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-04-17T22:56:22.542Z",
+          "updatedAt": "2025-04-18T11:20:42.986Z",
+          "pageId": 1
+        },
+        {
+          "id": 26,
+          "type": "link",
+          "order": 5,
+          "content": "{\"title\":\"Link Lojas\",\"text\":\"Lojas\",\"url\":\"https://hublink.app/lojas\",\"style\":\"primary\",\"width\":\"100\",\"imageUrl\":\"http://localhost:3001/uploads/image-1744930792801-371069151.png\",\"imagePosition\":\"right\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-04-17T22:59:39.311Z",
+          "updatedAt": "2025-04-18T11:20:43.146Z",
+          "pageId": 1
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Muffato",
+      "slug": "muffato",
+      "published": true,
+      "createdAt": "2025-04-17T18:54:32.103Z",
+      "updatedAt": "2025-04-17T18:59:47.832Z",
+      "userId": 2,
+      "style": {
+        "logo": "http://localhost:3001/uploads/image-1744916167076-315942546.jpg",
+        "linkColor": "#3b82f6",
+        "textColor": "#333333",
+        "fontFamily": "Montserrat, sans-serif",
+        "backgroundType": "color",
+        "backgroundColor": "#f5f5f5"
+      },
+      "components": [
+        {
+          "id": 23,
+          "type": "social",
+          "order": 0,
+          "content": "{\"title\":\"Redes Sociais\",\"instagram\":\"https://www.instagram.com/super_muffato/\",\"x\":\"https://www.twitter.com/https://www.youtube.com/supermuffato-fazbemfeito\",\"youtube\":\"https://www.youtube.com/SuperMuffato-FazBemfeito\",\"tiktok\":\"https://www.tiktok.com/@super_muffato\",\"kwai\":\"\",\"spotify\":\"\",\"iconColor\":\"#000000\"}",
+          "createdAt": "2025-04-17T18:57:19.532Z",
+          "updatedAt": "2025-04-17T18:59:05.755Z",
+          "pageId": 2
+        },
+        {
+          "id": 24,
+          "type": "carousel",
+          "order": 1,
+          "content": "{\"title\":\"Carrossel\",\"images\":[{\"url\":\"http://localhost:3001/uploads/image-1744916333597-347142598.png\",\"link\":\"\"},{\"url\":\"http://localhost:3001/uploads/image-1744916339040-570293260.png\",\"link\":\"\"},{\"url\":\"http://localhost:3001/uploads/image-1744916343149-904449842.png\",\"link\":\"\"}],\"config\":{\"slidesPerView\":1,\"showNavigation\":true,\"showPagination\":true,\"spaceBetween\":30,\"loop\":true,\"autoplay\":false,\"autoplayDelay\":3000,\"pauseOnHover\":true,\"controlsColor\":\"#000000\"}}",
+          "createdAt": "2025-04-17T18:58:42.785Z",
+          "updatedAt": "2025-04-17T18:59:05.845Z",
+          "pageId": 2
+        }
+      ]
+    }
+  ]
+}

@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const geoip = require('geoip-lite');
 require('dotenv').config();
 
 const app = express();
@@ -779,6 +780,26 @@ app.post('/api/track', async (req, res) => {
       return res.status(500).json({ message: 'Erro ao verificar página', error: pageError.message });
     }
     
+    // Obter o endereço IP do cliente
+    const ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+    const ipFormatted = ip.includes('::ffff:') ? ip.split('::ffff:')[1] : ip;
+    
+    // Obter informações de geolocalização usando geoip-lite
+    let geoData = null;
+    try {
+      if (ipFormatted !== '127.0.0.1' && ipFormatted !== '::1') {
+        geoData = geoip.lookup(ipFormatted);
+        console.log('Informações de geolocalização:', geoData);
+      } else {
+        console.log('Endereço local detectado, não é possível obter geolocalização');
+      }
+    } catch (geoError) {
+      console.error('Erro ao obter geolocalização:', geoError);
+    }
+    
+    // Armazenar apenas os 3 primeiros octetos do IP para privacidade
+    const ipPartial = ipFormatted.split('.').slice(0, 3).join('.') + '.*';
+    
     // Buscar ou criar visita
     let visit;
     try {
@@ -794,6 +815,21 @@ app.post('/api/track', async (req, res) => {
       
       if (!visit) {
         console.log('Criando nova visita para visitante:', visitorId?.substring(0, 8) + '...');
+        
+        // Preparar os dados de geolocalização
+        const geoFields = {};
+        if (geoData) {
+          geoFields.country = geoData.country;
+          geoFields.city = geoData.city;
+          geoFields.region = geoData.region;
+          
+          // Verificar se as coordenadas estão disponíveis
+          if (geoData.ll && geoData.ll.length === 2) {
+            geoFields.latitude = geoData.ll[0];
+            geoFields.longitude = geoData.ll[1];
+          }
+        }
+        
         visit = await prisma.pageVisit.create({
           data: {
             pageId: pageIdNum,
@@ -801,7 +837,9 @@ app.post('/api/track', async (req, res) => {
             device,
             browser,
             os,
-            referer
+            referer,
+            ipAddress: ipPartial,
+            ...geoFields
           }
         });
         console.log('Nova visita criada:', { id: visit.id });
@@ -905,32 +943,49 @@ app.post('/api/track', async (req, res) => {
 app.get('/api/pages/:id/analytics', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { period = '7d' } = req.query; // 7d, 30d, 90d, all
+    const { period = '7d' } = req.query;
     
     console.log(`Obtendo analytics para página ${id}, período: ${period}`);
     
-    const page = await prisma.page.findUnique({
-      where: { id: parseInt(id) }
-    });
+    // Definir intervalo de datas com base no período
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
     
-    if (!page || page.userId !== req.user.userId) {
-      return res.status(403).json({ message: 'Acesso negado' });
+    let startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+    
+    if (period === '7d') {
+      startDate.setDate(startDate.getDate() - 6);
+    } else if (period === '30d') {
+      startDate.setDate(startDate.getDate() - 29);
+    } else if (period === '90d') {
+      startDate.setDate(startDate.getDate() - 89);
+    } else if (period === 'all') {
+      startDate = new Date(0); // Desde o início
     }
     
-    // Calcular data inicial com base no período
-    const startDate = new Date();
-    if (period === '7d') startDate.setDate(startDate.getDate() - 7);
-    else if (period === '30d') startDate.setDate(startDate.getDate() - 30);
-    else if (period === '90d') startDate.setDate(startDate.getDate() - 90);
-    else if (period === 'all') startDate.setFullYear(startDate.getFullYear() - 10); // praticamente todos
+    // Verificar permissão do usuário para acessar esta página
+    const page = await prisma.page.findUnique({
+      where: { id: parseInt(id) },
+      select: { userId: true }
+    });
     
-    console.log(`Data inicial para busca: ${startDate.toISOString()}`);
+    if (!page) {
+      return res.status(404).json({ message: 'Página não encontrada' });
+    }
+    
+    if (page.userId !== req.user.userId) {
+      return res.status(403).json({ message: 'Você não tem permissão para acessar os analytics desta página' });
+    }
     
     // Calcular total de visitas diretamente da tabela de visitas
     const totalVisits = await prisma.pageVisit.count({
       where: {
         pageId: parseInt(id),
-        timestamp: { gte: startDate }
+        timestamp: {
+          gte: startDate,
+          lte: today
+        }
       }
     });
     
@@ -1181,6 +1236,88 @@ app.get('/api/pages/:id/analytics', authenticateToken, async (req, res) => {
     
     const bounceRate = totalVisitors > 0 ? (singlePageVisitors / totalVisitors) * 100 : 0;
     
+    // Obter dados de localização (países)
+    const locationStats = await prisma.pageVisit.groupBy({
+      by: ['country'],
+      where: {
+        pageId: parseInt(id),
+        timestamp: {
+          gte: startDate,
+          lte: today
+        },
+        country: {
+          not: null
+        }
+      },
+      _count: {
+        id: true
+      },
+      orderBy: {
+        _count: {
+          id: 'desc'
+        }
+      }
+    });
+    
+    // Formatar dados de localização
+    const formattedLocationStats = locationStats.map(item => ({
+      country: item.country || 'Desconhecido',
+      count: item._count.id
+    }));
+    
+    console.log('Estatísticas de localização:', formattedLocationStats);
+    
+    // Obter dados de cidades mais populares
+    const cityStats = await prisma.pageVisit.groupBy({
+      by: ['city', 'country'],
+      where: {
+        pageId: parseInt(id),
+        timestamp: {
+          gte: startDate,
+          lte: today
+        },
+        city: {
+          not: null
+        }
+      },
+      _count: {
+        id: true
+      },
+      orderBy: {
+        _count: {
+          id: 'desc'
+        }
+      },
+      take: 10 // Limitar às 10 principais cidades
+    });
+    
+    // Formatar dados de cidades
+    const formattedCityStats = cityStats.map(item => ({
+      city: item.city || 'Desconhecido',
+      country: item.country || 'Desconhecido',
+      count: item._count.id
+    }));
+    
+    // Obter coordenadas geográficas para mapeamento
+    const geoData = await prisma.pageVisit.findMany({
+      where: {
+        pageId: parseInt(id),
+        timestamp: {
+          gte: startDate,
+          lte: today
+        },
+        latitude: { not: null },
+        longitude: { not: null }
+      },
+      select: {
+        latitude: true,
+        longitude: true,
+        city: true,
+        country: true
+      },
+      distinct: ['latitude', 'longitude']
+    });
+    
     // Se não existem estatísticas, retornar dados vazios formatados
     if (dailyStats.length === 0) {
       const emptyStats = {
@@ -1201,6 +1338,9 @@ app.get('/api/pages/:id/analytics', authenticateToken, async (req, res) => {
     res.json({
       dailyStats,
       deviceStats: formattedDeviceStats,
+      locationStats: formattedLocationStats,
+      cityStats: formattedCityStats,
+      geoData,
       componentClicks: Object.values(clicksByComponent),
       summary: {
         totalVisits,

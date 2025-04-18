@@ -15,6 +15,18 @@ import {
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import html2pdf from 'html2pdf.js';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Corrigir o problema de ícones no Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+});
 
 // Registrar componentes do Chart.js
 ChartJS.register(
@@ -306,6 +318,8 @@ const PageAnalytics = () => {
         .pdf-card-content { padding: 15px; }
         .pdf-stats-container { display: flex; flex-wrap: wrap; justify-content: space-between; }
         .pdf-stat-card { width: 48%; margin-bottom: 15px; background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .leaflet-container { display: none !important; } /* Esconder o mapa interativo */
+        .location-image { max-width: 100%; height: auto; border: 1px solid #eaeaea; border-radius: 4px; }
       }
     `;
     document.head.appendChild(styleElement);
@@ -328,6 +342,43 @@ const PageAnalytics = () => {
                              <div style="font-size: 14px; color: #6b7280; margin-top: 5px;">Gerado em: ${new Date().toLocaleDateString('pt-BR')}</div>`;
     
     element.prepend(titleElement);
+    
+    // Substituir o mapa interativo por uma imagem estática para o PDF
+    if (analytics?.geoData && analytics.geoData.length > 0) {
+      const mapContainerElement = element.querySelector('.leaflet-container');
+      if (mapContainerElement) {
+        // Criar uma imagem para o mapa no PDF
+        const mapImageContainer = document.createElement('div');
+        mapImageContainer.className = 'location-image-container';
+        
+        // Gerar URL da imagem estática baseada nas coordenadas
+        // Limitamos a 10 localizações para não sobrecarregar a URL
+        const markers = analytics.geoData.slice(0, 10).map(loc => 
+          `markers=color:red%7C${loc.latitude},${loc.longitude}`
+        ).join('&');
+        
+        const mapImageUrl = `https://maps.googleapis.com/maps/api/staticmap?center=0,0&zoom=1&size=800x400&maptype=roadmap&${markers}&key=AIzaSyD-9tSrke72PouQMnMX-a7eZSW0jkFMBWY`;
+        
+        const mapImage = document.createElement('img');
+        mapImage.src = mapImageUrl;
+        mapImage.alt = 'Mapa de localizações dos visitantes';
+        mapImage.className = 'location-image';
+        mapImage.style.width = '100%';
+        mapImage.style.height = 'auto';
+        
+        mapImageContainer.appendChild(mapImage);
+        
+        // Adicionar a nota sobre os dados de localização
+        const mapNote = document.createElement('div');
+        mapNote.className = 'text-sm text-gray-600 italic text-center mt-2';
+        mapNote.textContent = 'Os dados de localização são aproximados e baseados no endereço IP dos visitantes.';
+        mapImageContainer.appendChild(mapNote);
+        
+        // Esconder o mapa original (em vez de substituir, para manter o estado React)
+        mapContainerElement.style.display = 'none';
+        mapContainerElement.parentNode.insertBefore(mapImageContainer, mapContainerElement.nextSibling);
+      }
+    }
     
     // Opções de configuração do PDF
     const options = {
@@ -367,6 +418,7 @@ const PageAnalytics = () => {
     const graphViewControls = document.querySelectorAll('.px-6.py-5.border-b.border-gray-200.flex.justify-between.items-center .flex.space-x-2');
     const componentsToggleButton = document.querySelector('.bg-white.rounded-lg.shadow.mb-6 .flex.justify-between.items-center button');
     const showMoreButton = document.querySelector('.mt-4.text-center');
+    const mapImageContainer = document.querySelector('.location-image-container');
     
     // Esconder elementos desnecessários
     if (headerButtons) headerButtons.style.display = 'none';
@@ -423,6 +475,17 @@ const PageAnalytics = () => {
         if (componentsToggleButton) componentsToggleButton.style.display = '';
         if (showMoreButton) showMoreButton.style.display = '';
         
+        // Remover a imagem estática do mapa
+        if (mapImageContainer) {
+          mapImageContainer.parentNode.removeChild(mapImageContainer);
+        }
+        
+        // Restaurar o mapa interativo
+        const mapContainerElement = element.querySelector('.leaflet-container');
+        if (mapContainerElement) {
+          mapContainerElement.style.display = '';
+        }
+        
         // Restaurar layout
         if (deviceSection) {
           deviceSection.classList.add('grid-cols-1', 'lg:grid-cols-2');
@@ -470,6 +533,31 @@ const PageAnalytics = () => {
         }, 3000);
       });
     }, 150);
+  };
+  
+  // Mapa de tradução para países
+  const countryTranslations = {
+    'US': 'Estados Unidos',
+    'BR': 'Brasil',
+    'UK': 'Reino Unido',
+    'GB': 'Reino Unido',
+    'FR': 'França',
+    'DE': 'Alemanha',
+    'IT': 'Itália',
+    'ES': 'Espanha',
+    'PT': 'Portugal',
+    'JP': 'Japão',
+    'CN': 'China',
+    'CA': 'Canadá',
+    'AU': 'Austrália',
+    'MX': 'México',
+    'AR': 'Argentina',
+    'CL': 'Chile',
+  };
+  
+  // Função para traduzir código de país
+  const translateCountry = (countryCode) => {
+    return countryTranslations[countryCode] || countryCode;
   };
   
   return (
@@ -780,6 +868,153 @@ const PageAnalytics = () => {
                   <p className="text-center text-gray-500 py-4">
                     Nenhum clique registrado neste período
                   </p>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* Mapa de Visitantes */}
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="px-6 py-5 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900">Mapa de Visitantes</h2>
+            </div>
+            <div className="p-6">
+              {analytics?.geoData && analytics.geoData.length > 0 ? (
+                <>
+                  <div className="h-96 w-full rounded-lg overflow-hidden mb-4">
+                    <MapContainer 
+                      center={[0, 0]} 
+                      zoom={2} 
+                      scrollWheelZoom={false}
+                      style={{ height: '100%', width: '100%' }}
+                    >
+                      <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      />
+                      {analytics.geoData.map((location, index) => (
+                        <Marker 
+                          key={index} 
+                          position={[location.latitude, location.longitude]}
+                        >
+                          <Popup>
+                            <div className="text-sm">
+                              <div className="font-medium">{location.city || 'Cidade desconhecida'}</div>
+                              <div>{translateCountry(location.country) || 'País desconhecido'}</div>
+                            </div>
+                          </Popup>
+                        </Marker>
+                      ))}
+                    </MapContainer>
+                  </div>
+                  <div className="text-sm text-gray-600 italic text-center">
+                    Os dados de localização são aproximados e baseados no endereço IP dos visitantes.
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12 text-gray-500">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p>Nenhum dado de localização disponível para este período</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Estatísticas de Localização */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Países */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900">Principais Países</h2>
+              </div>
+              <div className="p-6">
+                {analytics?.locationStats && analytics.locationStats.length > 0 ? (
+                  <div className="space-y-4">
+                    {analytics.locationStats.map((item, index) => {
+                      const percentage = analytics.summary.totalVisits > 0 
+                        ? (item.count / analytics.summary.totalVisits) * 100 
+                        : 0;
+                      
+                      // Cores para os diferentes países (primeiros 5)
+                      const colors = [
+                        'bg-blue-500',
+                        'bg-green-500',
+                        'bg-purple-500',
+                        'bg-yellow-500',
+                        'bg-red-500',
+                        'bg-indigo-500',
+                        'bg-pink-500'
+                      ];
+                      
+                      return (
+                        <div key={index}>
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm font-medium text-gray-700">
+                              {translateCountry(item.country)}
+                            </span>
+                            <span className="text-sm font-medium text-gray-700">
+                              {Math.round(percentage)}% ({item.count})
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div 
+                              className={`${colors[index % colors.length]} h-2.5 rounded-full`} 
+                              style={{ width: `${percentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-8">Sem dados para este período</p>
+                )}
+              </div>
+            </div>
+            
+            {/* Cidades */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900">Principais Cidades</h2>
+              </div>
+              <div className="p-6">
+                {analytics?.cityStats && analytics.cityStats.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead>
+                        <tr>
+                          <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Cidade
+                          </th>
+                          <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            País
+                          </th>
+                          <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Visitas
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {analytics.cityStats.map((city, i) => (
+                          <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {city.city}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {translateCountry(city.country)}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                              {formatNumber(city.count)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500 py-8">Sem dados para este período</p>
                 )}
               </div>
             </div>

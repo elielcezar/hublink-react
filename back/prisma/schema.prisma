@@ -65,6 +65,10 @@ model PageVisit {
   referer     String?   // de onde o usuário veio
   country     String?
   city        String?
+  region      String?   // estado ou província
+  latitude    Float?    // latitude para mapeamento
+  longitude   Float?    // longitude para mapeamento
+  ipAddress   String?   // armazenado de forma hash ou parcial por privacidade
   page        Page      @relation(fields: [pageId], references: [id], onDelete: Cascade)
   events      Event[]
 
