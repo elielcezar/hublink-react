@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import React from 'react';
-import axios from 'axios';
+import api from '../config/apiConfig';
 import CarouselRenderer from '../components/editor/renderers/CarouselRenderer';
 import LinkForm from '../components/editor/forms/LinkForm';
 import LinkRenderer from '../components/editor/renderers/LinkRenderer';
@@ -118,9 +118,7 @@ const PageEditor = () => {
     
     const fetchPageData = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/pages/${pageId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const response = await api.get(`/api/pages/${pageId}`);
         
         // Garantir que a página tenha um objeto style, mesmo que vazio
         setPage({
@@ -185,12 +183,9 @@ const PageEditor = () => {
       // Resetar qualquer erro anterior
       setError('');
       
-      const token = localStorage.getItem('token');
-      
-      const response = await axios.post(
-        `http://localhost:3002/api/pages/${pageId}/components`,
-        { type, content },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.post(
+        `/api/pages/${pageId}/components`,
+        { type, content }
       );
       
       setComponents(prevComponents => [...prevComponents, response.data]);
@@ -202,15 +197,15 @@ const PageEditor = () => {
   
   const deleteComponent = async (componentId) => {
     try {
-      const token = localStorage.getItem('token');
+      setError('');
       
-      await axios.delete(`http://localhost:3002/api/components/${componentId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/api/components/${componentId}`);
       
       setComponents(prevComponents => 
         prevComponents.filter(component => component.id !== componentId)
       );
+      
+      setHasUnsavedChanges(true);
     } catch (error) {
       console.error('Erro ao excluir componente:', error);
       setError('Falha ao excluir componente. Por favor, tente novamente.');
@@ -218,70 +213,55 @@ const PageEditor = () => {
   };
   
   const moveComponent = async (componentId, direction) => {
-    // Encontrar o índice atual
-    const currentIndex = components.findIndex(c => c.id === componentId);
-    if (currentIndex === -1) return;
-    
-    // Calcular novo índice
-    const newIndex = direction === 'up' 
-      ? Math.max(0, currentIndex - 1)
-      : Math.min(components.length - 1, currentIndex + 1);
-    
-    // Se não houver mudança, sair
-    if (newIndex === currentIndex) return;
-    
-    // Criar nova ordem de componentes
-    const newComponents = [...components];
-    const [movedItem] = newComponents.splice(currentIndex, 1);
-    newComponents.splice(newIndex, 0, movedItem);
-    
-    // Atualizar estado local imediatamente para UI responsiva
-    setComponents(newComponents);
-    
-    // Preparar array de IDs para enviar ao backend
-    const componentIds = newComponents.map(c => c.id);
-    
     try {
-      setSaving(true);
-      const token = localStorage.getItem('token');
+      setError('');
       
-      await axios.put(
-        `http://localhost:3002/api/pages/${pageId}/reorder`,
-        { componentIds },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const currentIndex = components.findIndex(comp => comp.id === componentId);
+      if (currentIndex === -1) return;
+      
+      const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (newIndex < 0 || newIndex >= components.length) return;
+      
+      // Trocar posição dos componentes
+      const newComponents = [...components];
+      [newComponents[currentIndex], newComponents[newIndex]] = 
+      [newComponents[newIndex], newComponents[currentIndex]];
+      
+      // Atualizar ordem
+      const componentIds = newComponents.map(comp => comp.id);
+      
+      await api.put(
+        `/api/pages/${pageId}/reorder`,
+        { componentIds }
       );
+      
+      setComponents(newComponents);
     } catch (error) {
       console.error('Erro ao reordenar componentes:', error);
-      setError('Erro ao salvar a nova ordem. Tente novamente.');
-    } finally {
-      setSaving(false);
+      setError('Falha ao reordenar componentes. Por favor, tente novamente.');
     }
-    setHasUnsavedChanges(true);
   };
   
   const togglePublish = async () => {
-    if (!page) return;
-    
     try {
-      setSaving(true);
-      const token = localStorage.getItem('token');
+      setError('');
       
-      const response = await axios.put(
-        `http://localhost:3002/api/pages/${pageId}`,
+      const response = await api.put(
+        `/api/pages/${pageId}`,
         {
           title: page.title,
           slug: page.slug,
           published: !page.published
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       );
       
-      setPage(response.data);
+      setPage({
+        ...page,
+        published: response.data.published
+      });
     } catch (error) {
-      console.error('Erro ao publicar/despublicar página:', error);
-      setError('Erro ao alterar status de publicação. Tente novamente.');
-    } finally {
-      setSaving(false);
+      console.error('Erro ao mudar estado de publicação:', error);
+      setError('Falha ao atualizar o estado de publicação. Por favor, tente novamente.');
     }
   };
   
@@ -295,70 +275,79 @@ const PageEditor = () => {
   };
   
   const saveComponents = async () => {
-    setSaving(true);
     try {
-      const token = localStorage.getItem('token');
-      const headers = { 
-        Authorization: `Bearer ${token}` 
-      };
+      setSaving(true);
+      setError('');
       
-      // Para cada componente, fazer uma requisição separada
-      for (const component of components) {
-        // Normalizar o conteúdo para garantir que seja uma string JSON
-        const contentToSave = typeof component.content === 'object' 
-          ? component.content
-          : JSON.parse(component.content);
-        
+      // Converter todos os contents para strings JSON antes de enviar
+      const componentsToSave = components.map(component => ({
+        ...component,
+        content: component.content
+      }));
+
+      // Array para coletar todos os resultados das chamadas à API
+      const savedComponents = [];
+      
+      // Fazer chamadas em paralelo para cada componente
+      const promises = componentsToSave.map(async (component) => {
         if (component.id && !isNaN(component.id)) {
           // Se o componente já existe, atualize-o
-          await axios.put(
-            `${import.meta.env.VITE_API_URL}/api/components/${component.id}`,
+          await api.put(
+            `/api/components/${component.id}`,
             {
               type: component.type,
-              content: contentToSave
-            },
-            { headers }
+              content: component.content
+            }
           );
+          return { ...component, saved: true };
         } else {
           // Se é um componente novo, crie-o
-          await axios.post(
-            `${import.meta.env.VITE_API_URL}/api/pages/${pageId}/components`,
+          await api.post(
+            `/api/pages/${pageId}/components`,
             {
               type: component.type,
-              content: contentToSave
-            },
-            { headers }
+              content: component.content
+            }
           );
+          return { ...component, saved: true };
         }
-      }
+      });
       
-      setSaving(false);
+      // Aguardar todas as chamadas à API
+      await Promise.all(promises);
+      
+      // Atualizar estado para refletir que as mudanças foram salvas
       setHasUnsavedChanges(false);
-      alert('Alterações salvas com sucesso!');
+      
+      // Exibir mensagem de sucesso temporária
+      setLastSaved(new Date().toLocaleTimeString());
+      
+      return true;
     } catch (error) {
       console.error('Erro ao salvar componentes:', error);
+      setError('Falha ao salvar componentes. Por favor, tente novamente.');
+      return false;
+    } finally {
       setSaving(false);
-      setError('Erro ao salvar. Por favor, tente novamente.');
     }
   };
   
   const fetchPageStyle = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/pages/${pageId}/style`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.get(
+        `/api/pages/${pageId}/style`
       );
       
-      // Atualizar apenas o estilo, mantendo os outros dados da página
+      const style = response.data.style || {
+        backgroundColor: '#ffffff',
+        fontFamily: 'Inter, sans-serif',
+        linkColor: '#3b82f6',
+        textColor: '#333333'
+      };
+      
       setPage(prevPage => ({
         ...prevPage,
-        style: response.data.style || {
-          backgroundColor: '#ffffff',
-          fontFamily: 'Inter, sans-serif',
-          linkColor: '#3b82f6',
-          textColor: '#333333'
-        }
+        style
       }));
     } catch (error) {
       console.error('Erro ao buscar estilo da página:', error);

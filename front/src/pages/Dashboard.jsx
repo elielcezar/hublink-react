@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import MenuDashboard from '../components/MenuDashboard';
-import axios from 'axios';
+import api from '../config/apiConfig';
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi';
 import { SketchPicker } from 'react-color';
 import ImageUploader from '../components/ImageUploader';
-
-const API_BASE_URL = 'http://localhost:3002';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -80,19 +78,15 @@ const Dashboard = () => {
     
     const fetchData = async () => {
       try {
-        // Buscar dados do usuário
+        // Buscar dados do usuário usando o api centralizado
         console.log('Buscando dados do usuário...');
-        const userResponse = await axios.get(`${API_BASE_URL}/api/me`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const userResponse = await api.get('/api/me');
         console.log('Dados do usuário recebidos com sucesso');
         setUser(userResponse.data);
         
-        // Buscar páginas do usuário
+        // Buscar páginas do usuário usando o api centralizado
         console.log('Buscando páginas do usuário...');
-        const pagesResponse = await axios.get(`${API_BASE_URL}/api/pages`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const pagesResponse = await api.get('/api/pages');
         console.log(`${pagesResponse.data.length} páginas encontradas`);
         setPages(pagesResponse.data);
         
@@ -101,9 +95,7 @@ const Dashboard = () => {
           const stylesObj = {};
           for (const page of pagesResponse.data) {
             try {
-              const styleResponse = await axios.get(`${API_BASE_URL}/api/pages/${page.id}/style`, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
+              const styleResponse = await api.get(`/api/pages/${page.id}/style`);
               
               if (styleResponse.data && styleResponse.data.style) {
                 stylesObj[page.id] = {
@@ -140,11 +132,9 @@ const Dashboard = () => {
   // Função para salvar o estilo de uma página
   const savePageStyle = async (pageId) => {
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${API_BASE_URL}/api/pages/${pageId}/style`,
-        { style: pageStyles[pageId] },
-        { headers: { Authorization: `Bearer ${token}` } }
+      await api.put(
+        `/api/pages/${pageId}/style`,
+        { style: pageStyles[pageId] }
       );
       
       // Feedback visual
@@ -251,12 +241,7 @@ const Dashboard = () => {
     }
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_BASE_URL}/api/pages`,
-        newPage,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const response = await api.post('/api/pages', newPage);
       
       // Adicionar a nova página à lista
       setPages([response.data, ...pages]);
@@ -304,10 +289,7 @@ const Dashboard = () => {
     }
     
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_BASE_URL}/api/pages/${pageId}`, {
-        headers: { Authorization: `Bearer ${token}` } 
-      });
+      await api.delete(`/api/pages/${pageId}`);
       
       // Remover a página da lista
       setPages(pages.filter(page => page.id !== pageId));
@@ -338,12 +320,7 @@ const Dashboard = () => {
     }
     
     try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${API_BASE_URL}/api/pages/${pageId}`,
-        { slug: slugValue },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.put(`/api/pages/${pageId}`, { slug: slugValue });
       
       // Atualizar a página na lista
       setPages(pages.map(page => 
@@ -548,11 +525,9 @@ const Dashboard = () => {
                             <button
                               onClick={async () => {
                                 try {
-                                  const token = localStorage.getItem('token');
-                                  await axios.put(
-                                    `${API_BASE_URL}/api/pages/${page.id}/publish`,
-                                    { published: true },
-                                    { headers: { Authorization: `Bearer ${token}` } }
+                                  await api.put(
+                                    `/api/pages/${page.id}/publish`,
+                                    { published: true }
                                   );
                                   
                                   // Atualizar a página na lista
@@ -576,11 +551,9 @@ const Dashboard = () => {
                             <button
                               onClick={async () => {
                                 try {
-                                  const token = localStorage.getItem('token');
-                                  await axios.put(
-                                    `${API_BASE_URL}/api/pages/${page.id}/publish`,
-                                    { published: false },
-                                    { headers: { Authorization: `Bearer ${token}` } }
+                                  await api.put(
+                                    `/api/pages/${page.id}/publish`,
+                                    { published: false }
                                   );
                                   
                                   // Atualizar a página na lista
