@@ -1,7 +1,32 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import MenuDashboard from '../components/MenuDashboard';
+import { 
+  Chart as ChartJS, 
+  CategoryScale, 
+  LinearScale, 
+  PointElement, 
+  LineElement, 
+  Title, 
+  Tooltip, 
+  Legend,
+  BarElement
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+import html2pdf from 'html2pdf.js';
+
+// Registrar componentes do Chart.js
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
@@ -12,6 +37,9 @@ const PageAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('7d');
   const [error, setError] = useState('');
+  const [viewMode, setViewMode] = useState('chart'); // 'chart' ou 'table'
+  const [showAllComponents, setShowAllComponents] = useState(false);
+  const reportRef = useRef(null);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -124,11 +152,331 @@ const PageAnalytics = () => {
     return new Intl.NumberFormat('pt-BR').format(num);
   };
   
+  // Configurações do gráfico de tráfego
+  const prepareChartData = () => {
+    if (!analytics || !analytics.dailyStats || analytics.dailyStats.length === 0) {
+      return {
+        labels: [],
+        datasets: []
+      };
+    }
+    
+    // Ordenar os dados por data
+    const sortedData = [...analytics.dailyStats].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Preparar labels (datas formatadas)
+    const labels = sortedData.map(day => formatDate(day.date));
+    
+    // Dados de visitas e cliques
+    const visitsData = sortedData.map(day => day.visits);
+    const clicksData = sortedData.map(day => day.clicks);
+    
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Visitas',
+          data: visitsData,
+          borderColor: 'rgb(59, 130, 246)', // Azul
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          fill: true,
+          tension: 0.3,
+          yAxisID: 'y'
+        },
+        {
+          label: 'Cliques',
+          data: clicksData,
+          borderColor: 'rgb(34, 197, 94)', // Verde
+          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          fill: true,
+          tension: 0.3,
+          yAxisID: 'y'
+        }
+      ]
+    };
+  };
+  
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: {
+      duration: 1000,
+      easing: 'easeOutQuart'
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)'
+        },
+        ticks: {
+          precision: 0, // Para garantir que só mostramos números inteiros
+          font: {
+            size: 11
+          }
+        },
+        title: {
+          display: true,
+          text: 'Quantidade',
+          font: {
+            size: 12
+          }
+        }
+      },
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          font: {
+            size: 10
+          },
+          maxRotation: 45,
+          minRotation: 45
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          boxWidth: 10,
+          usePointStyle: true,
+          padding: 20,
+          font: {
+            size: 12
+          }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        titleColor: '#333',
+        bodyColor: '#333',
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 1,
+        padding: 10,
+        displayColors: true,
+        usePointStyle: true,
+        callbacks: {
+          label: function(context) {
+            let label = context.dataset.label || '';
+            if (label) {
+              label += ': ';
+            }
+            label += formatNumber(context.raw);
+            return label;
+          }
+        }
+      }
+    },
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
+    elements: {
+      line: {
+        tension: 0.3 // Suavização da linha
+      }
+    }
+  };
+  
+  // Função para gerar e baixar o PDF
+  const downloadAsPDF = () => {
+    const element = reportRef.current;
+    
+    if (!element) return;
+    
+    // Criar um elemento de estilo para o PDF
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      @media print {
+        body { font-family: Arial, sans-serif; }
+        .pdf-full-width { width: 100% !important; margin-bottom: 20px !important; }
+        .pdf-card { break-inside: avoid; }
+        .pdf-table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+        .pdf-table th { background-color: #f3f4f6 !important; color: #374151; text-align: left; padding: 10px; }
+        .pdf-table td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
+        .pdf-section-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #1f2937; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
+        .pdf-card-content { padding: 15px; }
+        .pdf-stats-container { display: flex; flex-wrap: wrap; justify-content: space-between; }
+        .pdf-stat-card { width: 48%; margin-bottom: 15px; background: #fff; border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
+    // Adicionar um título temporário para o PDF
+    const titleElement = document.createElement('div');
+    titleElement.style.padding = '15px';
+    titleElement.style.textAlign = 'center';
+    titleElement.style.fontSize = '18px';
+    titleElement.style.fontWeight = 'bold';
+    titleElement.style.marginBottom = '30px';
+    titleElement.style.borderBottom = '2px solid #2563eb';
+    titleElement.style.color = '#1e40af';
+    titleElement.innerHTML = `<div style="font-size: 28px; margin-bottom: 8px;">Relatório de Analytics</div>
+                             <div style="font-size: 20px; color: #4b5563; margin-bottom: 5px;">${page.title}</div>
+                             <div style="font-size: 14px; color: #6b7280; margin-top: 10px;">Período: ${period === '7d' ? 'Últimos 7 dias' : 
+                                                          period === '30d' ? 'Últimos 30 dias' : 
+                                                          period === '90d' ? 'Últimos 90 dias' : 
+                                                          'Todo o período'}</div>
+                             <div style="font-size: 14px; color: #6b7280; margin-top: 5px;">Gerado em: ${new Date().toLocaleDateString('pt-BR')}</div>`;
+    
+    element.prepend(titleElement);
+    
+    // Opções de configuração do PDF
+    const options = {
+      margin: [15, 15],
+      filename: `analytics-${page.slug}-${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    // Notificação temporária
+    const notifyElement = document.createElement('div');
+    notifyElement.style.position = 'fixed';
+    notifyElement.style.bottom = '20px';
+    notifyElement.style.left = '50%';
+    notifyElement.style.transform = 'translateX(-50%)';
+    notifyElement.style.padding = '10px 20px';
+    notifyElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+    notifyElement.style.color = 'white';
+    notifyElement.style.borderRadius = '5px';
+    notifyElement.style.zIndex = '9999';
+    notifyElement.textContent = 'Gerando PDF, aguarde...';
+    document.body.appendChild(notifyElement);
+    
+    // Salvar estado atual
+    const currentViewMode = viewMode;
+    const currentShowAllComponents = showAllComponents;
+    
+    // Aplicar configurações específicas para PDF
+    setViewMode('table');
+    setShowAllComponents(true);
+    
+    // Guardar elementos para restaurar depois
+    const headerButtons = document.querySelector('.mb-6 .flex.space-x-2');
+    const googleAnalyticsSection = document.querySelector('.bg-white.rounded-lg.shadow.mb-8');
+    const deviceSection = document.querySelector('.grid.grid-cols-1.lg\\:grid-cols-2');
+    const graphViewControls = document.querySelectorAll('.px-6.py-5.border-b.border-gray-200.flex.justify-between.items-center .flex.space-x-2');
+    const componentsToggleButton = document.querySelector('.bg-white.rounded-lg.shadow.mb-6 .flex.justify-between.items-center button');
+    const showMoreButton = document.querySelector('.mt-4.text-center');
+    
+    // Esconder elementos desnecessários
+    if (headerButtons) headerButtons.style.display = 'none';
+    if (googleAnalyticsSection) googleAnalyticsSection.style.display = 'none';
+    if (graphViewControls && graphViewControls.length > 0) graphViewControls[0].style.display = 'none';
+    if (componentsToggleButton) componentsToggleButton.style.display = 'none';
+    if (showMoreButton) showMoreButton.style.display = 'none';
+    
+    // Ajustar layout para exibir seções em 100% da largura
+    if (deviceSection) {
+      deviceSection.classList.remove('grid-cols-1', 'lg:grid-cols-2');
+      deviceSection.classList.add('grid-cols-1');
+      
+      // Adicionar classe para melhor formatação
+      const deviceCards = deviceSection.querySelectorAll('.bg-white.rounded-lg.shadow');
+      deviceCards.forEach(card => {
+        card.classList.add('pdf-full-width', 'pdf-card');
+        
+        // Adicionar classe ao conteúdo interno
+        const cardContent = card.querySelector('.p-6');
+        if (cardContent) {
+          cardContent.classList.add('pdf-card-content');
+        }
+      });
+    }
+    
+    // Adicionar classes para melhorar tabelas no PDF
+    const tables = element.querySelectorAll('table');
+    tables.forEach(table => {
+      table.classList.add('pdf-table');
+    });
+    
+    // Adicionar classes aos headers das seções
+    const sectionHeaders = element.querySelectorAll('.px-6.py-5.border-b.border-gray-200, .px-6.py-5.border-b.border-gray-200.flex.justify-between.items-center');
+    sectionHeaders.forEach(header => {
+      const title = header.querySelector('h2');
+      if (title) {
+        title.classList.add('pdf-section-title');
+      }
+    });
+
+    // Aguardar renderização da tabela
+    setTimeout(() => {
+      // Gerar e baixar o PDF
+      html2pdf().set(options).from(element).save().then(() => {
+        // Restaurar estado anterior
+        setViewMode(currentViewMode);
+        setShowAllComponents(currentShowAllComponents);
+        
+        // Restaurar elementos escondidos
+        if (headerButtons) headerButtons.style.display = '';
+        if (googleAnalyticsSection) googleAnalyticsSection.style.display = '';
+        if (graphViewControls && graphViewControls.length > 0) graphViewControls[0].style.display = '';
+        if (componentsToggleButton) componentsToggleButton.style.display = '';
+        if (showMoreButton) showMoreButton.style.display = '';
+        
+        // Restaurar layout
+        if (deviceSection) {
+          deviceSection.classList.add('grid-cols-1', 'lg:grid-cols-2');
+          deviceSection.classList.remove('grid-cols-1');
+          
+          // Remover classes temporárias
+          const deviceCards = deviceSection.querySelectorAll('.bg-white.rounded-lg.shadow');
+          deviceCards.forEach(card => {
+            card.classList.remove('pdf-full-width', 'pdf-card');
+            
+            // Remover classe do conteúdo interno
+            const cardContent = card.querySelector('.p-6');
+            if (cardContent) {
+              cardContent.classList.remove('pdf-card-content');
+            }
+          });
+        }
+        
+        // Remover classes temporárias
+        tables.forEach(table => {
+          table.classList.remove('pdf-table');
+        });
+        
+        // Remover classes dos headers
+        sectionHeaders.forEach(header => {
+          const title = header.querySelector('h2');
+          if (title) {
+            title.classList.remove('pdf-section-title');
+          }
+        });
+        
+        // Remover título temporário
+        if (element.contains(titleElement)) {
+          element.removeChild(titleElement);
+        }
+        
+        // Remover estilos temporários
+        if (document.head.contains(styleElement)) {
+          document.head.removeChild(styleElement);
+        }
+        
+        // Remover notificação após 3 segundos
+        setTimeout(() => {
+          document.body.removeChild(notifyElement);
+        }, 3000);
+      });
+    }, 150);
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <MenuDashboard />
       <div className="pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" ref={reportRef}>
           <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Analytics: {page.title}</h1>
@@ -148,6 +496,17 @@ const PageAnalytics = () => {
                 <option value="90d">Últimos 90 dias</option>
                 <option value="all">Todo o período</option>
               </select>
+              
+              <button
+                onClick={downloadAsPDF}
+                className="bg-blue-50 border border-blue-300 text-blue-700 py-2 px-4 rounded-md shadow-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center"
+                title="Baixar como PDF"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
+                </svg>
+                Baixar PDF
+              </button>
               
               <Link
                 to="/dashboard"
@@ -187,50 +546,91 @@ const PageAnalytics = () => {
           
           {/* Tráfego por Dias */}
           <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-5 border-b border-gray-200">
+            <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-lg font-medium text-gray-900">Tráfego por Dia</h2>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setViewMode('chart')}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    viewMode === 'chart' 
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                  </svg>
+                  Gráfico
+                </button>
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    viewMode === 'table' 
+                      ? 'bg-blue-100 text-blue-700' 
+                      : 'text-gray-500 hover:bg-gray-100'
+                  }`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM9 8H4v2h5V8z" clipRule="evenodd" />
+                  </svg>
+                  Tabela
+                </button>
+              </div>
             </div>
             <div className="p-6">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead>
-                    <tr>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Data
-                      </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Visitas
-                      </th>
-                      <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Cliques
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {analytics.dailyStats.length > 0 ? (
-                      analytics.dailyStats.map((day, i) => (
-                        <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatDate(day.date)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatNumber(day.visits)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {formatNumber(day.clicks)}
-                          </td>
+              {analytics.dailyStats.length > 0 ? (
+                <div className={`transition-opacity duration-300 ${viewMode === 'chart' ? 'opacity-100' : 'opacity-0 hidden'}`}>
+                  <div className="w-full h-72">
+                    <Line data={prepareChartData()} options={chartOptions} />
+                  </div>
+                </div>
+              ) : null}
+              
+              <div className={`transition-opacity duration-300 ${viewMode === 'table' ? 'opacity-100' : 'opacity-0 hidden'}`}>
+                {analytics.dailyStats.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead>
+                        <tr>
+                          <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Data
+                          </th>
+                          <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Visitas
+                          </th>
+                          <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Cliques
+                          </th>
                         </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
-                          Sem dados para este período
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {analytics.dailyStats
+                          .sort((a, b) => new Date(b.date) - new Date(a.date)) // Ordenar do mais recente para o mais antigo
+                          .map((day, i) => (
+                            <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {formatDate(day.date)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {formatNumber(day.visits)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {formatNumber(day.clicks)}
+                              </td>
+                            </tr>
+                          ))
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                ) : null}
               </div>
+              
+              {analytics.dailyStats.length === 0 && (
+                <p className="text-center text-gray-500 py-8">
+                  Sem dados para este período
+                </p>
+              )}
             </div>
           </div>
           
@@ -291,9 +691,31 @@ const PageAnalytics = () => {
             </div>
             
             {/* Componentes mais clicados */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-5 border-b border-gray-200">
+            <div className="bg-white rounded-lg shadow mb-6">
+              <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
                 <h2 className="text-lg font-medium text-gray-900">Componentes mais clicados</h2>
+                {analytics.componentClicks.length > 3 && (
+                  <button
+                    onClick={() => setShowAllComponents(!showAllComponents)}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium focus:outline-none flex items-center"
+                  >
+                    {showAllComponents ? (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
+                        </svg>
+                        Ver top 3
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 011.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                        Ver todos
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
               <div className="p-6">
                 {analytics.componentClicks.length > 0 ? (
@@ -315,6 +737,7 @@ const PageAnalytics = () => {
                       <tbody className="bg-white divide-y divide-gray-200">
                         {analytics.componentClicks
                           .sort((a, b) => b.clicks - a.clicks)
+                          .slice(0, showAllComponents ? undefined : 3)
                           .map((component, i) => {
                             // Tradução dos tipos de componentes
                             const typeTranslations = {
@@ -342,6 +765,16 @@ const PageAnalytics = () => {
                           })}
                       </tbody>
                     </table>
+                    {!showAllComponents && analytics.componentClicks.length > 3 && (
+                      <div className="mt-4 text-center">
+                        <button
+                          onClick={() => setShowAllComponents(true)}
+                          className="text-sm text-blue-600 hover:text-blue-800 font-medium focus:outline-none"
+                        >
+                          Mostrar todos os {analytics.componentClicks.length} componentes
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-center text-gray-500 py-4">
