@@ -341,13 +341,47 @@ router.get('/:id/analytics', authenticateToken, async (req, res) => {
       }
     });
     autoComponentClicks.forEach(click => {
-      if (click.data && click.data.componentType) {
-        const rawId = click.data.rawComponentId || 'auto';
+      // Check if data exists and componentType is present
+      if (click.data && typeof click.data === 'object' && click.data.componentType) {
+        const rawId = click.data.rawComponentId || 'auto'; // Use rawComponentId if available
         const type = click.data.componentType;
         const title = click.data.componentTitle || '';
-        const key = `${rawId}-${type}`;
-        if (!clicksByComponent[key]) clicksByComponent[key] = { id: rawId, type: type, title: title, clicks: 0, isAuto: true };
+        let socialType = null; // Initialize socialType
+
+        // --- START MODIFICATION ---
+        // If it's a social component, try to extract the specific social type
+        // Adjusted path based on potential structure from AnalyticsTracker
+        if (type === 'social' && click.data.targetInfo?.elementData?.['data-social-type']) {
+          socialType = click.data.targetInfo.elementData['data-social-type'];
+        } else if (type === 'social' && click.data?.elementData?.['data-social-type']) { 
+          // Fallback check if targetInfo is not present
+          socialType = click.data.elementData['data-social-type'];
+        }
+
+        // Use a more specific key for social types
+        const key = type === 'social' && socialType 
+          ? `${rawId}-social-${socialType}` 
+          : `${rawId}-${type}`;
+        
+        if (!clicksByComponent[key]) {
+          clicksByComponent[key] = { 
+            id: rawId, // Keep original component ID/rawId for reference
+            type: type, 
+            title: title, 
+            clicks: 0, 
+            isAuto: true // Mark as auto-detected click
+          };
+          // Add socialType if it exists
+          if (socialType) {
+            clicksByComponent[key].socialType = socialType;
+          }
+        }
+        // --- END MODIFICATION ---
+        
         clicksByComponent[key].clicks++;
+      } else {
+         // Optional: Log clicks with missing data for debugging
+         // console.log('Skipping click event due to missing data structure:', click?.data);
       }
     });
 

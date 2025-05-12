@@ -18,12 +18,13 @@ const KwaiIcon = ({ color, size = 30 }) => (
   </svg>
 );
 
-const SocialRenderer = ({ content }) => {
+// Assuming 'id' is passed as a prop, e.g., <SocialRenderer id={component.id} content={component.content} />
+const SocialRenderer = ({ id, content }) => {
   const iconColor = content.iconColor || '#0077B5';
   
   const socialLinks = [
     { type: 'instagram', url: content.instagram, icon: <FaInstagram size={30} style={{color: iconColor}} /> },
-    { type: 'x', url: content.x, icon: <FaTwitter size={30} style={{color: iconColor}} /> },
+    { type: 'x', url: content.x, icon: <FaTwitter size={30} style={{color: iconColor}} /> }, // Assuming 'x' is for Twitter/X
     { type: 'youtube', url: content.youtube, icon: <FaYoutube size={30} style={{color: iconColor}} /> },
     { type: 'tiktok', url: content.tiktok, icon: <FaTiktok size={30} style={{color: iconColor}} /> },    
     { type: 'spotify', url: content.spotify, icon: <FaSpotify size={30} style={{color: iconColor}} /> },    
@@ -32,9 +33,16 @@ const SocialRenderer = ({ content }) => {
   
   const availableSocialLinks = socialLinks.filter(link => link.url);
   
+  // Ensure id is available, provide a fallback if necessary for safety
+  const componentId = id || 'social-component-fallback-id'; 
+
   return (
-    <div className="w-full px-2 mb-6">      
-      
+    // Add data-component-id and data-component-type to the main container
+    <div 
+      className="w-full px-2 mb-6" 
+      data-component-id={componentId} 
+      data-component-type="social"
+    >
       <div className="flex flex-wrap justify-center gap-4">
         {availableSocialLinks.map((link, index) => (
           <a
@@ -44,6 +52,10 @@ const SocialRenderer = ({ content }) => {
             rel="noopener noreferrer"
             className="transition-transform hover:scale-110"
             aria-label={`Link para ${link.type}`}
+            // Add data-social-type to identify the specific link
+            data-social-type={link.type}
+            // Optional: Add component ID here too if tracker logic needs it directly on the link
+            // data-component-id={componentId} 
           >
             {link.icon}
           </a>
