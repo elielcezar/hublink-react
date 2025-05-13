@@ -17,7 +17,11 @@ export default function MenuDashboard() {
 
     const navigate = useNavigate();
 
-    
+    const handleLogout = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/');
+  };
   
   return (
     <aside className="flex flex-col items-center justify-start min-h-screen w-1/12 bg-violet-700">
@@ -29,6 +33,10 @@ export default function MenuDashboard() {
         <Link to="/dashboard" className="text-white"><img src={editor} alt="editor" className="w-8 my-4" /></Link>
         {/*<Link to="/aparencia" className="text-white"><img src={aparencia} alt="aparencia" className="w-7 my-4" /></Link>*/}
         <Link to="/config" className="text-white"><img src={config} alt="config" className="w-8 my-4" /></Link>
+
+        <button  onClick={handleLogout} className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          Sair
+        </button> 
         
       </aside>
   )

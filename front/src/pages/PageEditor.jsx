@@ -15,6 +15,7 @@ import TextRenderer from '../components/editor/renderers/TextRenderer';
 import BannerForm from '../components/editor/forms/BannerForm';
 import CarouselForm from '../components/editor/forms/CarouselForm';
 import SocialForm from '../components/editor/forms/SocialForm';
+import '../styles/preview.css';
 
 // Componentes para renderização na prévia
 const componentRenderers = {
@@ -99,12 +100,12 @@ const defaultComponentValues = {
 const PageEditor = () => {
   const { pageId } = useParams();
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);  
+  const [_user, _setUser] = useState(null);  
   const [page, setPage] = useState(null);
   const [components, setComponents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState(null);
+  const [_lastSaved, _setLastSaved] = useState(null);
   const [error, setError] = useState('');
   const [expandedComponent, setExpandedComponent] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -286,7 +287,7 @@ const PageEditor = () => {
       }));
 
       // Array para coletar todos os resultados das chamadas à API
-      const savedComponents = [];
+      const _savedComponents = [];
       
       // Fazer chamadas em paralelo para cada componente
       const promises = componentsToSave.map(async (component) => {
@@ -320,7 +321,7 @@ const PageEditor = () => {
       setHasUnsavedChanges(false);
       
       // Exibir mensagem de sucesso temporária
-      setLastSaved(new Date().toLocaleTimeString());
+      _setLastSaved(new Date().toLocaleTimeString());
       
       return true;
     } catch (error) {
@@ -643,41 +644,29 @@ const PageEditor = () => {
                 
                 <div 
                   id="page-preview-container"
-                  className="bg-gray-50 border-[12px] border-black rounded-[30px] w-[20vw] h-[75vh] overflow-hidden"
+                  className="bg-gray-50 border-[12px] border-black rounded-[30px] w-[300px] h-[600px] overflow-hidden mx-auto"
                 >
-                  {components.length > 0 ? (
-                    <div className="h-[75vh] py-6 px-3 overflow-y-scroll overflow-x-hidden">
-                      {/* Adicionar o logo aqui, similar ao PublicPage */}
-                      {page?.style?.logo && (
-                        <header className="text-center mb-6">
-                          <div className="flex justify-center">
-                            <img 
-                              src={page.style.logo} 
-                              alt="Logo" 
-                              className="max-h-36 object-contain"
-                            />
-                          </div>
-                        </header>
-                      )}
-                      
-                      <div className="flex flex-wrap">
-                        {components.map((component) => {
-                          const ComponentRenderer = componentRenderers[component.type];
-                          return ComponentRenderer ? (
-                            <React.Fragment key={component.id}>
-                              <ComponentRenderer content={component.content} />
-                            </React.Fragment>
-                          ) : null;
-                        })}
-                      </div>
+                  <div className="preview-content h-full py-6 px-3 overflow-y-auto overflow-x-hidden">
+                    {page?.style?.logo && (
+                      <header className="text-center mb-6">
+                        <div className="flex justify-center">
+                          <img 
+                            src={page.style.logo} 
+                            alt="Logo" 
+                            className="max-h-36 object-contain"
+                          />
+                        </div>
+                      </header>
+                    )}
+                    
+                    <div className="flex flex-col">
+                      {components.map((component) => (
+                        <div key={component.id} className="mb-4 w-full">
+                          {componentRenderers[component.type]({ content: component.content })}
+                        </div>
+                      ))}
                     </div>
-                  ) : (
-                    <div className="h-full flex items-center justify-center">
-                      <p className="text-gray-400 text-center">
-                        Adicione componentes para ver a prévia aqui
-                      </p>
-                    </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -691,7 +680,7 @@ const PageEditor = () => {
 };
 
 // Função de debounce
-function debounce(func, wait) {
+const _debounce = (func, wait) => {
   let timeout;
   return function executedFunction(...args) {
     const later = () => {
@@ -717,7 +706,7 @@ const getComponentDefaultTitle = (type) => {
 };
 
 // Função para obter o rótulo de cada tipo de componente
-const getComponentLabel = (type) => {
+const _getComponentLabel = (type) => {
   const labels = {
     text: 'Texto',
     link: 'Link',

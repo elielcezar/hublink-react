@@ -22,6 +22,19 @@ const BannerForm = ({ content, onChange }) => {
       
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
+          Link (URL)
+        </label>
+        <input
+          type="text"
+          value={content.url || ''}
+          onChange={(e) => onChange({ ...content, url: e.target.value })}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          placeholder="https://"
+        />
+      </div>
+      
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           Texto Alternativo
         </label>
         <input

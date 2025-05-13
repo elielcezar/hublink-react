@@ -1,0 +1,81 @@
+/* Bordas coloridas somente para o preview */
+.preview-content .link-renderer {
+  border: 2px solid red;
+}
+
+.preview-content .social-renderer {
+  border: 2px solid green;
+}
+
+/* Estilos específicos para a pré-visualização */
+.preview-content {
+  /* Escalas para o tamanho da tela */
+  font-size: 12px; /* Fonte base reduzida */
+}
+
+/* Estilo para textos */
+.preview-content h1 {
+  font-size: 1.8em !important;
+}
+
+.preview-content h2 {
+  font-size: 1.5em !important;
+}
+
+.preview-content h3 {
+  font-size: 1.3em !important;
+}
+
+.preview-content p, .preview-content div, .preview-content span {
+  font-size: 1em !important;
+}
+
+/* Ajuste para imagens */
+.preview-content img {
+  max-width: 100% !important;
+  height: auto !important;
+  border: 2px solid blue;
+}
+
+/* Ajuste para links */
+.preview-content a.btn {
+  font-size: 0.9em !important;
+  padding: 8px 12px !important;
+}
+
+/* Ajuste para ícones de redes sociais */
+.preview-content .social-icon {
+  transform: scale(0.8) !important;
+}
+
+/* Ajuste para carrossel */
+.preview-content .carousel-container {
+  max-width: 100% !important;
+  height: auto !important;
+}
+
+/* Ajuste para botões e elementos interativos */
+.preview-content button {
+  font-size: 0.9em !important;
+  padding: 6px 10px !important;
+}
+
+/* Ajuste para espaçamentos */
+.preview-content .mb-4 {
+  margin-bottom: 12px !important;
+}
+
+.preview-content .py-4 {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+/* Reduzir os tamanhos absolutos para vw/vh */
+.preview-content [style*="width:"] {
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+.preview-content [style*="height:"] {
+  height: auto !important;
+} 

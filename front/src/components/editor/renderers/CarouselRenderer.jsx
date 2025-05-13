@@ -116,7 +116,7 @@ const CarouselRenderer = ({ content }) => {
   }
 
   return (
-    <div className="w-full mb-6 px-2" id={carouselId}>
+    <div className="carousel-renderer w-full mb-6 px-2" id={carouselId}>
       {/* Debug info - remover em produção */}
       {/*
       <div className="text-xs text-gray-500 mb-1">

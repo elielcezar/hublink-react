@@ -25,7 +25,7 @@ const IconRenderer = ({ content }) => {
   }
   
   return (
-    <div className={`${widthClass} px-2 mb-4`}>
+    <div className={`icon-renderer ${widthClass} px-2 mb-4`}>
       <a 
         href={content.url} 
         target="_blank" 

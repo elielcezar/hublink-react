@@ -31,7 +31,7 @@ const LinkRenderer = ({ content }) => {
     (content.style === 'primary' ? '#ffffff' : 'var(--text-color, #333333)');
   
   return (
-    <div className={`${widthClass} mb-4 px-2`}>
+    <div className={`link-renderer ${widthClass} mb-4 px-2`}>
       <div 
         className={`h-full flex 
           ${hasImage && imagePosition === 'top' ? 'flex-col' : 'items-center'} 
