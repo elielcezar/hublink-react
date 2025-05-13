@@ -414,18 +414,18 @@ const PageEditor = () => {
         <nav className="bg-white shadow-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
-              <div className="flex items-center">
-                <h1 className="text-xl font-bold text-gray-900">
-                  Hub<span className="text-blue-600">Link</span>
-                </h1>
+              <div className="flex items-center justify-between w-full">
+                
+               <div className="flex items-center space-x-4">
+                  <h1 className="text-xl font-bold text-gray-900">
+                    Hub<span className="text-blue-600">Link</span>
+                  </h1>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Página: {page?.title}                  
+                  </h2>     
+               </div>
 
-                <h2 className="text-xl font-bold text-gray-900">
-                  {page?.title}
-                </h2>
-
-                <span className="text-gray-700 mr-4">Olá, {user?.name}</span>
-
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4">                
                   <button
                       onClick={saveComponents}
                       disabled={saving || !hasUnsavedChanges}
@@ -461,12 +461,14 @@ const PageEditor = () => {
                   >
                     {page?.published ? 'Despublicar' : 'Publicar'}
                   </button>
+
+                  <button  onClick={handleLogout} className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    Sair
+                  </button> 
                                 
                 </div>
 
-                <button  onClick={handleLogout} className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    Sair
-                  </button> 
+               
               </div>
               
             </div>

@@ -838,10 +838,7 @@ const PageAnalytics = () => {
                             return (
                               <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                                 <td className="px-6 py-4 text-sm text-gray-900">
-                                  {/* Display specific social link if available */}
-                                  {component.type === 'social' && component.socialType 
-                                    ? `Redes Sociais: ${component.socialType.charAt(0).toUpperCase() + component.socialType.slice(1)}`
-                                    : (component.title || `Componente ${component.id}`)}
+                                  {component.title || `Componente ${component.id}`}
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-900">
                                   {typeTranslations[component.type] || component.type}
