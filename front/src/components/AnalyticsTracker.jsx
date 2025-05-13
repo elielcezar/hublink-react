@@ -165,32 +165,67 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
   
   // Adicionar script do Google Analytics se fornecido
   useEffect(() => {
-    if (gaId) {
-      // Evitar dupla inicialização
-      if (window.dataLayer) return;
-      
-      // Adicionar script do GA4
-      const script = document.createElement('script');
-      script.async = true;
-      script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-      document.head.appendChild(script);
-      
-      // Configurar o GA
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        window.dataLayer.push(arguments);
-      }
-      gtag('js', new Date());
-      gtag('config', gaId);
-      
-      // Limpeza
-      return () => {
-        if (script.parentNode) {
-          document.head.removeChild(script);
-        }
-      };
+    // Skip if no GA ID is provided
+    if (!gaId) {
+      console.log('Google Analytics ID não configurado');
+      return;
     }
-  }, [gaId]);
+
+    // Log for debugging purposes
+    console.log(`Inicializando Google Analytics com ID: ${gaId}`);
+
+    // Function to load the GA script
+    const loadGoogleAnalytics = () => {
+      // Create script elements for Google Analytics
+      const gtagScript = document.createElement('script');
+      gtagScript.async = true;
+      gtagScript.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+      
+      const inlineScript = document.createElement('script');
+      inlineScript.innerHTML = `
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${gaId}', { 
+          page_title: document.title,
+          page_path: window.location.pathname,
+          page_location: window.location.href
+        });
+      `;
+      
+      // Add scripts to document
+      document.head.appendChild(gtagScript);
+      document.head.appendChild(inlineScript);
+
+      // Track page view
+      console.log(`Pageview tracked for page ID: ${pageId}`);
+      
+      return () => {
+        // Cleanup scripts on component unmount
+        document.head.removeChild(gtagScript);
+        document.head.removeChild(inlineScript);
+      };
+    };
+
+    // Check if GA is already loaded to avoid duplicate loading
+    if (!window.ga && !document.querySelector(`script[src*="googletagmanager.com/gtag/js?id=${gaId}"]`)) {
+      loadGoogleAnalytics();
+    }
+  }, [gaId, pageId]);
+  
+  // Track component views if needed
+  useEffect(() => {
+    if (!gaId || !pageComponents || !window.gtag) return;
+
+    // Advanced: Track component impressions if needed
+    // This is optional but can provide more detailed analytics
+    pageComponents.forEach(component => {
+      if (component && component.id) {
+        console.log(`Component in view: ${component.type} (ID: ${component.id})`);
+        // You can add component tracking here if needed
+      }
+    });
+  }, [gaId, pageComponents]);
   
   // Rastrear visualização da página
   useEffect(() => {

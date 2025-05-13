@@ -4,7 +4,8 @@ import axios from 'axios';
 import MenuDashboard from '../components/MenuDashboard';
 import getApiBaseUrl from '../config/apiConfig';
 
-const API_BASE_URL = getApiBaseUrl();
+// Use a constant API base URL instead of a Promise
+const API_BASE_URL = 'http://localhost:3002'; // Replace with your actual API base URL
 
 const SettingsAnalytics = () => {
   const [gaId, setGaId] = useState('');
@@ -22,7 +23,6 @@ const SettingsAnalytics = () => {
           return;
         }
 
-        // Buscar usuário com gaId
         const userDetailResponse = await axios.get(`${API_BASE_URL}/api/user/details`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -59,13 +59,23 @@ const SettingsAnalytics = () => {
       
       setSuccess(true);
       
-      // Resetar mensagem de sucesso após 3 segundos
       setTimeout(() => {
         setSuccess(false);
       }, 3000);
     } catch (error) {
       console.error('Erro ao atualizar configurações:', error);
-      setError('Não foi possível salvar as configurações. Tente novamente.');
+      
+      if (error.response) {
+        console.error('Resposta do servidor:', error.response.data);
+        console.error('Status do erro:', error.response.status);
+        setError(`Erro (${error.response.status}): ${error.response.data.message || 'Não foi possível salvar as configurações'}`);
+      } else if (error.request) {
+        console.error('Sem resposta do servidor:', error.request);
+        setError('Servidor não respondeu. Verifique sua conexão e tente novamente.');
+      } else {
+        console.error('Erro na configuração da requisição:', error.message);
+        setError(`Erro na requisição: ${error.message}`);
+      }
     } finally {
       setIsUpdating(false);
     }

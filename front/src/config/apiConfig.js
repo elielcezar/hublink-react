@@ -1,22 +1,12 @@
-import axios from 'axios';
+const getApiBaseUrl = async () => {
+  // Your existing API URL logic
+  return 'http://localhost:3002'; // Replace with your actual API base URL
+};
 
-console.log('VITE_API_URL:', import.meta.env.VITE_API_URL);
+// Add a synchronous version that returns the URL directly
+const getApiBaseUrlSync = () => {
+  return 'http://localhost:3002'; // Replace with your actual API base URL
+};
 
-// Criar instância do axios com URL base do ambiente
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3002',
-    headers: {
-        'Content-Type': 'application/json'
-    }
-});
-
-// Interceptador para adicionar o token de autenticação a cada requisição
-api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
-
-export default api;
+export { getApiBaseUrl, getApiBaseUrlSync };
+export default getApiBaseUrlSync;
