@@ -33,7 +33,7 @@ const SocialRenderer = ({ content }) => {
   const availableSocialLinks = socialLinks.filter(link => link.url);
   
   return (
-    <div className="social-renderer w-full px-2 mb-6">      
+    <div className="social-renderer w-full px-2 mb-4">      
       
       <div className="flex flex-wrap justify-center gap-4">
         {availableSocialLinks.map((link, index) => (

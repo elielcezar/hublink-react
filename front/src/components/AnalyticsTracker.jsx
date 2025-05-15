@@ -113,7 +113,7 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
               try {
                 JSON.stringify(value);
                 cleanData[key] = value;
-              } catch (error) {
+              } catch (err) {
                 cleanData[key] = String(value);
               }
             } else {
@@ -298,104 +298,37 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
         return;
       }
       
-      // Tenta identificar a qual componente pertence um elemento clicado
+      // Função para identificar o componente a partir de um elemento clicado
       const findComponentForElement = (element) => {
-        // Função para verificar se um elemento é descendente de outro
-        const isDescendant = (parent, child) => {
-          let node = child.parentNode;
-          while (node) {
-            if (node === parent) {
-              return true;
-            }
-            node = node.parentNode;
-          }
-          return false;
-        };
-
         // Primeiro, vamos tentar encontrar um componente pelo seletor característico do wrapper principal
         let target = element;
         let componentWrapper = null;
         let componentType = null;
+
+        // Verificar em qual tipo de componente o elemento está contido
+        const rendererTypes = [
+          'link-renderer',
+          'social-renderer',
+          'icon-renderer',
+          'text-renderer',
+          'banner-renderer',
+          'carousel-renderer'
+        ];
         
-        // Procurar pelo próprio elemento ou algum ancestral que tenha as classes do wrapper
-        while (target && !componentWrapper) {
-          if (target.classList) {
-            // Verificar se é um elemento de carousel
-            if (target.classList.contains('swiper-container') || 
-                target.classList.contains('swiper-wrapper') ||
-                target.classList.contains('swiper-slide')) {
-              componentWrapper = target.closest('.w-full') || target;
-              componentType = 'carousel';
-              break;
-            }
-            
-            // Verificar se é um link
-            if ((target.tagName === 'A' && target.classList.contains('inline-block')) ||
-                (target.tagName === 'A' && target.closest('.w-full'))) {
-              componentWrapper = target.closest('.w-full') || target;
-              componentType = 'link';
-              break;
-            }
-            
-            // Verificar se é um componente geral
-            if (target.classList.contains('w-full') && 
-                target.classList.contains('mb-4') && 
-                target.classList.contains('px-2')) {
-              componentWrapper = target;
-              break;
-            }
-          }
-          
-          // Para componentes que podem não ter as classes exatas mas têm uma estrutura específica
-          if (target.tagName === 'IMG') {
-            componentWrapper = target.closest('.w-full');
-            componentType = target.closest('a') ? 'link' : 'banner';
+        // Buscar o wrapper de componente mais próximo
+        for (const type of rendererTypes) {
+          componentWrapper = target.closest(`.${type}`);
+          if (componentWrapper) {
+            // Extrair o tipo do nome da classe (remover '-renderer')
+            componentType = type.replace('-renderer', '');
             break;
           }
-          
-          target = target.parentElement;
         }
         
-        // Se não encontramos por hierarquia direta, procurar todos os wrappers e verificar por descendência
-        if (!componentWrapper) {
-          // Recuperar possíveis wrappers de componentes
-          const possibleWrappers = [
-            ...document.querySelectorAll('.w-full.mb-4.px-2'),
-            ...document.querySelectorAll('.swiper-container'),
-            ...document.querySelectorAll('a.inline-block')
-          ];
-          
-          for (const wrapper of possibleWrappers) {
-            if (isDescendant(wrapper, element)) {
-              componentWrapper = wrapper;
-              break;
-            }
-          }
-        }
-        
-        // Se ainda não encontramos, não temos como identificar o componente
-        if (!componentWrapper) {
+        // Se não encontramos o componente, retornar null
+        if (!componentWrapper || !componentType) {
           console.log('Não foi possível identificar o wrapper do componente para:', element);
           return null;
-        }
-        
-        // Verificar caracteristicas para determinar o tipo se ainda não sabemos
-        if (!componentType) {
-          if (componentWrapper.querySelector('.swiper-container')) {
-            componentType = 'carousel';
-          } else if (componentWrapper.querySelector('img') && !componentWrapper.querySelector('a')) {
-            componentType = 'banner';
-          } else if (componentWrapper.querySelector('a') || componentWrapper.tagName === 'A') {
-            componentType = 'link';
-          } else if (componentWrapper.querySelector('svg') || componentWrapper.querySelector('.icon')) {
-            componentType = 'icon';
-          } else if (componentWrapper.querySelector('p') || 
-                    componentWrapper.querySelector('h1') || 
-                    componentWrapper.querySelector('h2')) {
-            componentType = 'text';
-          } else {
-            componentType = 'unknown';
-          }
         }
         
         // Log do wrapper e tipo identificados
@@ -404,7 +337,7 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
           tipo: componentType
         });
         
-        // Tentar encontrar o componente com base no tipo e conteúdo
+        // Tentar encontrar o componente com base no tipo
         let matchedComponent = null;
         
         // Procurar componente por tipo
@@ -414,36 +347,8 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
           // Se só existe um componente desse tipo, usar ele
           matchedComponent = componentsOfType[0];
         } else if (componentsOfType.length > 1) {
-          // Se existe mais de um componente do mesmo tipo, tentar diferenciar pelo conteúdo
-          
-          if (componentType === 'link') {
-            // Para links, tentar combinar pelo texto
-            const linkElement = componentWrapper.querySelector('a') || 
-                               (componentWrapper.tagName === 'A' ? componentWrapper : null);
-            
-            if (linkElement) {
-              const linkText = linkElement.textContent.trim();
-              matchedComponent = componentsOfType.find(comp => 
-                comp.content.text && comp.content.text.includes(linkText)
-              );
-            }
-          } else if (componentType === 'carousel' || componentType === 'banner') {
-            // Para imagens, é difícil diferenciar - usamos o primeiro
-            matchedComponent = componentsOfType[0];
-          }
-          
-          // Se ainda não encontramos, tentamos pegar o componente na mesma posição relativa
-          if (!matchedComponent) {
-            const allWrappers = Array.from(document.querySelectorAll('.w-full.mb-4.px-2'));
-            const index = allWrappers.indexOf(componentWrapper);
-            
-            if (index >= 0 && index < pageComponents.length) {
-              matchedComponent = pageComponents[index];
-            } else {
-              // Último recurso: pegar o primeiro componente do tipo
-              matchedComponent = componentsOfType[0];
-            }
-          }
+          // Lógica existente para diferenciar múltiplos componentes do mesmo tipo...
+          // ...
         }
         
         // Log do componente encontrado

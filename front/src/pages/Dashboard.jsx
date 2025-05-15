@@ -77,14 +77,12 @@ const Dashboard = () => {
     console.log('Token presente:', token ? 'Sim' : 'Não');
     
     const fetchData = async () => {
-      try {
-        // Buscar dados do usuário usando o api centralizado
+      try {        
         console.log('Buscando dados do usuário...');
         const userResponse = await api.get('/api/me');
         console.log('Dados do usuário recebidos com sucesso');
-        setUser(userResponse.data);
+        setUser(userResponse.data);        
         
-        // Buscar páginas do usuário usando o api centralizado
         console.log('Buscando páginas do usuário...');
         const pagesResponse = await api.get('/api/pages');
         console.log(`${pagesResponse.data.length} páginas encontradas`);
