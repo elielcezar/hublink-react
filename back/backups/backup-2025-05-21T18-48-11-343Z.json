@@ -1,0 +1,131 @@
+{
+  "users": [
+    {
+      "id": 2,
+      "email": "elielcezar@gmail.com",
+      "username": "elielcezar",
+      "name": "Eliel Cezar",
+      "password": "$2b$10$RiiRS3fAv59MmcLDZYflpulW.fc4yzM/BlN3bFuMOpoIrnJki5rw2",
+      "gaId": "G-WE0HNWZN2C",
+      "createdAt": "2025-04-10T23:10:17.086Z",
+      "updatedAt": "2025-05-21T12:45:13.855Z",
+      "role": "user"
+    },
+    {
+      "id": 5,
+      "email": "eliel@megamidia.com.br",
+      "username": "megamidia",
+      "name": "Eliel Cezar ",
+      "password": "$2b$10$YQq7zQqJh/qC2b0SdouRTuqKwzXFZPVaTHKTK2Z0k7xXxwKU/48CK",
+      "gaId": null,
+      "createdAt": "2025-05-21T13:07:17.075Z",
+      "updatedAt": "2025-05-21T13:07:17.075Z",
+      "role": "user"
+    }
+  ],
+  "pages": [
+    {
+      "id": 1,
+      "title": "Teste",
+      "slug": "teste",
+      "published": true,
+      "createdAt": "2025-04-10T23:26:31.451Z",
+      "updatedAt": "2025-05-13T14:40:00.101Z",
+      "userId": 2,
+      "style": {
+        "logo": "/uploads/image-1747147193287-292318646.jpg",
+        "linkColor": "#ffffff",
+        "textColor": "#ecf80c",
+        "fontFamily": "Montserrat, sans-serif",
+        "backgroundType": "color",
+        "backgroundColor": "#f8f9fa",
+        "backgroundImage": ""
+      },
+      "components": [
+        {
+          "id": 37,
+          "type": "social",
+          "order": 0,
+          "content": "{\"title\":\"Redes Sociais 2\",\"instagram\":\"https://apps.apple.com/\",\"x\":\"https://apps.apple.com/\",\"youtube\":\"https://apps.apple.com/\",\"tiktok\":\"https://apps.apple.com/\",\"kwai\":\"\",\"spotify\":\"\",\"iconColor\":\"#0077B5\"}",
+          "createdAt": "2025-05-15T16:58:45.059Z",
+          "updatedAt": "2025-05-15T17:11:47.804Z",
+          "pageId": 1
+        },
+        {
+          "id": 38,
+          "type": "link",
+          "order": 1,
+          "content": "{\"title\":\"Novo Link\",\"text\":\"Clique aqui\",\"url\":\"https://apps.apple.com/br/app/super-muffato/id1040965567\",\"style\":\"primary\",\"width\":\"100\",\"imageUrl\":\"\",\"imagePosition\":\"left\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-05-15T17:11:30.133Z",
+          "updatedAt": "2025-05-15T17:11:47.866Z",
+          "pageId": 1
+        },
+        {
+          "id": 39,
+          "type": "link",
+          "order": 2,
+          "content": "{\"title\":\"Link\",\"text\":\"Clique aqui\",\"url\":\"https://\",\"style\":\"primary\",\"width\":\"100\",\"imageUrl\":\"\",\"imagePosition\":\"left\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-05-15T17:48:25.476Z",
+          "updatedAt": "2025-05-15T17:48:25.476Z",
+          "pageId": 1
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "megamidia",
+      "slug": "mega",
+      "published": true,
+      "createdAt": "2025-05-21T13:07:17.140Z",
+      "updatedAt": "2025-05-21T18:43:19.196Z",
+      "userId": 5,
+      "style": {
+        "logo": "/uploads/image-1747847499850-659728785.jpg",
+        "linkColor": "#3b82f6",
+        "textColor": "#333333",
+        "fontFamily": "Inter, sans-serif",
+        "backgroundType": "color",
+        "backgroundColor": "#50a393",
+        "backgroundImage": ""
+      },
+      "components": [
+        {
+          "id": 40,
+          "type": "banner",
+          "order": 0,
+          "content": "{\"title\":\"Teste Banner\",\"imageUrl\":\"/uploads/image-1747849345735-896116021.gif\",\"altText\":\"\",\"caption\":\"\"}",
+          "createdAt": "2025-05-21T14:24:09.005Z",
+          "updatedAt": "2025-05-21T18:14:49.932Z",
+          "pageId": 3
+        },
+        {
+          "id": 55,
+          "type": "icon",
+          "order": 1,
+          "content": "{\"title\":\"Botão\",\"text\":\"Texto do Botão\",\"url\":\"https://\",\"imageUrl\":\"\",\"height\":\"medium\",\"width\":\"100\",\"overlayColor\":\"rgba(0, 0, 0, 0.4)\",\"textColor\":\"#ffffff\"}",
+          "createdAt": "2025-05-21T18:11:58.922Z",
+          "updatedAt": "2025-05-21T18:14:49.932Z",
+          "pageId": 3
+        },
+        {
+          "id": 41,
+          "type": "link",
+          "order": 2,
+          "content": "{\"title\":\"Link\",\"text\":\"Clique aqui\",\"url\":\"https://\",\"style\":\"primary\",\"width\":\"100\",\"imageUrl\":\"/uploads/image-1747837792293-724882045.png\",\"imagePosition\":\"left\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-05-21T14:29:45.823Z",
+          "updatedAt": "2025-05-21T18:14:49.932Z",
+          "pageId": 3
+        },
+        {
+          "id": 56,
+          "type": "social",
+          "order": 3,
+          "content": "{\"title\":\"Redes Sociais\",\"instagram\":\"\",\"x\":\"\",\"youtube\":\"\",\"tiktok\":\"\",\"kwai\":\"\",\"spotify\":\"\",\"iconColor\":\"#0077B5\"}",
+          "createdAt": "2025-05-21T18:11:59.057Z",
+          "updatedAt": "2025-05-21T18:14:49.932Z",
+          "pageId": 3
+        }
+      ]
+    }
+  ]
+}

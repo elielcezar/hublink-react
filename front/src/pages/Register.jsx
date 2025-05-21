@@ -26,7 +26,7 @@ const Register = () => {
       await axios.post('http://localhost:3002/api/register', {
         name: data.name,
         email: data.email,
-        username: data.username,
+        pageSlug: data.pageSlug,
         password: data.password
       });
       
@@ -80,38 +80,38 @@ const Register = () => {
             </div>
             
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 hidden">
-                Usuário / URL
+              <label htmlFor="pageSlug" className="block text-sm font-medium text-gray-700 hidden">
+                Endereço da sua página
               </label>
               <div className="flex items-center">
                 <span className="text-gray-500 mr-2">hublink.app/</span>
                 <input
-                  id="username"
+                  id="pageSlug"
                   type="text"
-                  {...register('username', { 
-                    required: 'Nome de usuário é obrigatório',
+                  {...register('pageSlug', { 
+                    required: 'Endereço da página é obrigatório',
                     pattern: {
                       value: /^[a-z0-9-_.]+$/i,
                       message: 'Use apenas letras, números, hífens, pontos e underscores'
                     },
                     minLength: {
                       value: 3,
-                      message: 'Nome de usuário deve ter pelo menos 3 caracteres'
+                      message: 'Endereço deve ter pelo menos 3 caracteres'
                     },
                     maxLength: {
                       value: 30,
-                      message: 'Nome de usuário deve ter no máximo 30 caracteres'
+                      message: 'Endereço deve ter no máximo 30 caracteres'
                     }
                   })}
                   className="flex-1 mt-1 block px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="seu-nome-de-usuario"
+                  placeholder="seu-endereco"
                 />
               </div>
-              {errors.username && (
-                <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
+              {errors.pageSlug && (
+                <p className="mt-1 text-sm text-red-600">{errors.pageSlug.message}</p>
               )}
               <p className="mt-1 text-sm text-gray-500">
-                Este será o endereço da sua página principal. 
+                Este será o endereço da sua página principal.
               </p>
             </div>
             
@@ -200,7 +200,6 @@ const Register = () => {
         </div>
       </div>
     </div>
-    
   );
 };
 

@@ -16,13 +16,12 @@ datasource db {
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
-  username  String?  @unique  // Novo campo para nome de usuário
   name      String
   password  String
   gaId      String?  // ID do Google Analytics
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  role      String   @default("user")
+  role      String   @default("user")  
   pages     Page[]
 }
 

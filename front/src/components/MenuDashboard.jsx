@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react'
 import logo from '../assets/logo.png';
-import { IoHomeSharp } from "react-icons/io5";
-import editor from '../assets/editor.png';
-import aparencia from '../assets/aparencia.png';
-import { MdDesignServices } from "react-icons/md";
 import { MdOutlineDesignServices } from "react-icons/md";
 import { GoGear } from "react-icons/go";
 import { FaChartBar } from "react-icons/fa";
 import { TbLogout } from "react-icons/tb";
-import config from '../assets/config.png';
-import { FiEdit3, FiBarChart2 } from "react-icons/fi";
+import { FiEdit3 } from "react-icons/fi";
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import api from '../config/apiConfig';
 
 export default function MenuDashboard() {
-    const [user, setUser] = useState(null);
+    const [_user, setUser] = useState(null);
     const [userPage, setUserPage] = useState(null);
     const navigate = useNavigate();
+    const location = useLocation();
+    
+    // Estado para controlar qual tooltip está visível
+    const [activeTooltip, setActiveTooltip] = useState(null);
     
     useEffect(() => {
         const fetchUserAndPage = async () => {
@@ -47,57 +46,131 @@ export default function MenuDashboard() {
       localStorage.removeItem('user');
       navigate('/');
     };
+    
+    // Verifica se o caminho atual corresponde ao link para destacá-lo
+    const isActive = (path) => {
+      if (path === '/dashboard') {
+        return location.pathname === path;
+      }
+      return location.pathname.includes(path);
+    };
   
     return (
-      <aside className="flex flex-col items-center justify-start min-h-screen w-1/12 max-w-[100px] bg-violet-700">
-          <h1 className="text-xl font-bold text-gray-900">
-              <img src={logo} alt="logo" className="w-12 h-12 my-5" />
-          </h1>        
+      <aside className="flex flex-col items-center justify-start min-h-screen w-1/12 max-w-[100px] bg-violet-700 relative">
+          <div className="text-xl font-bold text-gray-900 mt-5 mb-10">
+              <img src={logo} alt="logo" className="w-12 h-12" />
+          </div>        
 
-          <Link 
-            to="/dashboard" 
-            className="text-white p-2 my-2 hover:bg-violet-800 rounded-full"
-            title="Personalizar Página"
+          {/* Menu Item - Personalizar */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setActiveTooltip('personalizar')}
+            onMouseLeave={() => setActiveTooltip(null)}
           >
-            <MdOutlineDesignServices size={36} />
-          </Link>
-
-          {userPage && (
             <Link 
-              to={`/editor/${userPage.id}`} 
-              className="text-white p-2 my-2 hover:bg-violet-800 rounded-full"
-              title="Editar Página"
+              to="/dashboard" 
+              className={`text-white p-2 my-2 hover:bg-violet-800 rounded-full flex items-center justify-center ${
+                isActive('/dashboard') ? 'bg-violet-800' : ''
+              }`}
             >
-              <FiEdit3 size={36} />
+              <MdOutlineDesignServices size={36} />
             </Link>
+            {activeTooltip === 'personalizar' && (
+              <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-sm rounded whitespace-nowrap z-50 -translate-y-12">
+                Personalizar Perfil
+                <div className="absolute top-1/2 right-full -translate-y-1/2 border-8 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
+          </div>
+
+          {/* Menu Item - Editor */}
+          {userPage && (
+            <div 
+              className="relative"
+              onMouseEnter={() => setActiveTooltip('editor')}
+              onMouseLeave={() => setActiveTooltip(null)}
+            >
+              <Link 
+                to={`/editor/${userPage.id}`} 
+                className={`text-white p-2 my-2 hover:bg-violet-800 rounded-full flex items-center justify-center ${
+                  isActive('/editor') ? 'bg-violet-800' : ''
+                }`}
+              >
+                <FiEdit3 size={36} />
+              </Link>
+              {activeTooltip === 'editor' && (
+                <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-sm rounded whitespace-nowrap z-50 -translate-y-12">
+                  Editar Página
+                  <div className="absolute top-1/2 right-full -translate-y-1/2 border-8 border-transparent border-r-gray-800"></div>
+                </div>
+              )}
+            </div>
           )}
 
+          {/* Menu Item - Analytics */}
           {userPage && (
-            <Link 
-              to={`/analytics/${userPage.id}`} 
-              className="text-white p-2 my-2 hover:bg-violet-800 rounded-full"
-              title="Analytics"
+            <div 
+              className="relative"
+              onMouseEnter={() => setActiveTooltip('analytics')}
+              onMouseLeave={() => setActiveTooltip(null)}
             >
-              <FaChartBar size={36} />
-            </Link>
+              <Link 
+                to={`/analytics/${userPage.id}`} 
+                className={`text-white p-2 my-2 hover:bg-violet-800 rounded-full flex items-center justify-center ${
+                  isActive('/analytics') ? 'bg-violet-800' : ''
+                }`}
+              >
+                <FaChartBar size={36} />
+              </Link>
+              {activeTooltip === 'analytics' && (
+                <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-sm rounded whitespace-nowrap z-50 -translate-y-12">
+                  Analytics
+                  <div className="absolute top-1/2 right-full -translate-y-1/2 border-8 border-transparent border-r-gray-800"></div>
+                </div>
+              )}
+            </div>
           )}
 
-          <Link 
-            to="/config" 
-            className="text-white p-2 my-2 hover:bg-violet-800 rounded-full"
-            title="Configurações"
+          {/* Menu Item - Configurações */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setActiveTooltip('config')}
+            onMouseLeave={() => setActiveTooltip(null)}
           >
-            <GoGear size={36} />
-          </Link>
+            <Link 
+              to="/config" 
+              className={`text-white p-2 my-2 hover:bg-violet-800 rounded-full flex items-center justify-center ${
+                isActive('/config') ? 'bg-violet-800' : ''
+              }`}
+            >
+              <GoGear size={36} />
+            </Link>
+            {activeTooltip === 'config' && (
+                <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-sm rounded whitespace-nowrap z-50 -translate-y-12">
+                  Configurações
+                  <div className="absolute top-1/2 right-full -translate-y-1/2 border-8 border-transparent border-r-gray-800"></div>
+                </div>
+            )}
+          </div>
 
-          <div className="mt-auto mb-8">
+          {/* Menu Item - Logout */}
+          <div 
+            className="relative mt-auto mb-8"
+            onMouseEnter={() => setActiveTooltip('logout')}
+            onMouseLeave={() => setActiveTooltip(null)}
+          >
             <button 
               onClick={handleLogout} 
-              className="text-white p-2 my-2 hover:bg-violet-800 rounded-full"
-              title="Sair"
+              className="text-white p-2 my-2 hover:bg-violet-800 rounded-full flex items-center justify-center"
             >
               <TbLogout size={36} />
             </button>
+            {activeTooltip === 'logout' && (
+              <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-sm rounded whitespace-nowrap z-50 -translate-y-10">
+                Sair
+                <div className="absolute top-1/2 right-full -translate-y-1/2 border-8 border-transparent border-r-gray-800"></div>
+              </div>
+            )}
           </div>
       </aside>
     );
