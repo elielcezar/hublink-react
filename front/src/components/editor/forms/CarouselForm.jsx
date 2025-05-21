@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ImageUploader from '../../ImageUploader';
+import ImageUploader from './ImageUploader';
 import TitleField from './TitleField';
 import { SketchPicker } from 'react-color';
 

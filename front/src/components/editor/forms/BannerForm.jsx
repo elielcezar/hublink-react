@@ -1,5 +1,5 @@
 import React from 'react';
-import ImageUploader from '../../ImageUploader';
+import ImageUploader from './ImageUploader';
 import TitleField from './TitleField';
 
 const BannerForm = ({ content, onChange }) => {
@@ -13,10 +13,10 @@ const BannerForm = ({ content, onChange }) => {
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Imagem do Banner
-        </label>
+        </label>      
         <ImageUploader 
-          currentImageUrl={content.imageUrl} 
           onImageUpload={(imageUrl) => onChange({ ...content, imageUrl })}
+          currentImage={content.imageUrl || ''} 
         />
       </div>
       

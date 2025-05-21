@@ -1,5 +1,5 @@
 import React from 'react';
-import ImageUploader from '../../ImageUploader';
+import ImageUploader from './ImageUploader';
 import { SketchPicker } from 'react-color';
 import TitleField from './TitleField';
 
@@ -16,7 +16,7 @@ const IconForm = ({ content, onChange }) => {
       
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Texto do Ícone
+          Texto do Botão
         </label>
         <input
           type="text"

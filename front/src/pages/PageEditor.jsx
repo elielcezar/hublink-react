@@ -16,6 +16,23 @@ import BannerForm from '../components/editor/forms/BannerForm';
 import CarouselForm from '../components/editor/forms/CarouselForm';
 import SocialForm from '../components/editor/forms/SocialForm';
 import '../styles/preview.css';
+import AppHeader from '../components/AppHeader';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Componentes para renderização na prévia
 const componentRenderers = {
@@ -86,8 +103,8 @@ const defaultComponentValues = {
     iconColor: '#0077B5'
   },
   icon: {
-    title: 'Ícone',
-    text: 'Texto do Ícone', 
+    title: 'Botão',
+    text: 'Texto do Botão', 
     url: 'https://', 
     imageUrl: '',
     height: 'medium',
@@ -97,10 +114,80 @@ const defaultComponentValues = {
   }
 };
 
+// Componente para cada item ordenável
+const SortableItem = ({ component, index, expandedComponent, setExpandedComponent, onDelete, saving, handleComponentUpdate }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: component.id.toString() });
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+  
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style}
+      className="bg-white rounded-lg shadow-md overflow-hidden"
+    >
+      <div
+        onClick={() => setExpandedComponent(
+          expandedComponent === component.id ? null : component.id
+        )}
+        className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
+      >
+        <div className="flex items-center">
+          <div 
+            {...attributes} 
+            {...listeners} 
+            className="mr-2 px-2 py-1 text-gray-500 hover:bg-gray-100 rounded cursor-grab"
+          >
+            ⣿
+          </div>
+          <span className="text-gray-500 mr-2">
+            {index + 1}.
+          </span>
+          <h3 className="font-medium capitalize">
+            {component.content.title || getComponentDefaultTitle(component.type)}
+          </h3>
+        </div>
+        
+        <div className="flex space-x-2">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(component.id);
+            }}
+            disabled={saving}
+            className="text-red-500 hover:text-red-700"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      
+      {expandedComponent === component.id && (
+        <div className="border-t border-gray-200 p-4">
+          {componentForms[component.type]({
+            content: component.content,
+            onChange: (newContent) => handleComponentUpdate(component.id, newContent)
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const PageEditor = () => {
   const { pageId } = useParams();
   const navigate = useNavigate();
-  const [_user, _setUser] = useState(null);  
+  const [_user, _setUser] = useState(null);
   const [page, setPage] = useState(null);
   const [components, setComponents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -109,6 +196,14 @@ const PageEditor = () => {
   const [error, setError] = useState('');
   const [expandedComponent, setExpandedComponent] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  
+  // Sensores para o drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
   
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -184,12 +279,19 @@ const PageEditor = () => {
       // Resetar qualquer erro anterior
       setError('');
       
-      const response = await api.post(
-        `/api/pages/${pageId}/components`,
-        { type, content }
-      );
+      // Não salvar na API imediatamente, apenas adicionar ao estado local
+      // Criar um ID temporário que será substituído quando salvar
+      const tempId = `temp-${Date.now()}`;
+      const newComponent = {
+        id: tempId,
+        type,
+        content,
+        isNew: true // Marcar como novo componente para salvar depois
+      };
       
-      setComponents(prevComponents => [...prevComponents, response.data]);
+      // Adicionar ao início da lista em vez do final
+      setComponents(prevComponents => [newComponent, ...prevComponents]);
+      setHasUnsavedChanges(true); // Marcar que há alterações não salvas
     } catch (error) {
       console.error('Erro ao adicionar componente:', error);
       setError('Falha ao adicionar componente. Por favor, tente novamente.');
@@ -200,11 +302,36 @@ const PageEditor = () => {
     try {
       setError('');
       
-      await api.delete(`/api/components/${componentId}`);
+      // Verificar se o componente é novo (ainda não salvo na API)
+      const component = components.find(comp => comp.id === componentId);
       
-      setComponents(prevComponents => 
-        prevComponents.filter(component => component.id !== componentId)
-      );
+      if (component && !component.isNew) {
+        // Marcar para deleção, mas não deletar imediatamente da API
+        // Em vez de manter o componente visível com uma flag toDelete
+        // vamos mover para um estado separado e remover da visualização
+        const deletedComponent = {...component, toDelete: true};
+        
+        // Remover da lista de componentes visíveis
+        setComponents(prevComponents => 
+          prevComponents.filter(comp => comp.id !== componentId)
+        );
+        
+        // Armazenar separadamente para deleção futura
+        // Isso poderia ser um novo estado como:
+        // setComponentsToDelete(prev => [...prev, deletedComponent]);
+        // 
+        // Mas como já temos a lógica implementada com a flag toDelete,
+        // podemos adicionar de volta ao array com a flag
+        setComponents(prevComponents => [
+          ...prevComponents.filter(comp => comp.id !== componentId),
+          deletedComponent
+        ]);
+      } else {
+        // Se for um componente novo, apenas remove do estado
+        setComponents(prevComponents => 
+          prevComponents.filter(component => component.id !== componentId)
+        );
+      }
       
       setHasUnsavedChanges(true);
     } catch (error) {
@@ -223,46 +350,16 @@ const PageEditor = () => {
       const newIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
       if (newIndex < 0 || newIndex >= components.length) return;
       
-      // Trocar posição dos componentes
+      // Trocar posição dos componentes apenas localmente
       const newComponents = [...components];
       [newComponents[currentIndex], newComponents[newIndex]] = 
       [newComponents[newIndex], newComponents[currentIndex]];
       
-      // Atualizar ordem
-      const componentIds = newComponents.map(comp => comp.id);
-      
-      await api.put(
-        `/api/pages/${pageId}/reorder`,
-        { componentIds }
-      );
-      
       setComponents(newComponents);
+      setHasUnsavedChanges(true); // Marcar que há alterações não salvas
     } catch (error) {
       console.error('Erro ao reordenar componentes:', error);
       setError('Falha ao reordenar componentes. Por favor, tente novamente.');
-    }
-  };
-  
-  const togglePublish = async () => {
-    try {
-      setError('');
-      
-      const response = await api.put(
-        `/api/pages/${pageId}`,
-        {
-          title: page.title,
-          slug: page.slug,
-          published: !page.published
-        }
-      );
-      
-      setPage({
-        ...page,
-        published: response.data.published
-      });
-    } catch (error) {
-      console.error('Erro ao mudar estado de publicação:', error);
-      setError('Falha ao atualizar o estado de publicação. Por favor, tente novamente.');
     }
   };
   
@@ -280,19 +377,31 @@ const PageEditor = () => {
       setSaving(true);
       setError('');
       
-      // Converter todos os contents para strings JSON antes de enviar
-      const componentsToSave = components.map(component => ({
-        ...component,
-        content: component.content
-      }));
-
-      // Array para coletar todos os resultados das chamadas à API
-      const _savedComponents = [];
+      // 1. Lidar com componentes para deletar
+      const componentsToDelete = components.filter(comp => comp.toDelete && !comp.isNew);
+      for (const component of componentsToDelete) {
+        await api.delete(`/api/components/${component.id}`);
+      }
       
-      // Fazer chamadas em paralelo para cada componente
-      const promises = componentsToSave.map(async (component) => {
-        if (component.id && !isNaN(component.id)) {
-          // Se o componente já existe, atualize-o
+      // 2. Filtrar componentes que não serão deletados
+      const componentsToSave = components.filter(comp => !comp.toDelete);
+      
+      // 3. Salvar componentes novos ou atualizados
+      for (const component of componentsToSave) {
+        if (component.isNew) {
+          // Componente novo - criar via API
+          const response = await api.post(
+            `/api/pages/${pageId}/components`,
+            { 
+              type: component.type, 
+              content: component.content 
+            }
+          );
+          // Atualizar o ID temporário com o ID real da API
+          component.id = response.data.id;
+          component.isNew = false;
+        } else {
+          // Componente existente - atualizar via API
           await api.put(
             `/api/components/${component.id}`,
             {
@@ -300,24 +409,18 @@ const PageEditor = () => {
               content: component.content
             }
           );
-          return { ...component, saved: true };
-        } else {
-          // Se é um componente novo, crie-o
-          await api.post(
-            `/api/pages/${pageId}/components`,
-            {
-              type: component.type,
-              content: component.content
-            }
-          );
-          return { ...component, saved: true };
         }
-      });
+      }
       
-      // Aguardar todas as chamadas à API
-      await Promise.all(promises);
+      // 4. Atualizar a ordem dos componentes
+      const componentIds = componentsToSave.map(comp => comp.id);
+      await api.put(
+        `/api/pages/${pageId}/reorder`,
+        { componentIds }
+      );
       
-      // Atualizar estado para refletir que as mudanças foram salvas
+      // 5. Atualizar o estado com os componentes salvos
+      setComponents(componentsToSave);
       setHasUnsavedChanges(false);
       
       // Exibir mensagem de sucesso temporária
@@ -369,6 +472,36 @@ const PageEditor = () => {
     };
   }, [pageId]);
   
+  // Função para lidar com o fim do drag and drop
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    
+    if (!over) return;
+    
+    if (active.id !== over.id) {
+      setComponents((items) => {
+        // Filtrar apenas componentes visíveis
+        const visibleItems = items.filter(item => !item.toDelete);
+        
+        // Encontrar os índices dos items
+        const oldIndex = visibleItems.findIndex(item => item.id.toString() === active.id);
+        const newIndex = visibleItems.findIndex(item => item.id.toString() === over.id);
+        
+        // Reorganizar a array
+        const reorderedItems = arrayMove(visibleItems, oldIndex, newIndex);
+        
+        // Combinar com componentes marcados para deleção
+        const newComponents = [
+          ...reorderedItems,
+          ...items.filter(item => item.toDelete)
+        ];
+        
+        setHasUnsavedChanges(true);
+        return newComponents;
+      });
+    }
+  };
+  
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
@@ -397,104 +530,30 @@ const PageEditor = () => {
       </div>
     );
   }
-
-  const handleLogout = () => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      navigate('/');
-  };
   
   return (
-    <>
     <div className="flex flex-row min-h-screen">
-    
       <MenuDashboard />
-
-      <div className="min-h-screen bg-gray-100 w-11/12">
+      
+      <div className="min-h-screen bg-gray-100 w-full max-w-[calc(100%-100px)]">
+        <AppHeader 
+          user={_user}
+          pages={page ? [page] : []}
+          showSaveButton={true}
+          showSlugEditor={true}
+          onSave={saveComponents}
+          hasChanges={hasUnsavedChanges}
+          saving={saving}
+        />
         
-        <nav className="bg-white shadow-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex items-center justify-between w-full">
-                
-               <div className="flex items-center space-x-4">
-                  <h1 className="text-xl font-bold text-gray-900">
-                    Hub<span className="text-blue-600">Link</span>
-                  </h1>
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Página: {page?.title}                  
-                  </h2>     
-               </div>
-
-                <div className="flex items-center space-x-4">                
-                  <button
-                      onClick={saveComponents}
-                      disabled={saving || !hasUnsavedChanges}
-                      className={`px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center ${
-                        hasUnsavedChanges
-                          ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                          : 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                      }`}
-                    >
-                      {saving ? (
-                        <>
-                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Salvando...
-                        </>
-                      ) : hasUnsavedChanges ? (
-                        'Salvar Alterações'
-                      ) : (
-                        'Alterações Salvas'
-                      )}
-                    </button>
-                                    
-                  <button
-                    onClick={togglePublish}
-                    disabled={saving}
-                    className={`px-4 py-2 text-sm rounded focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                      page?.published
-                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                        : 'bg-green-600 hover:bg-green-700 text-white'
-                    }`}
-                  >
-                    {page?.published ? 'Despublicar' : 'Publicar'}
-                  </button>
-
-                  <button  onClick={handleLogout} className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    Sair
-                  </button> 
-                                
-                </div>
-
-               
-              </div>
-              
-            </div>
-          </div>
-        </nav>
-
-        {error && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-              {error}
-            </div>
-          </div>
-        )}
-
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row gap-x-12">
             {/* Coluna de edição - Esquerda */}
             <div className="md:w-8/12 space-y-4">
-              <div className="bg-white p-4 rounded-lg shadow-md">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-gray-800">
-                    Editor de Componentes
-                  </h2>
-                  
-                </div>
+              <h1 className="text-2xl font-bold text-gray-900">                
+                  Editor de Compoentes
+              </h1>
+              <div className="bg-white p-4 rounded-lg shadow-md">               
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     onClick={() => addComponent('text', defaultComponentValues.text)}
@@ -536,81 +595,38 @@ const PageEditor = () => {
                     disabled={saving}
                     className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    Ícone
+                    Botão
                   </button>
                 </div>
               </div>
               
-              {components.length > 0 ? (
+              {components.filter(comp => !comp.toDelete).length > 0 ? (
                 <div className="space-y-4">
-                  {components.map((component, index) => (
-                    <div
-                      key={component.id}
-                      className="bg-white rounded-lg shadow-md overflow-hidden"
+                  <DndContext 
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext 
+                      items={components.filter(comp => !comp.toDelete).map(comp => comp.id.toString())}
+                      strategy={verticalListSortingStrategy}
                     >
-                      <div
-                        onClick={() => setExpandedComponent(
-                          expandedComponent === component.id ? null : component.id
-                        )}
-                        className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
-                      >
-                        <div className="flex items-center">
-                          <span className="text-gray-500 mr-2">
-                            {index + 1}.
-                          </span>
-                          <h3 className="font-medium capitalize">
-                            {component.content.title || getComponentDefaultTitle(component.type)}
-                          </h3>
-                        </div>
-                        
-                        <div className="flex space-x-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              moveComponent(component.id, 'up');
-                            }}
-                            disabled={index === 0 || saving}
-                            className={`text-gray-500 hover:text-gray-700 ${index === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            ▲
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              moveComponent(component.id, 'down');
-                            }}
-                            disabled={index === components.length - 1 || saving}
-                            className={`text-gray-500 hover:text-gray-700 ${index === components.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          >
-                            ▼
-                          </button>
-                          <span className="mx-1 text-gray-300">|</span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteComponent(component.id);
-                            }}
-                            disabled={saving}
-                            className="text-red-500 hover:text-red-700"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {expandedComponent === component.id && (
-                        <div className="border-t border-gray-200 p-4">
-                          {componentForms[component.type]({
-                            content: component.content,
-                            onChange: (newContent) => handleComponentUpdate(component.id, newContent)
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                      {components
+                        .filter(component => !component.toDelete)
+                        .map((component, index) => (
+                          <SortableItem 
+                            key={component.id}
+                            component={component}
+                            index={index}
+                            expandedComponent={expandedComponent}
+                            setExpandedComponent={setExpandedComponent}
+                            onDelete={deleteComponent}
+                            saving={saving}
+                            handleComponentUpdate={handleComponentUpdate}
+                          />
+                        ))}
+                    </SortableContext>
+                  </DndContext>
                 </div>
               ) : (
                 <div className="bg-white p-8 rounded-lg shadow-md text-center">
@@ -628,20 +644,6 @@ const PageEditor = () => {
             <div className="md:w-4/12">
               <div className="px-4">
               
-                
-              {page?.published && (
-                <p className="text-sm text-gray-500 mb-4 text-center">                  
-                  <a
-                    href={`/${page.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    hublink.app/{page.slug} 
-                  </a>
-                </p>
-                )}
-                
                 <div 
                   id="page-preview-container"
                   className="bg-gray-50 border-[12px] border-black rounded-[30px] w-[300px] h-[600px] overflow-hidden mx-auto"
@@ -673,9 +675,7 @@ const PageEditor = () => {
           </div>
         </main>
       </div>
-      </div>
-    </>
-    
+    </div>
   );
 };
 

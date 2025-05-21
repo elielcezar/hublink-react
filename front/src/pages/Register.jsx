@@ -26,6 +26,7 @@ const Register = () => {
       await axios.post('http://localhost:3002/api/register', {
         name: data.name,
         email: data.email,
+        username: data.username,
         password: data.password
       });
       
@@ -42,7 +43,7 @@ const Register = () => {
   };
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col md:flex-row bg-white overflow-hidden">
       <aside className="flex items-center justify-center h-screen w-6/12" style={{ backgroundImage: `url(${Background})`, backgroundSize: 'cover', backgroundPosition: 'center' }}>
       
       </aside>
@@ -63,7 +64,7 @@ const Register = () => {
           
           <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 hidden">
                 Nome completo
               </label>
               <input
@@ -71,6 +72,7 @@ const Register = () => {
                 type="text"
                 {...register('name', { required: 'Nome é obrigatório' })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Nome"
               />
               {errors.name && (
                 <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
@@ -78,7 +80,43 @@ const Register = () => {
             </div>
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 hidden">
+                Usuário / URL
+              </label>
+              <div className="flex items-center">
+                <span className="text-gray-500 mr-2">hublink.app/</span>
+                <input
+                  id="username"
+                  type="text"
+                  {...register('username', { 
+                    required: 'Nome de usuário é obrigatório',
+                    pattern: {
+                      value: /^[a-z0-9-_.]+$/i,
+                      message: 'Use apenas letras, números, hífens, pontos e underscores'
+                    },
+                    minLength: {
+                      value: 3,
+                      message: 'Nome de usuário deve ter pelo menos 3 caracteres'
+                    },
+                    maxLength: {
+                      value: 30,
+                      message: 'Nome de usuário deve ter no máximo 30 caracteres'
+                    }
+                  })}
+                  className="flex-1 mt-1 block px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="seu-nome-de-usuario"
+                />
+              </div>
+              {errors.username && (
+                <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
+              )}
+              <p className="mt-1 text-sm text-gray-500">
+                Este será o endereço da sua página principal. 
+              </p>
+            </div>
+            
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 hidden">
                 E-mail
               </label>
               <input
@@ -92,6 +130,7 @@ const Register = () => {
                   }
                 })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="E-mail"
               />
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -99,7 +138,7 @@ const Register = () => {
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 hidden">
                 Senha
               </label>
               <input
@@ -113,6 +152,7 @@ const Register = () => {
                   }
                 })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Senha"
               />
               {errors.password && (
                 <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
@@ -120,7 +160,7 @@ const Register = () => {
             </div>
             
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 hidden">
                 Confirmar senha
               </label>
               <input
@@ -131,6 +171,7 @@ const Register = () => {
                   validate: value => value === password || 'As senhas não correspondem'
                 })}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Confirmar senha"
               />
               {errors.confirmPassword && (
                 <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
@@ -158,7 +199,7 @@ const Register = () => {
           </div>
         </div>
       </div>
-    </>
+    </div>
     
   );
 };

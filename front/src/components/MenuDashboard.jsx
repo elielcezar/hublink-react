@@ -3,43 +3,104 @@ import logo from '../assets/logo.png';
 import { IoHomeSharp } from "react-icons/io5";
 import editor from '../assets/editor.png';
 import aparencia from '../assets/aparencia.png';
+import { MdDesignServices } from "react-icons/md";
+import { MdOutlineDesignServices } from "react-icons/md";
+import { GoGear } from "react-icons/go";
+import { FaChartBar } from "react-icons/fa";
+import { TbLogout } from "react-icons/tb";
 import config from '../assets/config.png';
-import { useNavigate, Link } from 'react-router-dom';
+import { FiEdit3, FiBarChart2 } from "react-icons/fi";
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import api from '../config/apiConfig';
 
 export default function MenuDashboard() {
-
     const [user, setUser] = useState(null);
-
-    useEffect(() => {
-        const user = localStorage.getItem('user');
-        setUser(JSON.parse(user));
-    }, []);
-
+    const [userPage, setUserPage] = useState(null);
     const navigate = useNavigate();
+    
+    useEffect(() => {
+        const fetchUserAndPage = async () => {
+            try {
+                // Recuperar o usuário do localStorage
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    const parsedUser = JSON.parse(storedUser);
+                    setUser(parsedUser);
+                    
+                    // Buscar a página única do usuário
+                    const pagesResponse = await api.get('/api/pages');
+                    if (pagesResponse.data && pagesResponse.data.length > 0) {
+                        // Como o usuário só tem uma página, pegamos a primeira
+                        setUserPage(pagesResponse.data[0]);
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao buscar dados do usuário e página:', error);
+            }
+        };
+        
+        fetchUserAndPage();
+    }, []);
 
     const handleLogout = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       navigate('/');
-  };
+    };
   
-  return (
-    <aside className="flex flex-col items-center justify-start min-h-screen w-1/12 bg-violet-700">
-        <h1 className="text-xl font-bold text-gray-900">
-            <img src={logo} alt="logo" className="w-12 h-12 my-5" />
-        </h1>        
+    return (
+      <aside className="flex flex-col items-center justify-start min-h-screen w-1/12 max-w-[100px] bg-violet-700">
+          <h1 className="text-xl font-bold text-gray-900">
+              <img src={logo} alt="logo" className="w-12 h-12 my-5" />
+          </h1>        
 
-        {/*<Link to="/dashboard" className="text-white w-[30px] h-[30px] text-3xl my-4"><IoHomeSharp /></Link>*/}
-        <Link to="/dashboard" className="text-white"><img src={editor} alt="editor" className="w-8 my-4" /></Link>
-        {/*<Link to="/aparencia" className="text-white"><img src={aparencia} alt="aparencia" className="w-7 my-4" /></Link>*/}
-        <Link to="/config" className="text-white"><img src={config} alt="config" className="w-8 my-4" /></Link>
+          <Link 
+            to="/dashboard" 
+            className="text-white p-2 my-2 hover:bg-violet-800 rounded-full"
+            title="Personalizar Página"
+          >
+            <MdOutlineDesignServices size={36} />
+          </Link>
 
-        <button  onClick={handleLogout} className="px-4 py-2 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          Sair
-        </button> 
-        
+          {userPage && (
+            <Link 
+              to={`/editor/${userPage.id}`} 
+              className="text-white p-2 my-2 hover:bg-violet-800 rounded-full"
+              title="Editar Página"
+            >
+              <FiEdit3 size={36} />
+            </Link>
+          )}
+
+          {userPage && (
+            <Link 
+              to={`/analytics/${userPage.id}`} 
+              className="text-white p-2 my-2 hover:bg-violet-800 rounded-full"
+              title="Analytics"
+            >
+              <FaChartBar size={36} />
+            </Link>
+          )}
+
+          <Link 
+            to="/config" 
+            className="text-white p-2 my-2 hover:bg-violet-800 rounded-full"
+            title="Configurações"
+          >
+            <GoGear size={36} />
+          </Link>
+
+          <div className="mt-auto mb-8">
+            <button 
+              onClick={handleLogout} 
+              className="text-white p-2 my-2 hover:bg-violet-800 rounded-full"
+              title="Sair"
+            >
+              <TbLogout size={36} />
+            </button>
+          </div>
       </aside>
-  )
+    );
 }
 
 

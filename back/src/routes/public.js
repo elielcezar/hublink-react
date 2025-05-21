@@ -58,5 +58,42 @@ router.get('/pages/:slug', async (req, res) => {
   }
 });
 
+router.get('/u/:username', async (req, res) => {
+  const { username } = req.params;
+  
+  try {
+    // Encontrar o usuário pelo username
+    const user = await prisma.user.findUnique({
+      where: { username: username }
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    // Buscar a página principal do usuário (considere criar uma flag isMain na tabela Page)
+    // ou use a primeira página do usuário como padrão
+    const page = await prisma.page.findFirst({
+      where: { 
+        userId: user.id,
+        published: true
+      },
+      orderBy: {
+        createdAt: 'asc' // A primeira página criada seria a principal
+      }
+    });
+
+    if (!page) {
+      return res.status(404).json({ message: 'Página não encontrada ou não publicada' });
+    }
+
+    // Retornar os dados da página
+    return res.json(page);
+  } catch (error) {
+    console.error('Erro ao buscar página do usuário:', error);
+    return res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
 module.exports = router;
 // Public routes for viewing pages

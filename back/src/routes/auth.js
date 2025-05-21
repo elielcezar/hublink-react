@@ -33,15 +33,53 @@ const authenticateToken = (req, res, next) => {
 // Rota: /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, username, password } = req.body;
+    
+    // Verificar se o email já existe
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ message: 'Usuário já existe' });
     }
+    
+    // Verificar se o username já existe
+    if (username) {
+      const existingUsername = await prisma.user.findUnique({ where: { username } });
+      if (existingUsername) {
+        return res.status(400).json({ message: 'Este nome de usuário já está em uso' });
+      }
+    }
+    
+    // Criar o usuário
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword }
+      data: { name, email, username, password: hashedPassword }
     });
+    
+    // Criar automaticamente uma página para o usuário
+    if (username) {
+      try {
+        await prisma.page.create({
+          data: {
+            title: username,
+            slug: username,
+            userId: user.id,
+            published: true,  // Opcional: você pode definir como true ou false conforme sua preferência
+            style: {
+              backgroundColor: '#ffffff',
+              fontFamily: 'Inter, sans-serif',
+              linkColor: '#3b82f6',
+              textColor: '#333333',
+              backgroundType: 'color'
+            }
+          }
+        });
+        console.log(`Página padrão criada automaticamente para o usuário ${username}`);
+      } catch (pageError) {
+        console.error('Erro ao criar página padrão para o usuário:', pageError);
+        // Não vamos retornar erro aqui, pois o usuário já foi criado com sucesso
+      }
+    }
+    
     res.status(201).json({ id: user.id, name: user.name, email: user.email });
   } catch (error) {
     console.error('Erro ao registrar:', error);

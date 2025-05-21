@@ -1,5 +1,5 @@
 import React from 'react';
-import ImageUploader from '../../ImageUploader';
+import ImageUploader from './ImageUploader';
 import { SketchPicker } from 'react-color';
 import TitleField from './TitleField';
 
