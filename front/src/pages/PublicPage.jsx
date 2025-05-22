@@ -142,6 +142,19 @@ const PublicPage = () => {
         document.body.style.backgroundPosition = 'fixed';
         document.body.style.backgroundRepeat = 'no-repeat';
         document.body.style.backgroundColor = ''; // Limpar a cor de fundo
+      } else if (pageStyle.backgroundType === 'gradient') {
+        // Aplicar o degradê
+        const gradientDirection = pageStyle.gradientDirection || 'to right';
+        const startColor = pageStyle.gradientStartColor || '#4f46e5';
+        const endColor = pageStyle.gradientEndColor || '#818cf8';
+        
+        document.body.style.backgroundImage = `linear-gradient(${gradientDirection}, ${startColor}, ${endColor})`;
+        document.body.style.backgroundSize = 'cover';
+        document.body.style.backgroundPosition = 'center';
+        document.body.style.backgroundRepeat = 'no-repeat';
+        document.body.style.backgroundColor = ''; // Limpar a cor de fundo
+        
+        console.log('Aplicando degradê:', `linear-gradient(${gradientDirection}, ${startColor}, ${endColor})`);
       } else {
         document.body.style.backgroundImage = ''; // Limpar a imagem de fundo
         document.body.style.backgroundColor = pageStyle.backgroundColor || '#ffffff';

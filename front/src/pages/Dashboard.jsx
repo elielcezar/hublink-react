@@ -5,25 +5,24 @@ import AppHeader from '../components/AppHeader';
 import api from '../config/apiConfig';
 import { SketchPicker } from 'react-color';
 import ImageUploader from '../components/editor/forms/ImageUploader';
+import Card from '../components/Card';
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [setShowNewPageForm] = useState(false);
-  const [newPage, setNewPage] = useState({ title: '', slug: '' });
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  
-  // Estados para o acordeão e edição de URL
-  const [expandedPageId, setExpandedPageId] = useState(null);
   const [editingSlug, setEditingSlug] = useState(null);
   const [slugValue, setSlugValue] = useState('');
   const [slugError, setSlugError] = useState('');
+  const navigate = useNavigate();
   
   // Novos estados para estilo da página
   const [pageStyles, setPageStyles] = useState({}); // Armazena estilos por ID da página
   const [showColorPicker, setShowColorPicker] = useState(null);
+  
+  // Re-add activePageId state
+  const [activePageId, setActivePageId] = useState(null);
   
   // Lista de fontes disponíveis
   const availableFonts = [
@@ -42,9 +41,6 @@ const Dashboard = () => {
   // Adicione um novo estado para rastrear páginas com alterações não salvas
   const [unsavedChanges, setUnsavedChanges] = useState({});
 
-  // Adicione este estado para controlar a página selecionada
-  const [activePageId, setActivePageId] = useState(null);
-
   // Adicione esta propriedade a todos os objetos de estilo padrão
   // Modifique o estilo padrão em vários lugares no código
   const defaultStyle = {
@@ -54,7 +50,10 @@ const Dashboard = () => {
     textColor: '#333333',
     backgroundImage: null,
     logo: null,
-    backgroundType: 'color' // Novo campo: 'color' ou 'image'
+    backgroundType: 'color', // 'color', 'image' ou 'gradient'
+    gradientStartColor: '#4f46e5',
+    gradientEndColor: '#818cf8',
+    gradientDirection: 'to right' // direção padrão do gradiente
   };
 
   useEffect(() => {
@@ -100,11 +99,13 @@ const Dashboard = () => {
           for (const page of pagesResponse.data) {
             try {
               const styleResponse = await api.get(`/api/pages/${page.id}/style`);
+              console.log('Estilo carregado para página', page.id, ':', styleResponse.data);
               
               if (styleResponse.data && styleResponse.data.style) {
+                // Garantir que todas as propriedades necessárias estejam presentes
                 stylesObj[page.id] = {
-                  ...styleResponse.data.style,
-                  backgroundType: styleResponse.data.style.backgroundType || 'color'
+                  ...defaultStyle,
+                  ...styleResponse.data.style
                 };
               } else {
                 // Estilo padrão
@@ -175,9 +176,18 @@ const Dashboard = () => {
   // Função para salvar o estilo de uma página
   const savePageStyle = async (pageId) => {
     try {
+      // Garantir que todas as propriedades necessárias estejam presentes
+      const styleToSave = {
+        ...defaultStyle,
+        ...pageStyles[pageId]
+      };
+      
+      console.log('Salvando estilo:', styleToSave);
+      console.log('Estilo de fundo gerado:', getBackgroundStyle(pageId));
+      
       await api.put(
         `/api/pages/${pageId}/style`,
-        { style: pageStyles[pageId] }
+        { style: styleToSave }
       );
       
       // Feedback visual
@@ -268,6 +278,29 @@ const Dashboard = () => {
     });
   };
 
+  // Função auxiliar para gerar o estilo de fundo com base no tipo
+  const getBackgroundStyle = (pageId) => {
+    const style = pageStyles[pageId] || defaultStyle;
+    
+    switch (style.backgroundType) {
+      case 'gradient':
+        return {
+          background: `linear-gradient(${style.gradientDirection || 'to right'}, ${style.gradientStartColor || '#4f46e5'}, ${style.gradientEndColor || '#818cf8'})`
+        };
+      case 'image':
+        return {
+          backgroundImage: style.backgroundImage ? `url(${style.backgroundImage})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        };
+      case 'color':
+      default:
+        return {
+          backgroundColor: style.backgroundColor || '#ffffff'
+        };
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-100">
@@ -285,7 +318,7 @@ const Dashboard = () => {
       
         <MenuDashboard />
 
-        <div className="min-h-screen bg-gray-100 w-full pl-[100px]">
+        <div className="min-h-screen bg-gray-50 bg-white w-full pl-[100px]">
 
           <AppHeader 
             user={user}
@@ -295,9 +328,9 @@ const Dashboard = () => {
           />
 
           <main className="py-10">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto px-4 sm:px-6 lg:px-8">
               <div className="mb-8 justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">                
+                <h1 className="text-3xl font-bold text-violet-700">                
                   Personalize seu Perfil
                 </h1>
               </div>
@@ -311,160 +344,292 @@ const Dashboard = () => {
               {pages.length > 0 ? (
                 <div className="space-y-4">
                   {pages.map((page) => (
-                    <div key={page.id} className="bg-white rounded-lg shadow overflow-hidden">
-                      <div className="px-4 py-5 sm:p-6 space-y-6">                       
-                        <div id={`style-section-${page.id}`}>    
-                          {/* Seção de Logo */}
-                          <div className="mb-6">
-                            <h4 className="font-medium text-gray-700 mb-2">Sua Marca</h4>
-                            <ImageUploader 
-                              onImageUpload={(imageUrl) => handleLogoUpload(page.id, imageUrl)}
-                              currentImage={pageStyles[page.id]?.logo || ''}
-                            />
-                          </div>  
+                    <div key={page.id}>                      
+                      
+                      <Card title="Sua Marca" noPadding noShadow>                         
+                        <ImageUploader 
+                          onImageUpload={(imageUrl) => handleLogoUpload(page.id, imageUrl)}
+                          currentImage={pageStyles[page.id]?.logo || ''}
+                        />                        
+                      </Card>                    
 
-                          {/* Seção de edição de URL/Slug */}
-                          <div className="mb-6">
-                            <h4 className="font-medium text-gray-700 mb-2">Endereço da Página</h4>
-                            {editingSlug === page.id ? (
-                              <div>
-                                <div className="flex items-center">
-                                  <span className="text-gray-500 mr-2">hublink.app/</span>
-                                  <input
-                                    type="text"
-                                    value={slugValue}
-                                    onChange={(e) => setSlugValue(e.target.value)}
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                    placeholder="minha-pagina"
-                                  />
-                                </div>
-                                {slugError && (
-                                  <p className="mt-1 text-sm text-red-600">{slugError}</p>
-                                )}
-                                <div className="mt-2 flex space-x-2">
-                                  <button
-                                    onClick={() => saveSlug(page.id)}
-                                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                                  >
-                                    Salvar
-                                  </button>
-                                  <button
-                                    onClick={() => setEditingSlug(null)}
-                                    className="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300"
-                                  >
-                                    Cancelar
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center">
-                                <h2 className="text-lg font-medium text-gray-800">
-                                  hublink.app/{page.slug}
-                                </h2>
-                                <button
-                                  onClick={() => startEditingSlug(page)}
-                                  className="ml-2 text-blue-600 hover:text-blue-800 text-sm"
-                                >
-                                  Alterar endereço
-                                </button>
-                              </div>
+                      <Card title="Endereço da Página" noPadding noShadow>
+                        
+                        {editingSlug === page.id ? (
+                          <>
+                            <div className="flex items-center mt-4">
+                              <span className="text-xl font-medium text-gray-500 mr-2">hublink.app/</span>
+                              <input
+                                type="text"
+                                value={slugValue}
+                                onChange={(e) => setSlugValue(e.target.value)}
+                                className="max-w-xs flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="minha-pagina"
+                              />
+                            </div>
+                            {slugError && (
+                              <p className="mt-1 text-sm text-red-600">{slugError}</p>
                             )}
-                          </div>
-
-                          {/* Seção de Fundo de Tela */}
-                          <div className="mb-6">
-                            <h4 className="font-medium text-gray-700 mb-2">Fundo de Tela</h4>
-                            <select
-                              value={pageStyles[page.id]?.backgroundType || 'color'}
-                              onChange={(e) => updatePageStyle(page.id, 'backgroundType', e.target.value)}
-                              className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded mb-4"
+                            <div className="mt-2 flex space-x-2 mt-4">
+                              <button
+                                onClick={() => saveSlug(page.id)}
+                                className="ml-2 text-violet-900 px-4 py-2 border-2 border-violet-900 rounded-md hover:text-blue-800 text-sm hover:bg-violet-900 hover:text-white"
+                              >
+                                Salvar
+                              </button>
+                              <button
+                                onClick={() => setEditingSlug(null)}
+                                className="px-3 py-1 bg-gray-200 px-4 py-2 text-gray-700 text-sm rounded hover:bg-gray-300"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="flex items-center mt-4">
+                            <h2 className="text-xl font-medium text-gray-500">
+                              hublink.app/{page.slug}
+                            </h2>
+                            <button
+                              onClick={() => startEditingSlug(page)}
+                              className="ml-2 text-violet-900 px-4 py-2 border-2 border-violet-900 rounded-md hover:text-blue-800 text-sm hover:bg-violet-900 hover:text-white"
                             >
-                              <option value="color">Cor de Fundo</option>
-                              <option value="image">Imagem de Fundo</option>
-                            </select>
-                            
-                            {/* Exibir o componente apropriado com base na seleção */}
-                            {(pageStyles[page.id]?.backgroundType === 'image' || !pageStyles[page.id]?.backgroundType) && (
-                              <div className="mb-6">
-                                <h4 className="font-medium text-gray-700 mb-2">Imagem de Fundo</h4>
-                                <ImageUploader 
-                                  onImageUpload={(imageUrl) => handleBackgroundImageUpload(page.id, imageUrl)}
-                                  currentImage={pageStyles[page.id]?.backgroundImage || ''}
-                                />
-                              </div>
-                            )}
-                            
-                            {(pageStyles[page.id]?.backgroundType === 'color' || !pageStyles[page.id]?.backgroundType) && (
-                              <div className="mb-6">
-                                <h4 className="font-medium text-gray-700 mb-2">Cor de Fundo</h4>
+                              Alterar endereço
+                            </button>
+                          </div>
+                        )}
+                        
+                      </Card>
+                     
+                      <Card title="Estilo de Fundo" noPadding noShadow>                        
+                        <div className="flex space-x-2 mb-4">
+                          <button
+                            className={`px-4 py-2 rounded-md ${
+                              (pageStyles[page.id]?.backgroundType === 'color' || !pageStyles[page.id]?.backgroundType) 
+                                ? 'bg-blue-600 text-white' 
+                                : 'bg-gray-200 text-gray-700'
+                            }`}
+                            onClick={() => updatePageStyle(page.id, 'backgroundType', 'color')}
+                          >
+                            Cor Sólida
+                          </button>
+                          <button
+                            className={`px-4 py-2 rounded-md ${
+                              pageStyles[page.id]?.backgroundType === 'gradient' 
+                                ? 'bg-blue-600 text-white' 
+                                : 'bg-gray-200 text-gray-700'
+                            }`}
+                            onClick={() => updatePageStyle(page.id, 'backgroundType', 'gradient')}
+                          >
+                            Degradê
+                          </button>
+                          <button
+                            className={`px-4 py-2 rounded-md ${
+                              pageStyles[page.id]?.backgroundType === 'image' 
+                                ? 'bg-blue-600 text-white' 
+                                : 'bg-gray-200 text-gray-700'
+                            }`}
+                            onClick={() => updatePageStyle(page.id, 'backgroundType', 'image')}
+                          >
+                            Imagem
+                          </button>
+                        </div>
+                        
+                        {/* Exibir o componente apropriado com base na seleção */}
+                        {pageStyles[page.id]?.backgroundType === 'image' && (
+                          <div className="mb-6">
+                            <h4 className="font-medium text-gray-700 mb-2">Imagem de Fundo</h4>
+                            <ImageUploader 
+                              onImageUpload={(imageUrl) => handleBackgroundImageUpload(page.id, imageUrl)}
+                              currentImage={pageStyles[page.id]?.backgroundImage || ''}
+                            />
+                          </div>
+                        )}
+                        
+                        {pageStyles[page.id]?.backgroundType === 'gradient' && (
+                          <div className="mb-6">
+                            <h4 className="font-medium text-gray-700 mb-2">Degradê</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Cor Inicial
+                                </label>
                                 <div className="flex items-center gap-3">
                                   <div 
                                     className="h-10 w-10 rounded border cursor-pointer"
-                                    style={{ backgroundColor: pageStyles[page.id]?.backgroundColor || '#ffffff' }}
-                                    onClick={() => setShowColorPicker(page.id)}
+                                    style={{ backgroundColor: pageStyles[page.id]?.gradientStartColor || '#4f46e5' }}
+                                    onClick={() => setShowColorPicker('gradientStart-' + page.id)}
                                   ></div>
                                   <input
                                     type="text"
-                                    value={pageStyles[page.id]?.backgroundColor || '#ffffff'}
-                                    onChange={(e) => updatePageStyle(page.id, 'backgroundColor', e.target.value)}
+                                    value={pageStyles[page.id]?.gradientStartColor || '#4f46e5'}
+                                    onChange={(e) => updatePageStyle(page.id, 'gradientStartColor', e.target.value)}
                                     className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
                                   />
                                 </div>
                                 
-                                {showColorPicker === page.id && (
+                                {showColorPicker === 'gradientStart-' + page.id && (
                                   <div className="absolute z-10 mt-2">
                                     <div 
                                       className="fixed inset-0" 
                                       onClick={() => setShowColorPicker(null)}
                                     ></div>
                                     <SketchPicker 
-                                      color={pageStyles[page.id]?.backgroundColor || '#ffffff'}
+                                      color={pageStyles[page.id]?.gradientStartColor || '#4f46e5'}
                                       onChange={(color) => {
-                                        updatePageStyle(page.id, 'backgroundColor', color.hex);
-                                      }}
-                                      onChangeComplete={(color) => {
-                                        updatePageStyle(page.id, 'backgroundColor', color.hex);
-                                        // Não salvar automaticamente
+                                        updatePageStyle(page.id, 'gradientStartColor', color.hex);
                                       }}
                                     />
                                   </div>
                                 )}
                               </div>
-                            )}
-                          </div>
-                          
-                          {/* Seção de Fonte */}
-                          <div className="mb-6">
-                            <h4 className="font-medium text-gray-700 mb-2">Fonte Principal</h4>
-                            <div className="flex items-center gap-3">
+                              
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Cor Final
+                                </label>
+                                <div className="flex items-center gap-3">
+                                  <div 
+                                    className="h-10 w-10 rounded border cursor-pointer"
+                                    style={{ backgroundColor: pageStyles[page.id]?.gradientEndColor || '#818cf8' }}
+                                    onClick={() => setShowColorPicker('gradientEnd-' + page.id)}
+                                  ></div>
+                                  <input
+                                    type="text"
+                                    value={pageStyles[page.id]?.gradientEndColor || '#818cf8'}
+                                    onChange={(e) => updatePageStyle(page.id, 'gradientEndColor', e.target.value)}
+                                    className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+                                  />
+                                </div>
+                                
+                                {showColorPicker === 'gradientEnd-' + page.id && (
+                                  <div className="absolute z-10 mt-2">
+                                    <div 
+                                      className="fixed inset-0" 
+                                      onClick={() => setShowColorPicker(null)}
+                                    ></div>
+                                    <SketchPicker 
+                                      color={pageStyles[page.id]?.gradientEndColor || '#818cf8'}
+                                      onChange={(color) => {
+                                        updatePageStyle(page.id, 'gradientEndColor', color.hex);
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="mt-4">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Direção do Degradê
+                              </label>
                               <select
-                                value={pageStyles[page.id]?.fontFamily || 'Inter, sans-serif'}
-                                onChange={(e) => updatePageStyle(page.id, 'fontFamily', e.target.value)}
+                                value={pageStyles[page.id]?.gradientDirection || 'to right'}
+                                onChange={(e) => updatePageStyle(page.id, 'gradientDirection', e.target.value)}
                                 className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded"
                               >
-                                {availableFonts.map(font => (
-                                  <option 
-                                    key={font.value} 
-                                    value={font.value}
-                                    style={{ fontFamily: font.value }}
-                                  >
-                                    {font.name}
-                                  </option>
-                                ))}
+                                <option value="to right">Horizontal (Esquerda para Direita)</option>
+                                <option value="to left">Horizontal (Direita para Esquerda)</option>
+                                <option value="to bottom">Vertical (Cima para Baixo)</option>
+                                <option value="to top">Vertical (Baixo para Cima)</option>
+                                <option value="to bottom right">Diagonal (Canto Superior Esquerdo)</option>
+                                <option value="to bottom left">Diagonal (Canto Superior Direito)</option>
+                                <option value="to top right">Diagonal (Canto Inferior Esquerdo)</option>
+                                <option value="to top left">Diagonal (Canto Inferior Direito)</option>
                               </select>
                             </div>
                             
-                            {/* Visualização da fonte */}
                             <div 
-                              className="mt-3 p-3 border rounded"
-                              style={{ fontFamily: pageStyles[page.id]?.fontFamily || 'Inter, sans-serif' }}
+                              className="mt-4 p-4 rounded border"
+                              style={{ 
+                                background: `linear-gradient(${pageStyles[page.id]?.gradientDirection || 'to right'}, ${pageStyles[page.id]?.gradientStartColor || '#4f46e5'}, ${pageStyles[page.id]?.gradientEndColor || '#818cf8'})`,
+                                height: '80px'
+                              }}
                             >
-                              <p className="text-lg font-bold">Exemplo de título</p>
-                              <p>Este é um exemplo de como seu texto vai aparecer.</p>
                             </div>
                           </div>
-                        </div>                      
-                      </div>
+                        )}
+                        
+                        {(pageStyles[page.id]?.backgroundType === 'color' || !pageStyles[page.id]?.backgroundType) && (
+                          <div className="mb-6">
+                            <h4 className="font-medium text-gray-700 mb-2">Cor de Fundo</h4>
+                            <div className="flex items-center gap-3">
+                              <div 
+                                className="h-10 w-10 rounded border cursor-pointer"
+                                style={{ backgroundColor: pageStyles[page.id]?.backgroundColor || '#ffffff' }}
+                                onClick={() => setShowColorPicker('color-' + page.id)}
+                              ></div>
+                              <input
+                                type="text"
+                                value={pageStyles[page.id]?.backgroundColor || '#ffffff'}
+                                onChange={(e) => updatePageStyle(page.id, 'backgroundColor', e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+                              />
+                            </div>
+                            
+                            {showColorPicker === 'color-' + page.id && (
+                              <div className="absolute z-10 mt-2">
+                                <div 
+                                  className="fixed inset-0" 
+                                  onClick={() => setShowColorPicker(null)}
+                                ></div>
+                                <SketchPicker 
+                                  color={pageStyles[page.id]?.backgroundColor || '#ffffff'}
+                                  onChange={(color) => {
+                                    updatePageStyle(page.id, 'backgroundColor', color.hex);
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </Card>
+
+                      {/* Card de Tipografia */}
+                      <Card title="Tipografia" noPadding noShadow>
+                        <div className="mb-6">
+                          <h4 className="font-medium text-gray-700 mb-2">Fonte Principal</h4>
+                          <div className="flex items-center gap-3">
+                            <select
+                              value={pageStyles[page.id]?.fontFamily || 'Inter, sans-serif'}
+                              onChange={(e) => updatePageStyle(page.id, 'fontFamily', e.target.value)}
+                              className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded"
+                            >
+                              {availableFonts.map(font => (
+                                <option 
+                                  key={font.value} 
+                                  value={font.value}
+                                  style={{ fontFamily: font.value }}
+                                >
+                                  {font.name}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          
+                          {/* Visualização da fonte */}
+                          <div 
+                            className="mt-3 p-3 border rounded"
+                            style={{ fontFamily: pageStyles[page.id]?.fontFamily || 'Inter, sans-serif' }}
+                          >
+                            <p className="text-lg font-bold">Exemplo de título</p>
+                            <p>Este é um exemplo de como seu texto vai aparecer.</p>
+                          </div>
+                        </div>
+                      </Card>
+
+                      {/* Card de Ações */}
+                      <Card noPadding noShadow>
+                        <div className="flex space-x-3">
+                          <button
+                            onClick={() => savePageStyle(page.id)}
+                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            disabled={!unsavedChanges[page.id]}
+                          >
+                            Salvar Alterações
+                          </button>                         
+                        </div>
+                      </Card>
                     </div>
                   ))}
                 </div>

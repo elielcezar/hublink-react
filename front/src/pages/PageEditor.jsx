@@ -142,7 +142,7 @@ const SortableItem = ({ component, index, expandedComponent, setExpandedComponen
     <div 
       ref={setNodeRef} 
       style={style}
-      className="bg-white rounded-lg shadow-md overflow-hidden"
+      className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-violet-700"
     >
       <div
         onClick={() => setExpandedComponent(
@@ -548,7 +548,7 @@ const PageEditor = () => {
     <div className="flex flex-row min-h-screen">
       <MenuDashboard />
       
-      <div className="min-h-screen bg-gray-100 w-full pl-[100px]">
+      <div className="min-h-screen w-full pl-[100px]">
         
         <AppHeader 
           user={user}
@@ -560,7 +560,7 @@ const PageEditor = () => {
           saving={saving}
         />
         
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row gap-x-12">
             {/* Coluna de edição - Esquerda */}
             <div className="md:w-8/12 space-y-4">
