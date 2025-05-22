@@ -56,7 +56,7 @@ export default function MenuDashboard() {
     };
   
     return (
-      <aside className="flex flex-col items-center justify-start min-h-screen w-1/12 max-w-[100px] bg-violet-700 relative">
+      <aside className="h-full fixed top-0 left-0 flex flex-col items-center justify-start min-h-screen w-1/12 max-w-[100px] bg-violet-700">
           <div className="text-xl font-bold text-gray-900 mt-5 mb-10">
               <img src={logo} alt="logo" className="w-12 h-12" />
           </div>        
@@ -69,8 +69,8 @@ export default function MenuDashboard() {
           >
             <Link 
               to="/dashboard" 
-              className={`text-white p-2 my-2 hover:bg-violet-800 rounded-full flex items-center justify-center ${
-                isActive('/dashboard') ? 'bg-violet-800' : ''
+              className={`text-white p-2 my-2 hover:bg-violet-900 rounded-full flex items-center justify-center ${
+                isActive('/dashboard') ? 'bg-violet-900' : ''
               }`}
             >
               <MdOutlineDesignServices size={36} />
@@ -92,8 +92,8 @@ export default function MenuDashboard() {
             >
               <Link 
                 to={`/editor/${userPage.id}`} 
-                className={`text-white p-2 my-2 hover:bg-violet-800 rounded-full flex items-center justify-center ${
-                  isActive('/editor') ? 'bg-violet-800' : ''
+                className={`text-white p-2 my-2 hover:bg-violet-900 rounded-full flex items-center justify-center ${
+                  isActive('/editor') ? 'bg-violet-900' : ''
                 }`}
               >
                 <FiEdit3 size={36} />
@@ -116,8 +116,8 @@ export default function MenuDashboard() {
             >
               <Link 
                 to={`/analytics/${userPage.id}`} 
-                className={`text-white p-2 my-2 hover:bg-violet-800 rounded-full flex items-center justify-center ${
-                  isActive('/analytics') ? 'bg-violet-800' : ''
+                className={`text-white p-2 my-2 hover:bg-violet-900 rounded-full flex items-center justify-center ${
+                  isActive('/analytics') ? 'bg-violet-900' : ''
                 }`}
               >
                 <FaChartBar size={36} />
@@ -138,9 +138,9 @@ export default function MenuDashboard() {
             onMouseLeave={() => setActiveTooltip(null)}
           >
             <Link 
-              to="/config" 
-              className={`text-white p-2 my-2 hover:bg-violet-800 rounded-full flex items-center justify-center ${
-                isActive('/config') ? 'bg-violet-800' : ''
+              to="/account" 
+              className={`text-white p-2 my-2 hover:bg-violet-900 rounded-full flex items-center justify-center ${
+                isActive('/config') ? 'bg-violet-900' : ''
               }`}
             >
               <GoGear size={36} />
@@ -161,7 +161,7 @@ export default function MenuDashboard() {
           >
             <button 
               onClick={handleLogout} 
-              className="text-white p-2 my-2 hover:bg-violet-800 rounded-full flex items-center justify-center"
+              className="text-white p-2 my-2 hover:bg-violet-900 rounded-full flex items-center justify-center"
             >
               <TbLogout size={36} />
             </button>

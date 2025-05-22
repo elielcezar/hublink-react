@@ -177,5 +177,78 @@ router.put('/user/ga-config', authenticateToken, async (req, res) => {
   }
 });
 
+// Rota para atualizar dados do usuário
+router.put('/auth/user/update', authenticateToken, async (req, res) => {
+  console.log('Rota /api/auth/user/update chamada');
+  console.log('Corpo da requisição:', req.body);
+  
+  try {
+    const { name, email, newPassword } = req.body;
+    const userId = req.user.userId;
+    
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Nome e e-mail são obrigatórios' });
+    }
+    
+    // Buscar o usuário atual
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+    
+    // Verificar se o email já está em uso por outro usuário
+    if (email !== user.email) {
+      const existingEmail = await prisma.user.findUnique({
+        where: { email }
+      });
+      
+      if (existingEmail && existingEmail.id !== userId) {
+        return res.status(400).json({ message: 'Este e-mail já está em uso por outro usuário' });
+      }
+    }
+    
+    // Preparar dados para atualização
+    const updateData = {
+      name,
+      email,
+      updatedAt: new Date()
+    };
+    
+    // Se estiver alterando a senha
+    if (newPassword) {
+      try {
+        // Hash da nova senha
+        updateData.password = await bcrypt.hash(newPassword, 10);
+      } catch (hashError) {
+        console.error('Erro ao gerar hash da senha:', hashError);
+        return res.status(500).json({ message: 'Erro ao processar a nova senha' });
+      }
+    }
+    
+    // Atualizar o usuário
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: updateData,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true
+      }
+    });
+    
+    console.log('Usuário atualizado com sucesso:', updatedUser.id);
+    res.json({ 
+      message: 'Dados atualizados com sucesso',
+      user: updatedUser
+    });
+  } catch (error) {
+    console.error('Erro ao atualizar usuário:', error);
+    res.status(500).json({ message: 'Erro ao atualizar dados do usuário' });
+  }
+});
+
 module.exports = router;
-// Routes for authentication and user management

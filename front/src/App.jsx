@@ -7,6 +7,7 @@ import PublicPage from './pages/PublicPage';
 import NotFound from './pages/NotFound';
 import PageAnalytics from './pages/PageAnalytics';
 import SettingsAnalytics from './pages/SettingsAnalytics';
+import AccountSettings from './pages/AccountSettings';
 import './App.css';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
           <Route path="/editor/:pageId" element={<PageEditor />} />
           <Route path="/analytics/:id" element={<PageAnalytics />} />
           <Route path="/settings/analytics" element={<SettingsAnalytics />} />
+          <Route path="/account" element={<AccountSettings />} />
           <Route path="/:slug" element={<PublicPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>      

@@ -18,6 +18,7 @@ import html2pdf from 'html2pdf.js';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import AppHeader from '../components/AppHeader';
 
 // Corrigir o problema de ícones no Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -50,6 +51,7 @@ const PageAnalytics = () => {
   const [viewMode, setViewMode] = useState('chart'); // 'chart' ou 'table'
   const [showAllComponents, setShowAllComponents] = useState(false);
   const reportRef = useRef(null);
+  const [user, setUser] = useState(null);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +62,9 @@ const PageAnalytics = () => {
           setError('Sessão expirada. Faça login novamente.');
           return;
         }
+        
+        const userResponse = await api.get('/api/me');        
+        setUser(userResponse.data);
         
         // Buscar informações da página usando a API centralizada
         const pageResponse = await api.get(`/api/pages/${id}`);
@@ -104,8 +109,9 @@ const PageAnalytics = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex">
         <MenuDashboard />
-        <div className="pt-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex-1 pl-[100px]">
+          <AppHeader user={user} />
+          <div className="max-w-7xl mx-auto mt-10 px-4 sm:px-6 lg:px-8">
             <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -119,27 +125,24 @@ const PageAnalytics = () => {
   }
   
   if (error) {
-    return (
+    return (      
       <div className="min-h-screen bg-gray-50 flex">
-        <MenuDashboard />
-        <div className="pt-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex min-h-[calc(100vh-5rem)] items-center justify-center">
-              <div className="text-center max-w-md p-6 bg-white rounded-lg shadow">
-                <div className="text-red-600 text-5xl mb-4">⚠️</div>
-                <h2 className="text-xl font-bold text-gray-800 mb-2">Erro</h2>
-                <p className="text-gray-600 mb-4">{error}</p>
-                <Link
-                  to="/dashboard"
-                  className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Voltar para o Dashboard
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+      <MenuDashboard />
+      <div className="flex-1 pl-[100px]">
+        <AppHeader user={user} />
+      <div className="text-center max-w-md p-6 bg-white rounded-lg shadow">
+        <div className="text-red-600 text-5xl mb-4">⚠️</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Erro</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Link
+            to="/dashboard"
+            className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Voltar para o Dashboard
+          </Link>
+      </div>  
       </div>
+      </div>          
     );
   }
   
@@ -561,8 +564,12 @@ const PageAnalytics = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <MenuDashboard />
-      <div className="pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" ref={reportRef}>
+      
+      <div className="flex-1 pl-[100px]">
+        
+          {user && <AppHeader user={user} />}
+
+        <div className="max-w-7xl mx-auto mt-10 px-4 sm:px-6 lg:px-8" ref={reportRef}>
           <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Analytics: {page.title}</h1>

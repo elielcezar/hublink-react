@@ -51,6 +51,7 @@ app.use('/api/upload', uploadRoutes); // Prefixo /api/upload
 app.use('/api/public', publicRoutes); // Prefixo /api/public
 app.use('/api/track', trackRoutes); // Prefixo /api/track
 app.use('/api', healthRoutes); // Prefixo /api para health e debug
+app.use('/api/auth', authRoutes);
 
 // Iniciar servidor
 app.listen(PORT, () => {

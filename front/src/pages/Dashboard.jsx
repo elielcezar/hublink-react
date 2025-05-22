@@ -80,10 +80,8 @@ const Dashboard = () => {
     console.log('Token presente:', token ? 'Sim' : 'Não');
     
     const fetchData = async () => {
-      try {        
-        console.log('Buscando dados do usuário...');
-        const userResponse = await api.get('/api/me');
-        console.log('Dados do usuário recebidos com sucesso');
+      try {                
+        const userResponse = await api.get('/api/me');        
         setUser(userResponse.data);        
         
         console.log('Buscando páginas do usuário...');
@@ -287,7 +285,8 @@ const Dashboard = () => {
       
         <MenuDashboard />
 
-        <div className="min-h-screen bg-gray-100 w-full max-w-[calc(100%-100px)]">
+        <div className="min-h-screen bg-gray-100 w-full pl-[100px]">
+
           <AppHeader 
             user={user}
             pages={pages}

@@ -17,6 +17,15 @@ import CarouselForm from '../components/editor/forms/CarouselForm';
 import SocialForm from '../components/editor/forms/SocialForm';
 import '../styles/preview.css';
 import AppHeader from '../components/AppHeader';
+
+import { GrTextAlignLeft } from "react-icons/gr";
+import { HiLink } from "react-icons/hi";
+import { FaRegImage } from "react-icons/fa";
+import { RiCarouselView } from "react-icons/ri";
+import { IoShareSocialSharp } from "react-icons/io5";
+import { FaSquareFontAwesomeStroke } from "react-icons/fa6";
+import { LuSquareMousePointer } from "react-icons/lu";
+
 import {
   DndContext,
   closestCenter,
@@ -187,7 +196,7 @@ const SortableItem = ({ component, index, expandedComponent, setExpandedComponen
 const PageEditor = () => {
   const { pageId } = useParams();
   const navigate = useNavigate();
-  const [_user, _setUser] = useState(null);
+  const [user, setUser] = useState(null);
   const [page, setPage] = useState(null);
   const [components, setComponents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -211,9 +220,13 @@ const PageEditor = () => {
       navigate('/');
       return;
     }
-    
+
     const fetchPageData = async () => {
       try {
+
+        const userResponse = await api.get('/api/me');        
+        setUser(userResponse.data);      
+            
         const response = await api.get(`/api/pages/${pageId}`);
         
         // Garantir que a página tenha um objeto style, mesmo que vazio
@@ -535,9 +548,10 @@ const PageEditor = () => {
     <div className="flex flex-row min-h-screen">
       <MenuDashboard />
       
-      <div className="min-h-screen bg-gray-100 w-full max-w-[calc(100%-100px)]">
+      <div className="min-h-screen bg-gray-100 w-full pl-[100px]">
+        
         <AppHeader 
-          user={_user}
+          user={user}
           pages={page ? [page] : []}
           showSaveButton={true}
           showSlugEditor={true}
@@ -551,50 +565,56 @@ const PageEditor = () => {
             {/* Coluna de edição - Esquerda */}
             <div className="md:w-8/12 space-y-4">
               <h1 className="text-2xl font-bold text-gray-900">                
-                  Editor de Compoentes
+                  Editor de Componentes
               </h1>
-              <div className="bg-white p-4 rounded-lg shadow-md">               
+              <div className="bg-violet-800 p-4 rounded-lg shadow-md">               
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   <button
                     onClick={() => addComponent('text', defaultComponentValues.text)}
                     disabled={saving}
-                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
+                    <GrTextAlignLeft className="mr-2" size={24} />
                     Texto
                   </button>
                   <button
                     onClick={() => addComponent('link', defaultComponentValues.link)}
                     disabled={saving}
-                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
+                    <HiLink className="mr-2" size={24} />
                     Link
                   </button>
                   <button
                     onClick={() => addComponent('banner', defaultComponentValues.banner)}
                     disabled={saving}
-                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
+                    <FaRegImage className="mr-2" size={24} />
                     Banner
                   </button>
                   <button
                     onClick={() => addComponent('carousel', defaultComponentValues.carousel)}
                     disabled={saving}
-                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
+                    <RiCarouselView className="mr-2" size={24} />
                     Carrossel
                   </button>
                   <button
                     onClick={() => addComponent('social', defaultComponentValues.social)}
                     disabled={saving}
-                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
+                    <IoShareSocialSharp className="mr-2" size={24} />
                     Redes Sociais
                   </button>
                   <button
                     onClick={() => addComponent('icon', defaultComponentValues.icon)}
                     disabled={saving}
-                    className="px-4 py-3 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
+                    <LuSquareMousePointer className="mr-2" size={24} />
                     Botão
                   </button>
                 </div>
