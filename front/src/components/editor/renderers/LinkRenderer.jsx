@@ -1,78 +1,134 @@
 import React from 'react';
 
-const LinkRenderer = ({ content }) => {
-  // Configuração de largura comum para ambos os estilos
-  const width = content.width || '100';
-  
-  // Define corretamente a classe de largura
-  let widthClass;
-  if (width === '100') {
-    widthClass = 'w-full'; // Ocupa toda a largura
-  } else if (width === '50') {
-    widthClass = 'w-1/2'; // Metade da largura em telas médias e grandes
-  } else {
-    widthClass = 'w-1/3'; // Um terço da largura em telas médias e grandes
-  }
+const LinkRenderer = ({ content, pageStyle }) => {
+  if (!content) return null;
 
-  console.log(content);
+  const {
+    text = 'Link',
+    url = '#',
+    imageUrl,
+    imagePosition = 'left',
+    width = '100'
+  } = content;
 
-  //Verificar se há texto
-  const hasText = content.text && content.text.trim() !== '';
+  // PRIORIZAR cores globais do pageStyle sobre cores específicas do content
+  const backgroundColor = pageStyle?.linkBackgroundColor || content.backgroundColor || '#3b82f6';
   
-  // Verificar se há imagem
-  const hasImage = content.imageUrl && content.imageUrl.trim() !== '';
-  const imagePosition = content.imagePosition || 'left';
+  // Para a cor do texto: usar linkTextColor se definida, senão usar textColor geral, senão usar branco como fallback
+  const textColor = pageStyle?.linkTextColor || pageStyle?.textColor || content.textColor || '#ffffff';
   
-  // Determinar as cores a serem usadas
-  const backgroundColor = content.backgroundColor || 
-    (content.style === 'primary' ? 'var(--link-color, #3b82f6)' : '#f3f4f6');
+  // Propriedades de design mais avançadas
+  const shadowColor = pageStyle?.linkShadowColor || '#000000';
+  const shadowIntensity = pageStyle?.linkShadowIntensity !== undefined ? pageStyle.linkShadowIntensity : 5;
+  const shadowBlur = pageStyle?.linkShadowBlur !== undefined ? pageStyle.linkShadowBlur : 5;
+  const shadowOpacity = pageStyle?.linkShadowOpacity !== undefined ? pageStyle.linkShadowOpacity : 20;
+  const borderRadius = pageStyle?.linkBorderRadius !== undefined ? pageStyle.linkBorderRadius : 5;
+
+  // Propriedades de texto do pageStyle
+  const fontFamily = pageStyle?.fontFamily || 'Inter, sans-serif';
+  const fontSize = pageStyle?.fontSize !== undefined ? pageStyle.fontSize : 16;
   
-  const textColor = content.textColor || 
-    (content.style === 'primary' ? '#ffffff' : 'var(--text-color, #333333)');
-  
+  // Converter fontWeight para valores numéricos
+  const getFontWeight = () => {
+    const weight = pageStyle?.fontWeight || 'normal';
+    if (weight === 'bold') return '700';
+    if (weight === 'normal') return '400';
+    return weight; // Se já for um número, manter como está
+  };
+  const fontWeight = getFontWeight();
+
+  // Estilos do container baseado na largura
+  const containerStyle = {
+    width: width === '100' ? '100%' : width === '50' ? '50%' : width === '33' ? '33.33%' : '100%',
+    display: 'inline-block',
+    verticalAlign: 'top',
+    paddingLeft: width !== '100' ? '4px' : '0',
+    paddingRight: width !== '100' ? '4px' : '0'
+  };
+
+  // Função para renderizar o conteúdo do link
+  const renderLinkContent = () => {
+    if (!imageUrl) {
+      return (
+        <span>
+          {text}
+        </span>
+      );
+    }
+
+    const imageElement = (
+      <img 
+        src={imageUrl} 
+        alt={text}
+        className="w-8 h-8 object-cover rounded flex-shrink-0"
+      />
+    );
+
+    const textElement = (
+      <span className="truncate">
+        {text}
+      </span>
+    );
+
+    if (imagePosition === 'top') {
+      return (
+        <div className="flex flex-col items-center space-y-2">
+          {imageElement}
+          {textElement}
+        </div>
+      );
+    } else if (imagePosition === 'right') {
+      return (
+        <div className="flex items-center justify-between space-x-3">
+          {textElement}
+          {imageElement}
+        </div>
+      );
+    } else {
+      // Default: left
+      return (
+        <div className="flex items-center space-x-3">
+          {imageElement}
+          {textElement}
+        </div>
+      );
+    }
+  };
+
+  // Criar o estilo da sombra dinamicamente com controle de blur e opacidade
+  const getShadowStyle = () => {
+    if (shadowIntensity === 0) return 'none';
+    
+    const offsetY = Math.ceil(shadowIntensity / 2);
+    const opacity = shadowOpacity / 100;
+    
+    const hex = shadowColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    return `0 ${offsetY}px ${shadowBlur}px rgba(${r}, ${g}, ${b}, ${opacity})`;
+  };
+
   return (
-    <div className={`link-renderer ${widthClass} mb-4 px-2`}>
-      <div 
-        className={`h-full flex 
-          ${hasImage && imagePosition === 'top' ? 'flex-col' : 'items-center'} 
-          ${hasImage && imagePosition === 'right' ? 'flex-row-reverse' : 'flex-row'} 
-          ${!hasText ? 'flex items-center justify-center' : null}
-          rounded-lg transition-all hover:shadow-md p-1`}
-        style={{ backgroundColor }}
+    <div style={containerStyle}>
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block w-full py-3 px-4 text-center transition-all duration-200 hover:opacity-90 active:scale-95"
+        style={{
+          backgroundColor: backgroundColor,
+          color: textColor,
+          borderRadius: `${borderRadius}px`,
+          boxShadow: getShadowStyle(),
+          fontFamily: fontFamily,
+          fontSize: `${fontSize}px`,
+          fontWeight: fontWeight
+        }}
       >
-        
-        {hasImage && (
-          <div className={`
-            ${imagePosition === 'top' ? 'w-full flex justify-center' : 'flex-shrink-0'} 
-          `}>
-            <img 
-              src={content.imageUrl} 
-              alt="" 
-              className={`${imagePosition === 'top' ? 'max-h-[20vw] md:max-h-[9vw] w-auto md:mt-2 max-sm:mt-1' : ''} 
-                ${imagePosition === 'left' || imagePosition === 'right' ? 'w-[14vw] md:w-[5vw] h-auto' : ''} 
-                 rounded-lg`}
-            />
-          </div>
-        )}
-
-        {hasText && (
-          <div className={`text-center w-full ${imagePosition === 'top' ? 'mt-2 mb-1' : null} `}>
-            <a 
-              href={content.url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-block hover:opacity-90 font-bold"
-              style={{ 
-                color: textColor,
-                backgroundColor: backgroundColor
-              }}
-            >
-              {content.text}
-            </a>
-          </div>          
-        )}
-
-      </div>
+        {renderLinkContent()}
+      </a>
     </div>
   );
 };

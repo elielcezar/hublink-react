@@ -10,19 +10,40 @@ import BannerRenderer from '../components/editor/renderers/BannerRenderer';
 import SocialRenderer from '../components/editor/renderers/SocialRenderer';
 import AnalyticsTracker from '../components/AnalyticsTracker';
 
+// Adicionar o defaultStyle no início do arquivo
+const defaultStyle = {
+  backgroundColor: '#ffffff',
+  fontFamily: 'Inter, sans-serif',
+  linkColor: '#3b82f6',
+  linkBackgroundColor: '#3b82f6',
+  linkTextColor: '#ffffff',
+  linkShadowColor: '#000000',
+  linkShadowIntensity: 4,
+  linkShadowBlur: 4,
+  linkShadowOpacity: 20,
+  linkBorderRadius: 8,
+  textColor: '#333333',
+  backgroundImage: null,
+  logo: null,
+  backgroundType: 'color',
+  gradientStartColor: '#4f46e5',
+  gradientEndColor: '#818cf8',
+  gradientDirection: 'to right'
+};
+
 // Reutilizando os mesmos componentes de renderização da página do editor
 const componentRenderers = {
-  text: ({ content }) => <TextRenderer content={content} />,
+  text: ({ content, pageStyle }) => <TextRenderer content={content} pageStyle={pageStyle} />,
   
-  link: ({ content }) => <LinkRenderer content={content} />,
+  link: ({ content, pageStyle }) => <LinkRenderer content={content} pageStyle={pageStyle} />,
   
-  banner: ({ content }) => <BannerRenderer content={content} />,
+  banner: ({ content, pageStyle }) => <BannerRenderer content={content} pageStyle={pageStyle} />,
   
-  carousel: ({ content }) => <CarouselRenderer content={content} />,
+  carousel: ({ content, pageStyle }) => <CarouselRenderer content={content} pageStyle={pageStyle} />,
 
-  social: ({ content }) => <SocialRenderer content={content} />,
+  social: ({ content, pageStyle }) => <SocialRenderer content={content} pageStyle={pageStyle} />,
 
-  icon: ({ content }) => <IconRenderer content={content} />
+  icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />
 };
 
 const PublicPage = () => {
@@ -31,12 +52,7 @@ const PublicPage = () => {
   const [components, setComponents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [pageStyle, setPageStyle] = useState({
-    backgroundColor: '#ffffff',
-    fontFamily: 'Inter, sans-serif',
-    linkColor: '#3b82f6',
-    textColor: '#333333'
-  });
+  const [pageStyle, setPageStyle] = useState(defaultStyle);
   
   // Detectar se estamos em um dispositivo móvel
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -85,13 +101,15 @@ const PublicPage = () => {
         
         setComponents(parsedComponents);
         
-        // Obter o estilo diretamente da resposta
-        if (response.data.style) {
-          console.log('Aplicando estilo:', response.data.style);
-          setPageStyle(response.data.style);
-        } else {
-          console.log('Nenhum estilo encontrado na resposta');
-        }
+        // Carregar o estilo da página - combinando com defaultStyle
+        const completeStyle = {
+          ...defaultStyle,
+          ...response.data.style
+        };
+        
+        console.log('Estilo completo aplicado:', completeStyle);
+        setPageStyle(completeStyle);
+        
       } catch (error) {
         console.error('Erro ao buscar dados da página:', error);
         // Informação mais detalhada sobre o erro
@@ -235,28 +253,63 @@ const PublicPage = () => {
         </header>
         
         <main>
-          <div className="flex flex-wrap -mx-2">
-            {components.map((component) => {
-              // Verificar se o componente é válido
-              if (!component || !component.type || !component.id) {
-                console.warn('Componente inválido:', component);
-                return null;
+          {(() => {
+            const rows = [];
+            let currentRow = [];
+            let currentRowWidth = 0;
+
+            components.forEach((component, index) => {
+              const isLink = component.type === 'link';
+              const width = isLink ? parseInt(component.content?.width || '100') : 100;
+
+              if (width === 100 || !isLink) {
+                // Finalizar linha atual se houver
+                if (currentRow.length > 0) {
+                  rows.push(currentRow);
+                  currentRow = [];
+                  currentRowWidth = 0;
+                }
+                // Adicionar componente em linha própria
+                rows.push([component]);
+              } else {
+                // Verificar se cabe na linha atual
+                if (currentRowWidth + width <= 100) {
+                  currentRow.push(component);
+                  currentRowWidth += width;
+                  
+                  // Se chegou a 100% ou é o último componente, finalizar linha
+                  if (currentRowWidth === 100 || index === components.length - 1) {
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentRowWidth = 0;
+                  }
+                } else {
+                  // Não cabe, finalizar linha atual e começar nova
+                  if (currentRow.length > 0) {
+                    rows.push(currentRow);
+                  }
+                  currentRow = [component];
+                  currentRowWidth = width;
+                }
               }
-              
-              const ComponentRenderer = componentRenderers[component.type];
-              
-              if (!ComponentRenderer) {
-                console.warn(`Renderer não encontrado para o tipo: ${component.type}`);
-                return null;
-              }
-              
-              return (
-                <React.Fragment key={component.id}>
-                  <ComponentRenderer content={component.content || {}} />
-                </React.Fragment>
-              );
-            })}
-          </div>
+            });
+
+            // Finalizar última linha se houver
+            if (currentRow.length > 0) {
+              rows.push(currentRow);
+            }
+
+            return rows.map((row, rowIndex) => (
+              <div key={rowIndex} className={row.length > 1 ? "mb-4 w-full" : "mb-4 w-full"}>
+                {row.map((component) => 
+                  componentRenderers[component.type]({ 
+                    content: component.content, 
+                    pageStyle: pageStyle 
+                  })
+                )}
+              </div>
+            ));
+          })()}
         </main>
         
         <footer className="mt-16 pt-8 border-t border-gray-200 text-center text-gray-500 text-sm">

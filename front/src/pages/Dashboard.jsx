@@ -1,11 +1,26 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import MenuDashboard from '../components/MenuDashboard';
 import AppHeader from '../components/AppHeader';
 import api from '../config/apiConfig';
 import { SketchPicker } from 'react-color';
 import ImageUploader from '../components/editor/forms/ImageUploader';
 import Card from '../components/Card';
+import CarouselRenderer from '../components/editor/renderers/CarouselRenderer';
+import LinkRenderer from '../components/editor/renderers/LinkRenderer';
+import SocialRenderer from '../components/editor/renderers/SocialRenderer';
+import BannerRenderer from '../components/editor/renderers/BannerRenderer';
+import IconRenderer from '../components/editor/renderers/IconRenderer';
+import TextRenderer from '../components/editor/renderers/TextRenderer';
+
+const componentRenderers = {
+  text: ({ content, pageStyle }) => <TextRenderer content={content} pageStyle={pageStyle} />,
+  link: ({ content, pageStyle }) => <LinkRenderer content={content} pageStyle={pageStyle} />,
+  banner: ({ content, pageStyle }) => <BannerRenderer content={content} pageStyle={pageStyle} />,
+  carousel: ({ content, pageStyle }) => <CarouselRenderer content={content} pageStyle={pageStyle} />,
+  social: ({ content, pageStyle }) => <SocialRenderer content={content} pageStyle={pageStyle} />,
+  icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />
+};
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -46,7 +61,16 @@ const Dashboard = () => {
   const defaultStyle = {
     backgroundColor: '#ffffff',
     fontFamily: 'Inter, sans-serif',
+    fontSize: 16,
+    fontWeight: 'normal',
     linkColor: '#3b82f6',
+    linkBackgroundColor: '#3b82f6',
+    linkTextColor: '#ffffff',
+    linkShadowColor: '#000000',
+    linkShadowIntensity: 4,
+    linkShadowBlur: 4,
+    linkShadowOpacity: 20,
+    linkBorderRadius: 8,
     textColor: '#333333',
     backgroundImage: null,
     logo: null,
@@ -55,6 +79,8 @@ const Dashboard = () => {
     gradientEndColor: '#818cf8',
     gradientDirection: 'to right' // direção padrão do gradiente
   };
+
+  const [components, setComponents] = useState([]);
 
   useEffect(() => {
     // Carregar fontes do Google
@@ -134,6 +160,46 @@ const Dashboard = () => {
     fetchData();
   }, [navigate]);
 
+  useEffect(() => {
+    if (!activePageId) {
+      setComponents([]);
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/');
+      return;
+    }
+
+    const fetchPageData = async () => {
+      try {
+        const userResponse = await api.get('/api/me');
+        setUser(userResponse.data);
+
+        const response = await api.get(`/api/pages/${activePageId}`);
+
+        const parsedComponents = response.data.components.map(comp => ({
+          ...comp,
+          content: typeof comp.content === 'string' ? JSON.parse(comp.content) : comp.content
+        }));
+
+        setComponents(parsedComponents);
+      } catch (error) {
+        console.error('Erro ao buscar dados da página:', error);
+        setError('Erro ao carregar a página. Verifique se você tem permissão para editá-la.');
+
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          navigate('/dashboard');
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPageData();
+  }, [activePageId, navigate]);
+
   // Função para iniciar a edição do slug
   const startEditingSlug = (page) => {
     setEditingSlug(page.id);
@@ -183,12 +249,21 @@ const Dashboard = () => {
       };
       
       console.log('Salvando estilo:', styleToSave);
-      console.log('Estilo de fundo gerado:', getBackgroundStyle(pageId));
       
       await api.put(
         `/api/pages/${pageId}/style`,
         { style: styleToSave }
       );
+      
+      // Recarregar os componentes para atualizar o preview
+      if (activePageId === pageId) {
+        const response = await api.get(`/api/pages/${activePageId}`);
+        const parsedComponents = response.data.components.map(comp => ({
+          ...comp,
+          content: typeof comp.content === 'string' ? JSON.parse(comp.content) : comp.content
+        }));
+        setComponents(parsedComponents);
+      }
       
       // Feedback visual
       const styleSection = document.getElementById(`style-section-${pageId}`);
@@ -196,20 +271,18 @@ const Dashboard = () => {
         styleSection.classList.add('bg-green-50');
         setTimeout(() => {
           styleSection.classList.remove('bg-green-50');
-        }, 1000);
+        }, 2000);
       }
       
-      // Limpar status de alterações não salvas para esta página
-      const newUnsavedChanges = { ...unsavedChanges };
-      delete newUnsavedChanges[pageId];
-      setUnsavedChanges(newUnsavedChanges);
-      
-      // Feedback ao usuário
-      alert('Alterações salvas com sucesso!');
+      // Limpar o estado de alterações não salvas
+      setUnsavedChanges(prev => ({
+        ...prev,
+        [pageId]: false
+      }));
       
     } catch (error) {
       console.error('Erro ao salvar estilo:', error);
-      alert('Erro ao salvar estilo da página');
+      alert('Erro ao salvar as alterações. Tente novamente.');
     }
   };
   
@@ -278,27 +351,40 @@ const Dashboard = () => {
     });
   };
 
-  // Função auxiliar para gerar o estilo de fundo com base no tipo
+  // Função para obter o estilo de fundo
   const getBackgroundStyle = (pageId) => {
     const style = pageStyles[pageId] || defaultStyle;
     
-    switch (style.backgroundType) {
-      case 'gradient':
-        return {
-          background: `linear-gradient(${style.gradientDirection || 'to right'}, ${style.gradientStartColor || '#4f46e5'}, ${style.gradientEndColor || '#818cf8'})`
-        };
-      case 'image':
-        return {
-          backgroundImage: style.backgroundImage ? `url(${style.backgroundImage})` : 'none',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        };
-      case 'color':
-      default:
-        return {
-          backgroundColor: style.backgroundColor || '#ffffff'
-        };
+    if (style.backgroundType === 'image' && style.backgroundImage) {
+      return {
+        backgroundImage: `url(${style.backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      };
+    } else if (style.backgroundType === 'gradient') {
+      const direction = style.gradientDirection || 'to right';
+      const startColor = style.gradientStartColor || '#4f46e5';
+      const endColor = style.gradientEndColor || '#818cf8';
+      return {
+        background: `linear-gradient(${direction}, ${startColor}, ${endColor})`
+      };
+    } else {
+      return {
+        backgroundColor: style.backgroundColor || '#ffffff'
+      };
     }
+  };
+
+  // Função para obter o estilo de fonte global
+  const getFontStyle = (pageId) => {
+    const style = pageStyles[pageId] || defaultStyle;
+    return {
+      fontFamily: style.fontFamily || defaultStyle.fontFamily,
+      fontSize: `${style.fontSize || 16}px`,
+      fontWeight: style.fontWeight || 'normal',
+      color: style.textColor || defaultStyle.textColor
+    };
   };
 
   if (loading) {
@@ -318,7 +404,7 @@ const Dashboard = () => {
       
         <MenuDashboard />
 
-        <div className="min-h-screen bg-gray-50 bg-white w-full pl-[100px]">
+        <div className="min-h-screen w-full pl-[100px]">
 
           <AppHeader 
             user={user}
@@ -327,8 +413,11 @@ const Dashboard = () => {
             savePageStyle={savePageStyle}            
           />
 
-          <main className="py-10">
-            <div className="mx-auto px-4 sm:px-6 lg:px-8">
+          <main className="flex flex-col md:flex-row">
+
+            {/* Coluna de edição - Esquerda */}
+            <div className="md:w-8/12 space-y-4 pt-8 px-8 h-[calc(100vh-70px)] border-r border-gray-200 overflow-y-scroll">
+              
               <div className="mb-8 justify-between items-center">
                 <h1 className="text-3xl font-bold text-violet-700">                
                   Personalize seu Perfil
@@ -341,19 +430,34 @@ const Dashboard = () => {
                 </div>
               )}
               
+              <div className="mb-4">
+                <label className="mr-2">Selecione a página:</label>
+                <select
+                  value={activePageId || ''}
+                  onChange={e => setActivePageId(e.target.value)}
+                  className="border px-2 py-1 rounded"
+                >
+                  {pages.map(page => (
+                    <option key={page.id} value={page.id}>
+                      {page.slug}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
               {pages.length > 0 ? (
                 <div className="space-y-4">
                   {pages.map((page) => (
                     <div key={page.id}>                      
                       
-                      <Card title="Sua Marca" noPadding noShadow>                         
+                      <Card title="Sua Marca" noShadow>                         
                         <ImageUploader 
                           onImageUpload={(imageUrl) => handleLogoUpload(page.id, imageUrl)}
                           currentImage={pageStyles[page.id]?.logo || ''}
                         />                        
                       </Card>                    
 
-                      <Card title="Endereço da Página" noPadding noShadow>
+                      <Card title="Endereço da Página" noShadow>
                         
                         {editingSlug === page.id ? (
                           <>
@@ -401,7 +505,7 @@ const Dashboard = () => {
                         
                       </Card>
                      
-                      <Card title="Estilo de Fundo" noPadding noShadow>                        
+                      <Card title="Estilo de Fundo" noShadow >                        
                         <div className="flex space-x-2 mb-4">
                           <button
                             className={`px-4 py-2 rounded-md ${
@@ -585,41 +689,311 @@ const Dashboard = () => {
                         )}
                       </Card>
 
-                      {/* Card de Tipografia */}
-                      <Card title="Tipografia" noPadding noShadow>
-                        <div className="mb-6">
-                          <h4 className="font-medium text-gray-700 mb-2">Fonte Principal</h4>
-                          <div className="flex items-center gap-3">
+                      {/* Card para Fonte e Texto */}
+                      <Card title="Configuração de Fonte e Texto">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                          <div>
+                            <h4 className="font-medium text-gray-700 mb-2">Família da Fonte</h4>
                             <select
-                              value={pageStyles[page.id]?.fontFamily || 'Inter, sans-serif'}
+                              value={pageStyles[page.id]?.fontFamily || defaultStyle.fontFamily}
                               onChange={(e) => updatePageStyle(page.id, 'fontFamily', e.target.value)}
-                              className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded"
+                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
-                              {availableFonts.map(font => (
-                                <option 
-                                  key={font.value} 
-                                  value={font.value}
-                                  style={{ fontFamily: font.value }}
-                                >
+                              {availableFonts.map((font) => (
+                                <option key={font.value} value={font.value}>
                                   {font.name}
                                 </option>
                               ))}
                             </select>
                           </div>
                           
-                          {/* Visualização da fonte */}
+                          <div>
+                            <h4 className="font-medium text-gray-700 mb-2">Cor do Texto</h4>
+                            <div className="flex items-center gap-3">
+                              <div 
+                                className="h-10 w-10 rounded border cursor-pointer"
+                                style={{ backgroundColor: pageStyles[page.id]?.textColor || '#333333' }}
+                                onClick={() => setShowColorPicker('text-' + page.id)}
+                              ></div>
+                              <input
+                                type="text"
+                                value={pageStyles[page.id]?.textColor || '#333333'}
+                                onChange={(e) => updatePageStyle(page.id, 'textColor', e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+                              />
+                            </div>
+                            
+                            {showColorPicker === 'text-' + page.id && (
+                              <div className="absolute z-10 mt-2">
+                                <div 
+                                  className="fixed inset-0" 
+                                  onClick={() => setShowColorPicker(null)}
+                                ></div>
+                                <SketchPicker 
+                                  color={pageStyles[page.id]?.textColor || '#333333'}
+                                  onChange={(color) => {
+                                    updatePageStyle(page.id, 'textColor', color.hex);
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-2">
+                              Tamanho da Fonte: {pageStyles[page.id]?.fontSize || 16}px
+                            </label>
+                            <input
+                              type="range"
+                              min="12"
+                              max="24"
+                              value={pageStyles[page.id]?.fontSize || 16}
+                              onChange={(e) => updatePageStyle(page.id, 'fontSize', parseInt(e.target.value))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                              <span>12px</span>
+                              <span>24px</span>
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-medium text-gray-700 mb-2">Peso da Fonte</h4>
+                            <select
+                              value={pageStyles[page.id]?.fontWeight || 'normal'}
+                              onChange={(e) => updatePageStyle(page.id, 'fontWeight', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="normal">Normal</option>
+                              <option value="bold">Negrito</option>
+                            </select>
+                          </div>
+                        </div>
+                      </Card>
+
+                      {/* Card para Configuração dos Links */}
+                      <Card title="Configuração dos Links" >
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                          <div>
+                            <h4 className="font-medium text-gray-700 mb-2">Cor de Fundo dos Links</h4>
+                            <div className="flex items-center gap-3">
+                              <div 
+                                className="h-10 w-10 rounded border cursor-pointer"
+                                style={{ backgroundColor: pageStyles[page.id]?.linkBackgroundColor || '#3b82f6' }}
+                                onClick={() => setShowColorPicker('linkBackground-' + page.id)}
+                              ></div>
+                              <input
+                                type="text"
+                                value={pageStyles[page.id]?.linkBackgroundColor || '#3b82f6'}
+                                onChange={(e) => updatePageStyle(page.id, 'linkBackgroundColor', e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+                              />
+                            </div>
+                            
+                            {showColorPicker === 'linkBackground-' + page.id && (
+                              <div className="absolute z-10 mt-2">
+                                <div 
+                                  className="fixed inset-0" 
+                                  onClick={() => setShowColorPicker(null)}
+                                ></div>
+                                <SketchPicker 
+                                  color={pageStyles[page.id]?.linkBackgroundColor || '#3b82f6'}
+                                  onChange={(color) => {
+                                    updatePageStyle(page.id, 'linkBackgroundColor', color.hex);
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-medium text-gray-700 mb-2">Cor do Texto dos Links</h4>
+                            <div className="flex items-center gap-3">
+                              <div 
+                                className="h-10 w-10 rounded border cursor-pointer"
+                                style={{ backgroundColor: pageStyles[page.id]?.linkTextColor || '#ffffff' }}
+                                onClick={() => setShowColorPicker('linkText-' + page.id)}
+                              ></div>
+                              <input
+                                type="text"
+                                value={pageStyles[page.id]?.linkTextColor || '#ffffff'}
+                                onChange={(e) => updatePageStyle(page.id, 'linkTextColor', e.target.value)}
+                                className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+                              />
+                            </div>
+                            
+                            {showColorPicker === 'linkText-' + page.id && (
+                              <div className="absolute z-10 mt-2">
+                                <div 
+                                  className="fixed inset-0" 
+                                  onClick={() => setShowColorPicker(null)}
+                                ></div>
+                                <SketchPicker 
+                                  color={pageStyles[page.id]?.linkTextColor || '#ffffff'}
+                                  onChange={(color) => {
+                                    updatePageStyle(page.id, 'linkTextColor', color.hex);
+                                  }}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Configurações de Sombra */}
+                        <div className="mb-6">
+                          <h4 className="font-medium text-gray-700 mb-4">Configuração da Sombra</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-2">Cor da Sombra</label>
+                              <div className="flex items-center gap-3">
+                                <div 
+                                  className="h-8 w-8 rounded border cursor-pointer"
+                                  style={{ backgroundColor: pageStyles[page.id]?.linkShadowColor || '#000000' }}
+                                  onClick={() => setShowColorPicker('linkShadow-' + page.id)}
+                                ></div>
+                                <input
+                                  type="text"
+                                  value={pageStyles[page.id]?.linkShadowColor || '#000000'}
+                                  onChange={(e) => updatePageStyle(page.id, 'linkShadowColor', e.target.value)}
+                                  className="px-3 py-2 border border-gray-300 rounded text-sm w-20"
+                                />
+                              </div>
+                              
+                              {showColorPicker === 'linkShadow-' + page.id && (
+                                <div className="absolute z-10 mt-2">
+                                  <div 
+                                    className="fixed inset-0" 
+                                    onClick={() => setShowColorPicker(null)}
+                                  ></div>
+                                  <SketchPicker 
+                                    color={pageStyles[page.id]?.linkShadowColor || '#000000'}
+                                    onChange={(color) => {
+                                      updatePageStyle(page.id, 'linkShadowColor', color.hex);
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-2">
+                                Intensidade: {pageStyles[page.id]?.linkShadowIntensity || 4}
+                              </label>
+                              <input
+                                type="range"
+                                min="0"
+                                max="10"
+                                value={pageStyles[page.id]?.linkShadowIntensity || 4}
+                                onChange={(e) => updatePageStyle(page.id, 'linkShadowIntensity', parseInt(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                              />
+                              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>0</span>
+                                <span>10</span>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-2">
+                                Desfoque: {pageStyles[page.id]?.linkShadowBlur || 4}
+                              </label>
+                              <input
+                                type="range"
+                                min="0"
+                                max="20"
+                                value={pageStyles[page.id]?.linkShadowBlur || 4}
+                                onChange={(e) => updatePageStyle(page.id, 'linkShadowBlur', parseInt(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                              />
+                              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>Dura</span>
+                                <span>Suave</span>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <label className="block text-sm text-gray-600 mb-2">
+                                Opacidade: {pageStyles[page.id]?.linkShadowOpacity || 20}%
+                              </label>
+                              <input
+                                type="range"
+                                min="10"
+                                max="100"
+                                step="5"
+                                value={pageStyles[page.id]?.linkShadowOpacity || 20}
+                                onChange={(e) => updatePageStyle(page.id, 'linkShadowOpacity', parseInt(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                              />
+                              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>Sutil</span>
+                                <span>Forte</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Configuração de Bordas */}
+                        <div className="mb-6">
+                          <h4 className="font-medium text-gray-700 mb-4">Configuração das Bordas</h4>
+                          <div>
+                            <label className="block text-sm text-gray-600 mb-2">
+                              Raio das Bordas: {pageStyles[page.id]?.linkBorderRadius || 8}px
+                            </label>
+                            <input
+                              type="range"
+                              min="0"
+                              max="20"
+                              value={pageStyles[page.id]?.linkBorderRadius || 8}
+                              onChange={(e) => updatePageStyle(page.id, 'linkBorderRadius', parseInt(e.target.value))}
+                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            />
+                            <div className="flex justify-between text-xs text-gray-500 mt-1">
+                              <span>Bordas retas</span>
+                              <span>Muito arredondado</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Preview do link atualizado */}
+                        <div className="mt-4">
+                          <h4 className="font-medium text-gray-700 mb-2">Prévia do Link</h4>
                           <div 
-                            className="mt-3 p-3 border rounded"
-                            style={{ fontFamily: pageStyles[page.id]?.fontFamily || 'Inter, sans-serif' }}
+                            className="inline-block px-6 py-3 text-center transition-all duration-200"
+                            style={{
+                              backgroundColor: pageStyles[page.id]?.linkBackgroundColor || '#3b82f6',
+                              color: pageStyles[page.id]?.linkTextColor || pageStyles[page.id]?.textColor || '#ffffff',
+                              borderRadius: `${pageStyles[page.id]?.linkBorderRadius || 8}px`,
+                              fontFamily: pageStyles[page.id]?.fontFamily || defaultStyle.fontFamily,
+                              fontSize: `${pageStyles[page.id]?.fontSize || 16}px`,
+                              fontWeight: pageStyles[page.id]?.fontWeight === 'bold' ? '700' : '400',
+                              boxShadow: (pageStyles[page.id]?.linkShadowIntensity || 4) > 0 
+                                ? (() => {
+                                    const intensity = pageStyles[page.id]?.linkShadowIntensity || 4;
+                                    const blur = pageStyles[page.id]?.linkShadowBlur || 4;
+                                    const opacity = (pageStyles[page.id]?.linkShadowOpacity || 20) / 100;
+                                    const color = pageStyles[page.id]?.linkShadowColor || '#000000';
+                                    const offsetY = Math.ceil(intensity / 2);
+                                    
+                                    // Converter hex para RGB e aplicar opacidade
+                                    const hex = color.replace('#', '');
+                                    const r = parseInt(hex.substr(0, 2), 16);
+                                    const g = parseInt(hex.substr(2, 2), 16);
+                                    const b = parseInt(hex.substr(4, 2), 16);
+                                    
+                                    return `0 ${offsetY}px ${blur}px rgba(${r}, ${g}, ${b}, ${opacity})`;
+                                  })()
+                                : 'none'
+                            }}
                           >
-                            <p className="text-lg font-bold">Exemplo de título</p>
-                            <p>Este é um exemplo de como seu texto vai aparecer.</p>
+                            Exemplo de Link
                           </div>
                         </div>
                       </Card>
 
                       {/* Card de Ações */}
-                      <Card noPadding noShadow>
+                      <Card >
                         <div className="flex space-x-3">
                           <button
                             onClick={() => savePageStyle(page.id)}
@@ -647,6 +1021,96 @@ const Dashboard = () => {
                 </div>
               )}
             </div>
+
+            {/* Prévia - Direita */}
+            <div className="w-full md:w-4/12 flex flex-col justify-center items-center h-[calc(100vh-70px)] border border-gray-200">
+              
+                <div 
+                  id="page-preview-container"
+                  className="bg-gray-50 border-[12px] border-black rounded-[30px] w-[300px] h-[600px] overflow-hidden mx-auto"
+                  style={{
+                    ...getBackgroundStyle(activePageId),
+                    ...getFontStyle(activePageId)
+                  }}
+                >
+                  <div className="preview-content h-full py-6 px-3 overflow-y-auto overflow-x-hidden">
+                    {pageStyles[activePageId]?.logo && (
+                      <header className="text-center mb-6">
+                        <div className="flex justify-center">
+                          <img 
+                            src={pageStyles[activePageId].logo} 
+                            alt="Logo" 
+                            className="max-h-36 object-contain"
+                          />
+                        </div>
+                      </header>
+                    )}
+                    
+                    <div className="flex flex-col">
+                      {/* Agrupar componentes por linha baseado na largura */}
+                      {(() => {
+                        const rows = [];
+                        let currentRow = [];
+                        let currentRowWidth = 0;
+
+                        components.forEach((component, index) => {
+                          const isLink = component.type === 'link';
+                          const width = isLink ? parseInt(component.content?.width || '100') : 100;
+
+                          if (width === 100 || !isLink) {
+                            // Finalizar linha atual se houver
+                            if (currentRow.length > 0) {
+                              rows.push(currentRow);
+                              currentRow = [];
+                              currentRowWidth = 0;
+                            }
+                            // Adicionar componente em linha própria
+                            rows.push([component]);
+                          } else {
+                            // Verificar se cabe na linha atual
+                            if (currentRowWidth + width <= 100) {
+                              currentRow.push(component);
+                              currentRowWidth += width;
+                              
+                              // Se chegou a 100% ou é o último componente, finalizar linha
+                              if (currentRowWidth === 100 || index === components.length - 1) {
+                                rows.push(currentRow);
+                                currentRow = [];
+                                currentRowWidth = 0;
+                              }
+                            } else {
+                              // Não cabe, finalizar linha atual e começar nova
+                              if (currentRow.length > 0) {
+                                rows.push(currentRow);
+                              }
+                              currentRow = [component];
+                              currentRowWidth = width;
+                            }
+                          }
+                        });
+
+                        // Finalizar última linha se houver
+                        if (currentRow.length > 0) {
+                          rows.push(currentRow);
+                        }
+
+                        return rows.map((row, rowIndex) => (
+                          <div key={rowIndex} className={row.length > 1 ? "mb-4 w-full" : "mb-4 w-full"}>
+                            {row.map((component) => 
+                              componentRenderers[component.type]({ 
+                                content: component.content, 
+                                pageStyle: pageStyles[activePageId] || defaultStyle 
+                              })
+                            )}
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              
+            </div>
+
           </main>
         </div>
       </div>

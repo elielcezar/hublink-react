@@ -80,7 +80,7 @@ const SocialForm = ({ content, onChange }) => {
         </div>
         
         {showColorPicker && (
-          <div className="absolute z-10 mt-2">
+          <div className="absolute z-10 mt-2 bottom-20 left-4">
             <div 
               className="fixed inset-0" 
               onClick={() => setShowColorPicker(false)}

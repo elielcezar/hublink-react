@@ -45,12 +45,12 @@ import { CSS } from '@dnd-kit/utilities';
 
 // Componentes para renderização na prévia
 const componentRenderers = {
-  text: ({ content }) => <TextRenderer content={content} />,
-  link: ({ content }) => <LinkRenderer content={content} />,
-  banner: ({ content }) => <BannerRenderer content={content} />,
-  carousel: ({ content }) => <CarouselRenderer content={content} />,
-  social: ({ content }) => <SocialRenderer content={content} />,
-  icon: ({ content }) => <IconRenderer content={content} />
+  text: ({ content, pageStyle }) => <TextRenderer content={content} pageStyle={pageStyle} />,
+  link: ({ content, pageStyle }) => <LinkRenderer content={content} pageStyle={pageStyle} />,
+  banner: ({ content, pageStyle }) => <BannerRenderer content={content} pageStyle={pageStyle} />,
+  carousel: ({ content, pageStyle }) => <CarouselRenderer content={content} pageStyle={pageStyle} />,
+  social: ({ content, pageStyle }) => <SocialRenderer content={content} pageStyle={pageStyle} />,
+  icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />
 };
 
 // Formulários para edição dos componentes
@@ -76,9 +76,7 @@ const defaultComponentValues = {
     style: 'primary',
     width: '100',
     imageUrl: '',
-    imagePosition: 'left',
-    backgroundColor: '#ffffff',
-    textColor: '#000000'
+    imagePosition: 'left'
   },
   banner: { 
     title: 'Banner',
@@ -142,7 +140,7 @@ const SortableItem = ({ component, index, expandedComponent, setExpandedComponen
     <div 
       ref={setNodeRef} 
       style={style}
-      className="bg-white rounded-lg shadow-md overflow-hidden border-2 border-violet-700"
+      className="bg-white rounded-lg shadow-md border-2 hover:border-violet-700 relative"
     >
       <div
         onClick={() => setExpandedComponent(
@@ -198,6 +196,7 @@ const PageEditor = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [page, setPage] = useState(null);
+  const [pageStyle, setPageStyle] = useState(defaultStyle);
   const [components, setComponents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -223,21 +222,25 @@ const PageEditor = () => {
 
     const fetchPageData = async () => {
       try {
-
         const userResponse = await api.get('/api/me');        
         setUser(userResponse.data);      
             
         const response = await api.get(`/api/pages/${pageId}`);
         
-        // Garantir que a página tenha um objeto style, mesmo que vazio
+        // Carregar o estilo da página
+        const styleResponse = await api.get(`/api/pages/${pageId}/style`);
+        const loadedPageStyle = styleResponse.data?.style || defaultStyle;
+        
+        // Garantir que todas as propriedades necessárias estejam presentes
+        const completeStyle = {
+          ...defaultStyle,
+          ...loadedPageStyle
+        };
+        
+        setPageStyle(completeStyle);
         setPage({
           ...response.data,
-          style: response.data.style || {
-            backgroundColor: '#ffffff',
-            fontFamily: 'Inter, sans-serif',
-            linkColor: '#3b82f6',
-            textColor: '#333333'
-          }
+          style: completeStyle
         });
         
         // Converter os componentes para objetos com content parseado
@@ -263,29 +266,36 @@ const PageEditor = () => {
   }, [pageId, navigate]);
   
   useEffect(() => {
-    if (page?.style) {
+    if (pageStyle) {
       // Buscar o elemento de preview 
       const previewElement = document.getElementById('page-preview-container');
       
       if (previewElement) {
         // Aplicar cor de fundo ou imagem de fundo
-        if (page.style.backgroundType === 'image' && page.style.backgroundImage) {
-          previewElement.style.backgroundImage = `url(${page.style.backgroundImage})`;
+        if (pageStyle.backgroundType === 'image' && pageStyle.backgroundImage) {
+          previewElement.style.backgroundImage = `url(${pageStyle.backgroundImage})`;
           previewElement.style.backgroundSize = 'cover';
           previewElement.style.backgroundPosition = 'center';
           previewElement.style.backgroundRepeat = 'no-repeat';
           previewElement.style.backgroundColor = '';
+        } else if (pageStyle.backgroundType === 'gradient') {
+          previewElement.style.backgroundImage = '';
+          previewElement.style.background = `linear-gradient(${pageStyle.gradientDirection || 'to right'}, ${pageStyle.gradientStartColor || '#4f46e5'}, ${pageStyle.gradientEndColor || '#818cf8'})`;
         } else {
           previewElement.style.backgroundImage = '';
-          previewElement.style.backgroundColor = page.style.backgroundColor || '#ffffff';
+          previewElement.style.background = '';
+          previewElement.style.backgroundColor = pageStyle.backgroundColor || '#ffffff';
         }
         
         // Aplicar fonte e cor do texto
-        previewElement.style.fontFamily = page.style.fontFamily || 'Inter, sans-serif';
-        previewElement.style.color = page.style.textColor || '#333333';
+        previewElement.style.fontFamily = pageStyle.fontFamily || 'Inter, sans-serif';
+        previewElement.style.color = pageStyle.textColor || '#333333';
+        
+        // Forçar re-render dos componentes
+        console.log('PageStyle atualizado:', pageStyle);
       }
     }
-  }, [page?.style]);
+  }, [pageStyle]);
   
   const addComponent = async (type, content) => {
     try {
@@ -353,7 +363,7 @@ const PageEditor = () => {
     }
   };
   
-  const moveComponent = async (componentId, direction) => {
+  const _moveComponent = async (componentId, direction) => {
     try {
       setError('');
       
@@ -455,26 +465,20 @@ const PageEditor = () => {
         `/api/pages/${pageId}/style`
       );
       
-      const style = response.data.style || {
-        backgroundColor: '#ffffff',
-        fontFamily: 'Inter, sans-serif',
-        linkColor: '#3b82f6',
-        textColor: '#333333'
-      };
+      const style = response.data.style || defaultStyle;
       
-      setPage(prevPage => ({
-        ...prevPage,
-        style
-      }));
+      setPageStyle(style);
     } catch (error) {
       console.error('Erro ao buscar estilo da página:', error);
     }
   };
   
   useEffect(() => {
-    // Adicione um event listener para quando a janela recebe foco novamente
+    // Buscar estilo inicial
+    fetchPageStyle();
+    
+    // Atualizar quando a janela recebe foco
     const handleFocus = () => {
-      // Recarregar o estilo da página quando a janela recebe foco
       fetchPageStyle();
     };
     
@@ -512,6 +516,29 @@ const PageEditor = () => {
         setHasUnsavedChanges(true);
         return newComponents;
       });
+    }
+  };
+  
+  // Mova a função getBackgroundStyle para dentro do componente
+  const getBackgroundStyle = () => {
+    const style = pageStyle || defaultStyle;
+    
+    switch (style.backgroundType) {
+      case 'gradient':
+        return {
+          background: `linear-gradient(${style.gradientDirection || 'to right'}, ${style.gradientStartColor || '#4f46e5'}, ${style.gradientEndColor || '#818cf8'})`
+        };
+      case 'image':
+        return {
+          backgroundImage: style.backgroundImage ? `url(${style.backgroundImage})` : 'none',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        };
+      case 'color':
+      default:
+        return {
+          backgroundColor: style.backgroundColor || '#ffffff'
+        };
     }
   };
   
@@ -560,19 +587,20 @@ const PageEditor = () => {
           saving={saving}
         />
         
-        <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col md:flex-row gap-x-12">
+        <main className="flex flex-col md:flex-row">
+          
+
             {/* Coluna de edição - Esquerda */}
-            <div className="md:w-8/12 space-y-4">
+            <div className="md:w-8/12 space-y-4 pt-8 px-8 h-[calc(100vh-70px)] border-r border-gray-200 overflow-y-scroll">
               <h1 className="text-2xl font-bold text-gray-900">                
                   Editor de Componentes
               </h1>
               <div className="bg-violet-800 p-4 rounded-lg shadow-md">               
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-8 gap-2">
                   <button
                     onClick={() => addComponent('text', defaultComponentValues.text)}
                     disabled={saving}
-                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
+                    className="flex flex-col items-center justify-center items-center px-2 py-3 text-white bg-violet-500 font-medium text-md rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
                     <GrTextAlignLeft className="mr-2" size={24} />
                     Texto
@@ -580,7 +608,7 @@ const PageEditor = () => {
                   <button
                     onClick={() => addComponent('link', defaultComponentValues.link)}
                     disabled={saving}
-                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
+                    className="flex flex-col items-center justify-center items-center px-2 py-3 text-white bg-violet-500 font-medium text-md rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
                     <HiLink className="mr-2" size={24} />
                     Link
@@ -588,7 +616,7 @@ const PageEditor = () => {
                   <button
                     onClick={() => addComponent('banner', defaultComponentValues.banner)}
                     disabled={saving}
-                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
+                    className="flex flex-col items-center justify-center items-center px-2 py-3 text-white bg-violet-500 font-medium text-md rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
                     <FaRegImage className="mr-2" size={24} />
                     Banner
@@ -596,7 +624,7 @@ const PageEditor = () => {
                   <button
                     onClick={() => addComponent('carousel', defaultComponentValues.carousel)}
                     disabled={saving}
-                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
+                    className="flex flex-col items-center justify-center items-center px-2 py-3 text-white bg-violet-500 font-medium text-md rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
                     <RiCarouselView className="mr-2" size={24} />
                     Carrossel
@@ -604,7 +632,7 @@ const PageEditor = () => {
                   <button
                     onClick={() => addComponent('social', defaultComponentValues.social)}
                     disabled={saving}
-                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
+                    className="flex flex-col items-center justify-center items-center px-2 py-3 text-white bg-violet-500 font-medium text-md rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
                     <IoShareSocialSharp className="mr-2" size={24} />
                     Redes Sociais
@@ -612,7 +640,7 @@ const PageEditor = () => {
                   <button
                     onClick={() => addComponent('icon', defaultComponentValues.icon)}
                     disabled={saving}
-                    className="flex items-center px-4 py-3 text-white bg-violet-500 font-medium text-lg rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
+                    className="flex flex-col items-center justify-center items-center px-2 py-3 text-white bg-violet-500 font-medium text-md rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
                   >
                     <LuSquareMousePointer className="mr-2" size={24} />
                     Botão
@@ -661,19 +689,23 @@ const PageEditor = () => {
             </div>
             
             {/* Prévia - Direita */}
-            <div className="md:w-4/12">
-              <div className="px-4">
+            <div className="w-full md:w-4/12 flex flex-col justify-center items-center h-[calc(100vh-70px)] border border-gray-200">
               
                 <div 
                   id="page-preview-container"
                   className="bg-gray-50 border-[12px] border-black rounded-[30px] w-[300px] h-[600px] overflow-hidden mx-auto"
+                  style={{
+                    ...getBackgroundStyle(),
+                    fontFamily: pageStyle?.fontFamily || defaultStyle.fontFamily,
+                    color: pageStyle?.textColor || defaultStyle.textColor
+                  }}
                 >
                   <div className="preview-content h-full py-6 px-3 overflow-y-auto overflow-x-hidden">
-                    {page?.style?.logo && (
+                    {pageStyle?.logo && (
                       <header className="text-center mb-6">
                         <div className="flex justify-center">
                           <img 
-                            src={page.style.logo} 
+                            src={pageStyle.logo} 
                             alt="Logo" 
                             className="max-h-36 object-contain"
                           />
@@ -684,15 +716,18 @@ const PageEditor = () => {
                     <div className="flex flex-col">
                       {components.map((component) => (
                         <div key={component.id} className="mb-4 w-full">
-                          {componentRenderers[component.type]({ content: component.content })}
+                          {componentRenderers[component.type]({ 
+                            content: component.content, 
+                            pageStyle: pageStyle || defaultStyle 
+                          })}
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
-              </div>
+              
             </div>
-          </div>
+          
         </main>
       </div>
     </div>
@@ -736,6 +771,27 @@ const _getComponentLabel = (type) => {
     icon: 'Ícone'
   };
   return labels[type] || 'Componente';
+};
+
+// Mova o defaultStyle para fora do componente (pode ficar no escopo do módulo)
+const defaultStyle = {
+  backgroundColor: '#ffffff',
+  fontFamily: 'Inter, sans-serif',
+  linkColor: '#3b82f6',
+  linkBackgroundColor: '#3b82f6',
+  linkTextColor: '#ffffff',
+  linkShadowColor: '#000000',
+  linkShadowIntensity: 4,
+  linkShadowBlur: 4,
+  linkShadowOpacity: 20,
+  linkBorderRadius: 8,
+  textColor: '#333333',
+  backgroundImage: null,
+  logo: null,
+  backgroundType: 'color',
+  gradientStartColor: '#4f46e5',
+  gradientEndColor: '#818cf8',
+  gradientDirection: 'to right'
 };
 
 export default PageEditor; 

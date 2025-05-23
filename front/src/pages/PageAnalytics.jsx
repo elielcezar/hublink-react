@@ -569,7 +569,7 @@ const PageAnalytics = () => {
         
           {user && <AppHeader user={user} />}
 
-        <div className="max-w-7xl mx-auto mt-10 px-4 sm:px-6 lg:px-8" ref={reportRef}>
+        <div className="w-full mx-auto mt-10 px-4 sm:px-6 lg:px-8" ref={reportRef}>
           <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Analytics: {page.title}</h1>
@@ -728,60 +728,7 @@ const PageAnalytics = () => {
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Dispositivos */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-5 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Dispositivos</h2>
-              </div>
-              <div className="p-6">
-                {analytics.deviceStats.length > 0 ? (
-                  <div className="space-y-4">
-                    {analytics.deviceStats.map((item, index) => {
-                      const percentage = analytics.summary.totalVisits > 0 
-                        ? (item.count / analytics.summary.totalVisits) * 100 
-                        : 0;
-                      
-                      // Cores para os diferentes tipos de dispositivos
-                      const colors = {
-                        desktop: 'bg-blue-500',
-                        mobile: 'bg-green-500',
-                        tablet: 'bg-purple-500',
-                        desconhecido: 'bg-gray-500'
-                      };
-                      
-                      // Nomes em português
-                      const deviceNames = {
-                        desktop: 'Desktop',
-                        mobile: 'Celular',
-                        tablet: 'Tablet',
-                        desconhecido: 'Desconhecido'
-                      };
-                      
-                      return (
-                        <div key={index}>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-sm font-medium text-gray-700">
-                              {deviceNames[item.device] || item.device}
-                            </span>
-                            <span className="text-sm font-medium text-gray-700">
-                              {Math.round(percentage)}% ({item.count})
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div 
-                              className={`${colors[item.device] || 'bg-gray-500'} h-2.5 rounded-full`} 
-                              style={{ width: `${percentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500">Sem dados para este período</p>
-                )}
-              </div>
-            </div>
+            
             
             {/* Componentes mais clicados */}
             <div className="bg-white rounded-lg shadow mb-6">
@@ -884,11 +831,158 @@ const PageAnalytics = () => {
               <h2 className="text-lg font-medium text-gray-900">Fontes de Tráfego</h2>
             </div>
             <div className="p-6">
-              {analytics?.trafficSources && analytics.trafficSources?.length > 0 ? (
+              
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Gráfico de Tipos de Fontes */}
+                  
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-4">Tipos de Origem</h3>
+                  {analytics?.geoData && analytics.geoData.length > 0 ? (
+                    <>
+                      <div className="h-96 w-full rounded-lg overflow-hidden mb-4">
+                        <MapContainer 
+                          center={[0, 0]} 
+                          zoom={2} 
+                          scrollWheelZoom={false}
+                          style={{ height: '100%', width: '100%' }}
+                        >
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          />
+                          {analytics.geoData.map((location, index) => (
+                            <Marker 
+                              key={index} 
+                              position={[location.latitude, location.longitude]}
+                            >
+                              <Popup>
+                                <div className="text-sm">
+                                  <div className="font-medium">{location.city || 'Cidade desconhecida'}</div>
+                                  <div>{translateCountry(location.country) || 'País desconhecido'}</div>
+                                </div>
+                              </Popup>
+                            </Marker>
+                          ))}
+                        </MapContainer>
+                      </div>
+                      <div className="text-sm text-gray-600 italic text-center">
+                        Os dados de localização são aproximados e baseados no endereço IP dos visitantes.
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p>Nenhum dado de localização disponível para este período</p>
+                    </div>
+                  )}
+
+                        {/* Cidades */}
+                        <div className="bg-white rounded-lg shadow">
+                    <div className="px-6 py-5 border-b border-gray-200">
+                      <h2 className="text-lg font-medium text-gray-900">Principais Cidades</h2>
+                    </div>
+                    <div className="p-6">
+                      {analytics?.cityStats && analytics.cityStats.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-gray-200">
+                            <thead>
+                              <tr>
+                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Cidade
+                                </th>
+                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  País
+                                </th>
+                                <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                  Visitas
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200">
+                              {analytics.cityStats.map((city, i) => (
+                                <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {city.city}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {translateCountry(city.country)}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                    {formatNumber(city.count)}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p className="text-center text-gray-500 py-8">Sem dados para este período</p>
+                      )}
+                    </div>
+                  </div>
+                    
+                  </div>
+
+                  
+                  <div>
+                    {/* Dispositivos */}
+            <div className="bg-white rounded-lg shadow">
+              <div className="px-6 py-5 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900">Dispositivos</h2>
+              </div>
+              <div className="p-6">
+                {analytics.deviceStats.length > 0 ? (
+                  <div className="space-y-4">
+                    {analytics.deviceStats.map((item, index) => {
+                      const percentage = analytics.summary.totalVisits > 0 
+                        ? (item.count / analytics.summary.totalVisits) * 100 
+                        : 0;
+                      
+                      // Cores para os diferentes tipos de dispositivos
+                      const colors = {
+                        desktop: 'bg-blue-500',
+                        mobile: 'bg-green-500',
+                        tablet: 'bg-purple-500',
+                        desconhecido: 'bg-gray-500'
+                      };
+                      
+                      // Nomes em português
+                      const deviceNames = {
+                        desktop: 'Desktop',
+                        mobile: 'Celular',
+                        tablet: 'Tablet',
+                        desconhecido: 'Desconhecido'
+                      };
+                      
+                      return (
+                        <div key={index}>
+                          <div className="flex justify-between mb-1">
+                            <span className="text-sm font-medium text-gray-700">
+                              {deviceNames[item.device] || item.device}
+                            </span>
+                            <span className="text-sm font-medium text-gray-700">
+                              {Math.round(percentage)}% ({item.count})
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div 
+                              className={`${colors[item.device] || 'bg-gray-500'} h-2.5 rounded-full`} 
+                              style={{ width: `${percentage}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-center text-gray-500">Sem dados para este período</p>
+                )}
+              </div>
+            </div>
+                  {analytics?.trafficSources && analytics.trafficSources?.length > 0 ? (
+                  <>
+                  {/* Gráfico de Tipos de Fontes */}
+                  <h3 className="text-sm font-medium text-gray-700 mb-4">Tipos de Origem</h3>
                     <div className="space-y-4">
                       {analytics.trafficSources
                         .filter(item => item.type === 'category')
@@ -937,10 +1031,7 @@ const PageAnalytics = () => {
                           );
                         })}
                     </div>
-                  </div>
-
-                  {/* Tabela de Referenciadores Específicos */}
-                  <div>
+                    {/* Tabela de Referenciadores Específicos */}
                     <h3 className="text-sm font-medium text-gray-700 mb-4">Sites Referenciadores</h3>
                     <div className="overflow-x-auto">
                       <table className="min-w-full divide-y divide-gray-200">
@@ -971,221 +1062,23 @@ const PageAnalytics = () => {
                             ))}
                         </tbody>
                       </table>
-                    </div>
+                    </div>  
+                    </> 
+                    ) : (
+                      <div className="text-center py-12 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        <p>Nenhum dado de origem de tráfego disponível para este período</p>
+                        <p className="text-sm mt-2">As origens de tráfego começarão a ser coletadas a partir de agora</p>
+                      </div>
+                    )}                 
                   </div>
 
-                  {/* Campanhas UTM */}
-                  <div className="lg:col-span-2 mt-6">
-                    <h3 className="text-sm font-medium text-gray-700 mb-4">Campanhas (UTM)</h3>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead>
-                          <tr>
-                            <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Campanha
-                            </th>
-                            <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Fonte
-                            </th>
-                            <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Meio
-                            </th>
-                            <th className="px-4 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Visitas
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {analytics.trafficSources
-                            .filter(item => item.type === 'campaign')
-                            .sort((a, b) => b.count - a.count)
-                            .slice(0, 10)
-                            .map((campaign, i) => (
-                              <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                <td className="px-4 py-3 text-sm text-gray-900">
-                                  {campaign.campaign || '-'}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-900">
-                                  {campaign.source || '-'}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-900">
-                                  {campaign.medium || '-'}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                                  {formatNumber(campaign.count)}
-                                </td>
-                              </tr>
-                            ))}
-                            {analytics.trafficSources.filter(item => item.type === 'campaign').length === 0 && (
-                              <tr>
-                                <td colSpan="4" className="px-4 py-4 text-sm text-gray-500 text-center">
-                                  Nenhuma campanha UTM detectada no período
-                                </td>
-                              </tr>
-                            )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                  <p>Nenhum dado de origem de tráfego disponível para este período</p>
-                  <p className="text-sm mt-2">As origens de tráfego começarão a ser coletadas a partir de agora</p>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Mapa de Visitantes */}
-          <div className="bg-white rounded-lg shadow mb-6">
-            <div className="px-6 py-5 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Mapa de Visitantes</h2>
-            </div>
-            <div className="p-6">
-              {analytics?.geoData && analytics.geoData.length > 0 ? (
-                <>
-                  <div className="h-96 w-full rounded-lg overflow-hidden mb-4">
-                    <MapContainer 
-                      center={[0, 0]} 
-                      zoom={2} 
-                      scrollWheelZoom={false}
-                      style={{ height: '100%', width: '100%' }}
-                    >
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-                      {analytics.geoData.map((location, index) => (
-                        <Marker 
-                          key={index} 
-                          position={[location.latitude, location.longitude]}
-                        >
-                          <Popup>
-                            <div className="text-sm">
-                              <div className="font-medium">{location.city || 'Cidade desconhecida'}</div>
-                              <div>{translateCountry(location.country) || 'País desconhecido'}</div>
-                            </div>
-                          </Popup>
-                        </Marker>
-                      ))}
-                    </MapContainer>
-                  </div>
-                  <div className="text-sm text-gray-600 italic text-center">
-                    Os dados de localização são aproximados e baseados no endereço IP dos visitantes.
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-12 text-gray-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p>Nenhum dado de localização disponível para este período</p>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Estatísticas de Localização */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Países */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-5 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Principais Países</h2>
-              </div>
-              <div className="p-6">
-                {analytics?.locationStats && analytics.locationStats.length > 0 ? (
-                  <div className="space-y-4">
-                    {analytics.locationStats.map((item, index) => {
-                      const percentage = analytics.summary.totalVisits > 0 
-                        ? (item.count / analytics.summary.totalVisits) * 100 
-                        : 0;
-                      
-                      // Cores para os diferentes países (primeiros 5)
-                      const colors = [
-                        'bg-blue-500',
-                        'bg-green-500',
-                        'bg-purple-500',
-                        'bg-yellow-500',
-                        'bg-red-500',
-                        'bg-indigo-500',
-                        'bg-pink-500'
-                      ];
-                      
-                      return (
-                        <div key={index}>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-sm font-medium text-gray-700">
-                              {translateCountry(item.country)}
-                            </span>
-                            <span className="text-sm font-medium text-gray-700">
-                              {Math.round(percentage)}% ({item.count})
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div 
-                              className={`${colors[index % colors.length]} h-2.5 rounded-full`} 
-                              style={{ width: `${percentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500 py-8">Sem dados para este período</p>
-                )}
-              </div>
-            </div>
             
-            {/* Cidades */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-5 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Principais Cidades</h2>
-              </div>
-              <div className="p-6">
-                {analytics?.cityStats && analytics.cityStats.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead>
-                        <tr>
-                          <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Cidade
-                          </th>
-                          <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            País
-                          </th>
-                          <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Visitas
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {analytics.cityStats.map((city, i) => (
-                          <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {city.city}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {translateCountry(city.country)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                              {formatNumber(city.count)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500 py-8">Sem dados para este período</p>
-                )}
-              </div>
+                </div>              
             </div>
-          </div>
+          </div>          
           
           {/* Seção para Configurar Google Analytics */}
           <div className="bg-white rounded-lg shadow mb-8">

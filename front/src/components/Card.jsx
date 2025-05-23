@@ -35,7 +35,7 @@ const Card = ({
   // Classes base do card
   const cardClasses = `
     ${className}
-    bg-white rounded-lg overflow-hidden my-12
+    bg-white rounded-lg my-12 border-[1px] border-gray-200 relative
     ${noShadow ? '' : 'shadow'}    
     ${onClick ? 'cursor-pointer transition-all hover:shadow-lg' : ''}
   `;
@@ -50,7 +50,7 @@ const Card = ({
   const headerClasses = `
     ${noPadding ? '' : 'px-4 py-3'}
     border-b border-gray-200    
-    text-violet-700 text-xl font-medium mb-6 pb-4
+    bg-gray-50 text-violet-700 text-lg font-medium mb-6 pb-4
     ${headerClassName}
   `;
 
@@ -68,7 +68,7 @@ const Card = ({
         <div className={headerClasses}>
           <div className="flex justify-between items-center">
             <div>
-              {title && <h3 className="font-medium text-gray-700">{title}</h3>}
+              {title && <h3>{title}</h3>}
               {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
             </div>
             {actions && <div className="flex space-x-2">{actions}</div>}
