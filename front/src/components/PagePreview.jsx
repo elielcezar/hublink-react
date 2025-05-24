@@ -20,6 +20,8 @@ import IconRenderer from './editor/renderers/IconRenderer';
 import TextRenderer from './editor/renderers/TextRenderer';
 import VideoRenderer from './editor/renderers/VideoRenderer';
 
+import '../styles/preview.css';
+
 const defaultStyle = {
   backgroundColor: '#ffffff',
   fontFamily: 'Inter, sans-serif',
@@ -81,24 +83,72 @@ const PagePreview = ({ components = [], pageStyle = defaultStyle }) => {
                 <img 
                   src={pageStyle.logo} 
                   alt="Logo" 
-                  className="max-h-36 object-contain"
+                  className="logo max-h-36 object-contain rounded-full"
                 />
               </div>
             </header>
           )}
           
-          <div className="flex flex-col">
-            {components
-              .filter(component => !component.toDelete)
-              .map((component) => (
-                <div key={component.id} className="mb-4 w-full">
-                  {componentRenderers[component.type]({ 
+          <main>
+          {(() => {
+            const rows = [];
+            let currentRow = [];
+            let currentRowWidth = 0;
+
+            components.forEach((component, index) => {
+              const isLink = component.type === 'link';
+              const width = isLink ? parseInt(component.content?.width || '100') : 100;
+
+              if (width === 100 || !isLink) {
+                // Finalizar linha atual se houver
+                if (currentRow.length > 0) {
+                  rows.push(currentRow);
+                  currentRow = [];
+                  currentRowWidth = 0;
+                }
+                // Adicionar componente em linha própria
+                rows.push([component]);
+              } else {
+                // Verificar se cabe na linha atual
+                if (currentRowWidth + width <= 100) {
+                  currentRow.push(component);
+                  currentRowWidth += width;
+                  
+                  // Se chegou a 100% ou é o último componente, finalizar linha
+                  if (currentRowWidth === 100 || index === components.length - 1) {
+                    rows.push(currentRow);
+                    currentRow = [];
+                    currentRowWidth = 0;
+                  }
+                } else {
+                  // Não cabe, finalizar linha atual e começar nova
+                  if (currentRow.length > 0) {
+                    rows.push(currentRow);
+                  }
+                  currentRow = [component];
+                  currentRowWidth = width;
+                }
+              }
+            });
+
+            // Finalizar última linha se houver
+            if (currentRow.length > 0) {
+              rows.push(currentRow);
+            }
+
+            return rows.map((row, rowIndex) => (
+              <div key={rowIndex} className={row.length > 1 ? "mb-4 w-full" : "mb-4 w-full"}>
+                {row.map((component) => 
+                  componentRenderers[component.type]({ 
                     content: component.content, 
-                    pageStyle: pageStyle || defaultStyle 
-                  })}
-                </div>
-              ))}
-          </div>
+                    pageStyle: pageStyle 
+                  })
+                )}
+              </div>
+            ));
+          })()}
+        </main>
+
         </div>
       </div>
     </>

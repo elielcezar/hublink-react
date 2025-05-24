@@ -3,7 +3,6 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import React from 'react';
 import api from '../config/apiConfig';
 import MenuDashboard from '../components/MenuDashboard';
-import '../styles/preview.css';
 import AppHeader from '../components/AppHeader';
 import PagePreview from '../components/PagePreview';
 

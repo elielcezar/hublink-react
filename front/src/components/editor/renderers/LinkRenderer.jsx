@@ -120,7 +120,7 @@ const LinkRenderer = ({ content, pageStyle }) => {
   };
 
   return (
-    <div style={containerStyle}>
+    <div style={containerStyle} className={`link-renderer width-${width}`}>
       <a
         href={url}
         target="_blank"

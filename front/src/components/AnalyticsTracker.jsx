@@ -19,16 +19,7 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
           content: component.content
         });
       });
-      componentsMapRef.current = map;
-      
-      // Imprimir informações sobre os componentes carregados para debugging
-      console.log(`Carregados ${pageComponents.length} componentes para rastreamento:`, 
-        pageComponents.map(c => ({
-          id: c.id,
-          type: c.type,
-          title: c.content.title || 'Sem título'
-        }))
-      );
+      componentsMapRef.current = map;      
     }
   }, [pageComponents]);
   
@@ -137,10 +128,7 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
         os,
         referer: document.referrer,
         timestamp: new Date().toISOString()
-      };
-      
-      // Log para fins de debugging
-      console.log(`Enviando evento: ${eventType}`, trackData);
+      };      
       
       // Enviar dados para o backend
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/track`, {
@@ -155,8 +143,7 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
         throw new Error(`Erro ao enviar evento: ${response.status} ${response.statusText} - ${errorText}`);
       }
       
-      const responseData = await response.json();
-      console.log('Resposta do servidor para evento:', responseData);
+      const responseData = await response.json();      
       
     } catch (error) {
       console.error('Erro ao rastrear evento:', error);
@@ -166,13 +153,9 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
   // Adicionar script do Google Analytics se fornecido
   useEffect(() => {
     // Skip if no GA ID is provided
-    if (!gaId) {
-      console.log('Google Analytics ID não configurado');
+    if (!gaId) {      
       return;
-    }
-
-    // Log for debugging purposes
-    console.log(`Inicializando Google Analytics com ID: ${gaId}`);
+    }    
 
     // Function to load the GA script
     const loadGoogleAnalytics = () => {
@@ -196,9 +179,7 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
       // Add scripts to document
       document.head.appendChild(gtagScript);
       document.head.appendChild(inlineScript);
-
-      // Track page view
-      console.log(`Pageview tracked for page ID: ${pageId}`);
+      
       
       return () => {
         // Cleanup scripts on component unmount
@@ -214,18 +195,14 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
   }, [gaId, pageId]);
   
   // Track component views if needed
-  useEffect(() => {
+  /*useEffect(() => {
     if (!gaId || !pageComponents || !window.gtag) return;
-
-    // Advanced: Track component impressions if needed
-    // This is optional but can provide more detailed analytics
     pageComponents.forEach(component => {
       if (component && component.id) {
-        console.log(`Component in view: ${component.type} (ID: ${component.id})`);
-        // You can add component tracking here if needed
+        console.log(`Component in view: ${component.type} (ID: ${component.id})`);        
       }
     });
-  }, [gaId, pageComponents]);
+  }, [gaId, pageComponents]);*/
   
   // Rastrear visualização da página
   useEffect(() => {
@@ -329,13 +306,7 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
         if (!componentWrapper || !componentType) {
           console.log('Não foi possível identificar o wrapper do componente para:', element);
           return null;
-        }
-        
-        // Log do wrapper e tipo identificados
-        console.log('ComponentWrapper identificado:', {
-          elemento: componentWrapper,
-          tipo: componentType
-        });
+        }   
         
         // Tentar encontrar o componente com base no tipo
         let matchedComponent = null;
@@ -349,19 +320,7 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
         } else if (componentsOfType.length > 1) {
           // Lógica existente para diferenciar múltiplos componentes do mesmo tipo...
           // ...
-        }
-        
-        // Log do componente encontrado
-        if (matchedComponent) {
-          console.log('Componente identificado:', {
-            id: matchedComponent.id,
-            tipo: matchedComponent.type,
-            titulo: matchedComponent.content.title || 'Sem título'
-          });
-        } else {
-          console.log('Nenhum componente encontrado do tipo:', componentType);
-        }
-        
+        }        
         return matchedComponent;
       };
       
@@ -381,17 +340,6 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
         
         // Encontrar o componente ao qual este elemento pertence
         const component = findComponentForElement(target);
-        
-        // Debug: registrar informações sobre o clique no console
-        console.log('Clique detectado:', {
-          elemento: target,
-          tipo: elementType,
-          componenteIdentificado: component ? {
-            id: component.id,
-            tipo: component.type,
-            titulo: component.content.title
-          } : 'Nenhum componente identificado'
-        });
         
         if (component) {
           const linkUrl = target.tagName === 'A' ? target.href : 

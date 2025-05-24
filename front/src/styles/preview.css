@@ -1,81 +1,67 @@
-/* Bordas coloridas somente para o preview */
-.preview-content .link-renderer {
-  border: 2px solid red;
+#page-preview-container header{
+  margin-bottom: 10px;
 }
 
-.preview-content .social-renderer {
-  border: 2px solid green;
+#page-preview-container .logo{
+  max-width: 80px;  
 }
 
-/* Estilos específicos para a pré-visualização */
-.preview-content {
-  /* Escalas para o tamanho da tela */
-  font-size: 12px; /* Fonte base reduzida */
+#page-preview-container .social-renderer > div{
+  gap: 11px;
 }
 
-/* Estilo para textos */
-.preview-content h1 {
-  font-size: 1.8em !important;
+#page-preview-container .social-renderer a svg{  
+  max-width: 20px;  
 }
 
-.preview-content h2 {
-  font-size: 1.5em !important;
+#page-preview-container .banner-renderer{
+
 }
 
-.preview-content h3 {
-  font-size: 1.3em !important;
+#page-preview-container .link-renderer.width-100 a{
+  max-width: auto;
+  min-height: .5rem;  
+  padding: .1rem .25rem;
 }
 
-.preview-content p, .preview-content div, .preview-content span {
-  font-size: 1em !important;
+#page-preview-container .link-renderer.width-100 img{
+  max-width: 1.7rem;  
+  max-height: 1.7rem;
 }
 
-/* Ajuste para imagens */
-.preview-content img {
-  max-width: 100% !important;
-  height: auto !important;
-  border: 2px solid blue;
+#page-preview-container .link-renderer.width-100 p{
+  min-height: 2rem;
+  width: calc(100% - 4rem);
+  display: flex;
+  align-items: center;    
+  font-size: .7rem;
 }
 
-/* Ajuste para links */
-.preview-content a.btn {
-  font-size: 0.9em !important;
-  padding: 8px 12px !important;
+#page-preview-container .link-renderer.width-50 a{
+  padding: .4rem .25rem;
 }
 
-/* Ajuste para ícones de redes sociais */
-.preview-content .social-icon {
-  transform: scale(0.8) !important;
+#page-preview-container .link-renderer.width-50 a > div{
+  padding: 0;
 }
 
-/* Ajuste para carrossel */
-.preview-content .carousel-container {
-  max-width: 100% !important;
-  height: auto !important;
+#page-preview-container .link-renderer.width-50 img{
+  max-width: 3.4rem;  
+  max-height: 3.4rem;
 }
 
-/* Ajuste para botões e elementos interativos */
-.preview-content button {
-  font-size: 0.9em !important;
-  padding: 6px 10px !important;
+#page-preview-container .link-renderer.width-50 p{
+  min-height: 2rem;  
+  display: flex;  
+  font-size: .7rem;  
+  min-height: 45px;
 }
 
-/* Ajuste para espaçamentos */
-.preview-content .mb-4 {
-  margin-bottom: 12px !important;
+#page-preview-container .link-renderer.width-33{
+  width: 33%;
+  background: green;
 }
 
-.preview-content .py-4 {
-  padding-top: 10px !important;
-  padding-bottom: 10px !important;
-}
+#page-preview-container .text-renderer{
 
-/* Reduzir os tamanhos absolutos para vw/vh */
-.preview-content [style*="width:"] {
-  width: auto !important;
-  max-width: 100% !important;
 }
-
-.preview-content [style*="height:"] {
-  height: auto !important;
-} 

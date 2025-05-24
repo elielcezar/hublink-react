@@ -60,29 +60,16 @@ const PublicPage = () => {
   // Detectar se estamos em um dispositivo móvel
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
     navigator.userAgent
-  );
-  
-  // Log para diagnóstico
-  useEffect(() => {
-    console.log('PublicPage carregada:', {
-      slug,
-      isMobile,
-      userAgent: navigator.userAgent,
-      url: window.location.href,
-      apiUrl: import.meta.env.VITE_API_URL || 'Não definido'
-    });
-  }, [slug]);
+  );  
 
   useEffect(() => {
     const fetchPageData = async () => {
       try {
         // Log da URL completa para diagnóstico
         const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3002';
-        const url = `${apiUrl}/api/public/pages/${slug}`;
-        console.log(`Fazendo requisição GET para: ${url}`);
+        const url = `${apiUrl}/api/public/pages/${slug}`;        
         
-        const response = await axios.get(url);
-        console.log('Resposta da API:', response.data);
+        const response = await axios.get(url);        
         
         setPage(response.data);
         
@@ -108,9 +95,8 @@ const PublicPage = () => {
         const completeStyle = {
           ...defaultStyle,
           ...response.data.style
-        };
+        };        
         
-        console.log('Estilo completo aplicado:', completeStyle);
         setPageStyle(completeStyle);
         
       } catch (error) {
@@ -173,9 +159,8 @@ const PublicPage = () => {
         document.body.style.backgroundSize = 'cover';
         document.body.style.backgroundPosition = 'center';
         document.body.style.backgroundRepeat = 'no-repeat';
-        document.body.style.backgroundColor = ''; // Limpar a cor de fundo
+        document.body.style.backgroundColor = ''; // Limpar a cor de fundo        
         
-        console.log('Aplicando degradê:', `linear-gradient(${gradientDirection}, ${startColor}, ${endColor})`);
       } else {
         document.body.style.backgroundImage = ''; // Limpar a imagem de fundo
         document.body.style.backgroundColor = pageStyle.backgroundColor || '#ffffff';
@@ -229,8 +214,7 @@ const PublicPage = () => {
       </div>
     );
   }
-  
-  console.log('Renderizando com estilo:', pageStyle);
+   
 
   return (
     <div className="min-h-screen">
