@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import MenuDashboard from '../components/MenuDashboard';
-import getApiBaseUrl from '../config/apiConfig';
+import AppHeader from '../components/AppHeader';
+import api from '../config/apiConfig';
 
 // Use a constant API base URL instead of a Promise
 const API_BASE_URL = 'http://localhost:3002'; // Replace with your actual API base URL
@@ -12,6 +13,8 @@ const SettingsAnalytics = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [user, setUser] = useState(null);
+  const [userPage, setUserPage] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,7 +23,15 @@ const SettingsAnalytics = () => {
         const token = localStorage.getItem('token');
         if (!token) {
           navigate('/login');
-          return;
+          return;        
+        }
+
+        const userResponse = await api.get('/api/me');        
+        setUser(userResponse.data);
+        
+        const pagesResponse = await api.get('/api/pages');
+        if (pagesResponse.data && pagesResponse.data.length > 0) {            
+            setUserPage(pagesResponse.data[0].id);            
         }
 
         const userDetailResponse = await axios.get(`${API_BASE_URL}/api/user/details`, {
@@ -84,15 +95,19 @@ const SettingsAnalytics = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <MenuDashboard />
-      <div className="pt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div className="flex-1 pl-[100px]">
+
+          <AppHeader user={user} />
+
+        <div className="w-full mx-auto mt-10 px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Configurações de Analytics</h1>
             <Link
-              to="/dashboard"
+              to={`/analytics/${userPage}`}
               className="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md shadow-sm hover:bg-gray-50"
             >
-              Voltar para o Dashboard
+              Voltar para o Analytics
             </Link>
           </div>
           
