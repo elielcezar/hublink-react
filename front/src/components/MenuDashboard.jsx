@@ -56,7 +56,7 @@ export default function MenuDashboard() {
     };
   
     return (
-      <aside className="h-full fixed top-0 left-0 flex flex-col items-center justify-start min-h-screen w-1/12 max-w-[100px] bg-violet-700">
+      <aside className="h-full fixed top-0 left-0 flex flex-col items-center justify-start min-h-screen w-1/12 max-w-[100px] bg-violet-700 z-50">
           <div className="text-xl font-bold text-gray-900 mt-5 mb-10">
               <img src={logo} alt="logo" className="w-12 h-12" />
           </div>        
@@ -73,7 +73,7 @@ export default function MenuDashboard() {
                 isActive('/dashboard') ? 'bg-violet-900' : ''
               }`}
             >
-              <MdOutlineDesignServices size={36} />
+              <FiEdit3 size={36} />
             </Link>
             {activeTooltip === 'personalizar' && (
               <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-sm rounded whitespace-nowrap z-50 -translate-y-12">
@@ -95,8 +95,8 @@ export default function MenuDashboard() {
                 className={`text-white p-2 my-2 hover:bg-violet-900 rounded-full flex items-center justify-center ${
                   isActive('/editor') ? 'bg-violet-900' : ''
                 }`}
-              >
-                <FiEdit3 size={36} />
+              >                
+                <MdOutlineDesignServices size={36} />
               </Link>
               {activeTooltip === 'editor' && (
                 <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-sm rounded whitespace-nowrap z-50 -translate-y-12">

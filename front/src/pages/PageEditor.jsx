@@ -3,28 +3,27 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import React from 'react';
 import api from '../config/apiConfig';
 import CarouselRenderer from '../components/editor/renderers/CarouselRenderer';
-import LinkForm from '../components/editor/forms/LinkForm';
 import LinkRenderer from '../components/editor/renderers/LinkRenderer';
 import MenuDashboard from '../components/MenuDashboard';
 import SocialRenderer from '../components/editor/renderers/SocialRenderer';
 import BannerRenderer from '../components/editor/renderers/BannerRenderer';
-import IconForm from '../components/editor/forms/IconForm';
 import IconRenderer from '../components/editor/renderers/IconRenderer';
-import TextForm from '../components/editor/forms/TextForm';
 import TextRenderer from '../components/editor/renderers/TextRenderer';
-import BannerForm from '../components/editor/forms/BannerForm';
-import CarouselForm from '../components/editor/forms/CarouselForm';
-import SocialForm from '../components/editor/forms/SocialForm';
+import VideoRenderer from '../components/editor/renderers/VideoRenderer';
 import '../styles/preview.css';
 import AppHeader from '../components/AppHeader';
+
+import { MdOutlineDesignServices } from "react-icons/md";
 
 import { GrTextAlignLeft } from "react-icons/gr";
 import { HiLink } from "react-icons/hi";
 import { FaRegImage } from "react-icons/fa";
 import { RiCarouselView } from "react-icons/ri";
 import { IoShareSocialSharp } from "react-icons/io5";
-import { FaSquareFontAwesomeStroke } from "react-icons/fa6";
 import { LuSquareMousePointer } from "react-icons/lu";
+import { FaYoutube } from "react-icons/fa";
+
+import SortableItem from '../components/editor/forms/SortableItem';
 
 import {
   DndContext,
@@ -38,7 +37,6 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -50,17 +48,8 @@ const componentRenderers = {
   banner: ({ content, pageStyle }) => <BannerRenderer content={content} pageStyle={pageStyle} />,
   carousel: ({ content, pageStyle }) => <CarouselRenderer content={content} pageStyle={pageStyle} />,
   social: ({ content, pageStyle }) => <SocialRenderer content={content} pageStyle={pageStyle} />,
-  icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />
-};
-
-// Formulários para edição dos componentes
-const componentForms = {
-  text: ({ content, onChange }) => <TextForm content={content} onChange={onChange} />,
-  link: ({ content, onChange }) => <LinkForm content={content} onChange={onChange} />,
-  banner: ({ content, onChange }) => <BannerForm content={content} onChange={onChange} />,
-  carousel: ({ content, onChange }) => <CarouselForm content={content} onChange={onChange} />,
-  social: ({ content, onChange }) => <SocialForm content={content} onChange={onChange} />,
-  icon: ({ content, onChange }) => <IconForm content={content} onChange={onChange} />
+  icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />,
+  video: ({ content, pageStyle }) => <VideoRenderer content={content} pageStyle={pageStyle} />
 };
 
 // Valores padrão para novos componentes
@@ -107,7 +96,7 @@ const defaultComponentValues = {
     tiktok: '',
     kwai: '',
     spotify: '',
-    iconColor: '#0077B5'
+    iconColor: '#000000'
   },
   icon: {
     title: 'Botão',
@@ -118,78 +107,16 @@ const defaultComponentValues = {
     width: '100',
     overlayColor: 'rgba(0, 0, 0, 0.4)',
     textColor: '#ffffff'
+  },
+  video: {
+    title: 'Vídeo',
+    videoUrl: '',
+    caption: ''
   }
 };
 
 // Componente para cada item ordenável
-const SortableItem = ({ component, index, expandedComponent, setExpandedComponent, onDelete, saving, handleComponentUpdate }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-  } = useSortable({ id: component.id.toString() });
-  
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
-  
-  return (
-    <div 
-      ref={setNodeRef} 
-      style={style}
-      className="bg-white rounded-lg shadow-md border-2 hover:border-violet-700 relative"
-    >
-      <div
-        onClick={() => setExpandedComponent(
-          expandedComponent === component.id ? null : component.id
-        )}
-        className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-50"
-      >
-        <div className="flex items-center">
-          <div 
-            {...attributes} 
-            {...listeners} 
-            className="mr-2 px-2 py-1 text-gray-500 hover:bg-gray-100 rounded cursor-grab"
-          >
-            ⣿
-          </div>
-          <span className="text-gray-500 mr-2">
-            {index + 1}.
-          </span>
-          <h3 className="font-medium capitalize">
-            {component.content.title || getComponentDefaultTitle(component.type)}
-          </h3>
-        </div>
-        
-        <div className="flex space-x-2">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(component.id);
-            }}
-            disabled={saving}
-            className="text-red-500 hover:text-red-700"
-          >
-            ×
-          </button>
-        </div>
-      </div>
-      
-      {expandedComponent === component.id && (
-        <div className="border-t border-gray-200 p-4">
-          {componentForms[component.type]({
-            content: component.content,
-            onChange: (newContent) => handleComponentUpdate(component.id, newContent)
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
+
 
 const PageEditor = () => {
   const { pageId } = useParams();
@@ -587,16 +514,18 @@ const PageEditor = () => {
           saving={saving}
         />
         
-        <main className="flex flex-col md:flex-row">
-          
+        <main className="flex flex-col md:flex-row">          
 
             {/* Coluna de edição - Esquerda */}
-            <div className="md:w-8/12 space-y-4 pt-8 px-8 h-[calc(100vh-70px)] border-r border-gray-200 overflow-y-scroll">
-              <h1 className="text-2xl font-bold text-gray-900">                
-                  Editor de Componentes
-              </h1>
+            <div className="md:w-8/12 space-y-4 pt-8 px-8 h-[calc(100vh-70px)] border-r border-gray-200 overflow-y-scroll">             
+              <div className="mb-8 justify-between items-center">
+                <h1 className="text-2xl font-medium text-violet-700 flex items-center">                
+                  <MdOutlineDesignServices className="mr-2" size={36} />
+                  <span>Construa sua Página</span>
+                </h1>
+              </div>
               <div className="bg-violet-800 p-4 rounded-lg shadow-md">               
-                <div className="grid grid-cols-2 sm:grid-cols-8 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-7 gap-2">
                   <button
                     onClick={() => addComponent('text', defaultComponentValues.text)}
                     disabled={saving}
@@ -644,6 +573,14 @@ const PageEditor = () => {
                   >
                     <LuSquareMousePointer className="mr-2" size={24} />
                     Botão
+                  </button>
+                  <button
+                    onClick={() => addComponent('video', defaultComponentValues.video)}
+                    disabled={saving}
+                    className="flex flex-col items-center justify-center items-center px-2 py-3 text-white bg-violet-500 font-medium text-md rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
+                  >
+                    <FaYoutube className="mr-2" size={24} />
+                    Vídeo
                   </button>
                 </div>
               </div>
@@ -747,19 +684,6 @@ const _debounce = (func, wait) => {
   };
 }
 
-// Adicionar esta função para determinar o título padrão para cada tipo de componente
-const getComponentDefaultTitle = (type) => {
-  const defaults = {
-    text: 'Bloco de Texto',
-    link: 'Link',
-    banner: 'Banner',
-    carousel: 'Carrossel',
-    social: 'Redes Sociais',
-    icon: 'Ícone'
-  };
-  return defaults[type] || 'Componente';
-};
-
 // Função para obter o rótulo de cada tipo de componente
 const _getComponentLabel = (type) => {
   const labels = {
@@ -768,7 +692,8 @@ const _getComponentLabel = (type) => {
     banner: 'Banner',
     carousel: 'Carrossel',
     social: 'Redes Sociais',
-    icon: 'Ícone'
+    icon: 'Ícone',
+    video: 'Vídeo'
   };
   return labels[type] || 'Componente';
 };

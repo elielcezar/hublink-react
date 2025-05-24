@@ -20,7 +20,7 @@ const AppHeader = ({
 }) => {
   
   return (
-    <nav className="bg-white shadow-md mx-full px-4 sm:px-6 lg:px-8 flex justify-between h-16">      
+    <nav className="bg-white border-b border-gray-200 mx-full px-4 sm:px-6 lg:px-8 flex justify-between h-16 z-50">      
         
           <div className="flex items-center w-full justify-between">
             
@@ -41,9 +41,9 @@ const AppHeader = ({
                         onSave();
                       }
                     }}
-                    className={`flex items-center px-4 py-2 text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2 cursor-pointer text-md
+                    className={`flex items-center px-4 py-2 text-white font-medium rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2 cursor-pointer text-md
                       ${unsavedChanges[page.id] || hasChanges 
-                        ? 'bg-blue-600 hover:bg-blue-700' 
+                        ? 'bg-violet-700 hover:bg-violet-900' 
                         : 'bg-gray-400 hover:bg-gray-400'
                     }`}
                     disabled={!(unsavedChanges[page.id] || hasChanges)}
@@ -56,7 +56,7 @@ const AppHeader = ({
                 {showPreviewButton && (                  
                   <Link 
                       to={`/${page.slug}`}
-                      className={`flex items-center px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 mr-2 cursor-pointer text-md`}
+                      className={`flex items-center px-4 py-2 bg-green-600 text-white font-medium rounded-3xl hover:bg-green-700 mr-2 cursor-pointer text-md`}
                       target="_blank"
                   >
                     <FaExternalLinkAlt className="mr-2" size={16}/>

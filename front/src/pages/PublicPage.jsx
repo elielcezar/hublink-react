@@ -8,6 +8,7 @@ import TextRenderer from '../components/editor/renderers/TextRenderer';
 import CarouselRenderer from '../components/editor/renderers/CarouselRenderer';
 import BannerRenderer from '../components/editor/renderers/BannerRenderer';
 import SocialRenderer from '../components/editor/renderers/SocialRenderer';
+import VideoRenderer from '../components/editor/renderers/VideoRenderer';
 import AnalyticsTracker from '../components/AnalyticsTracker';
 
 // Adicionar o defaultStyle no início do arquivo
@@ -43,7 +44,9 @@ const componentRenderers = {
 
   social: ({ content, pageStyle }) => <SocialRenderer content={content} pageStyle={pageStyle} />,
 
-  icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />
+  icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />,
+
+  video: ({ content, pageStyle }) => <VideoRenderer content={content} pageStyle={pageStyle} />
 };
 
 const PublicPage = () => {

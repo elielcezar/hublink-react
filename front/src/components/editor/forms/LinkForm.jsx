@@ -10,8 +10,8 @@ const LinkForm = ({ content, onChange }) => {
         onChange={(newTitle) => onChange({ ...content, title: newTitle })}
       />
       
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="flex gap-2 mb-4">
+        <label className="flex items-center block text-sm font-medium text-gray-700 mb-1 w-[180px]">
           Texto do Link
         </label>
         <input
@@ -23,8 +23,8 @@ const LinkForm = ({ content, onChange }) => {
         />
       </div>
       
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="mb-4 flex gap-2">
+        <label className="flex items-center block text-sm font-medium text-gray-700 mb-1 w-[180px]">
           URL
         </label>
         <input
@@ -36,8 +36,8 @@ const LinkForm = ({ content, onChange }) => {
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+      <div className="flex gap-2 mb-4">
+        <label className="flex items-center block text-sm font-medium text-gray-700 mb-1 w-[180px]">
           Largura do Link
         </label>
         <select
@@ -52,8 +52,8 @@ const LinkForm = ({ content, onChange }) => {
       </div>
 
       {content.imageUrl && content.imageUrl.trim() !== '' && (
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="flex gap-2 mb-4">
+          <label className="flex items-center block text-sm font-medium text-gray-700 mb-1 w-[180px]">
             Posição da Imagem
           </label>
           <select
@@ -68,13 +68,14 @@ const LinkForm = ({ content, onChange }) => {
         </div>
       )}
       
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="flex gap-2 mb-4">
+        <label className="flex items-center block text-sm font-medium text-gray-700 mb-1 w-[147px]">
           Imagem (Opcional)
         </label>
         <ImageUploader 
           onImageUpload={(imageUrl) => onChange({ ...content, imageUrl })}
           currentImage={content.imageUrl || ''} 
+          className="w-full"
         />
       </div>     
       

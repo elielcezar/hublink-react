@@ -25,6 +25,7 @@ const Card = ({
   className = '',
   noPadding = false,
   noShadow = false,
+  noBorder = false,
   headerClassName = '',
   bodyClassName = '',
   footer,
@@ -35,8 +36,9 @@ const Card = ({
   // Classes base do card
   const cardClasses = `
     ${className}
-    bg-white rounded-lg my-12 border-[1px] border-gray-200 relative
-    ${noShadow ? '' : 'shadow'}    
+    bg-white rounded-lg my-12 relative
+    ${noShadow ? '' : 'shadow'}   
+    ${noBorder ? '' : 'border-[1px] border-gray-200'}
     ${onClick ? 'cursor-pointer transition-all hover:shadow-lg' : ''}
   `;
 

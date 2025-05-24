@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import MenuDashboard from '../components/MenuDashboard';
 import AppHeader from '../components/AppHeader';
 import api from '../config/apiConfig';
@@ -12,6 +12,10 @@ import SocialRenderer from '../components/editor/renderers/SocialRenderer';
 import BannerRenderer from '../components/editor/renderers/BannerRenderer';
 import IconRenderer from '../components/editor/renderers/IconRenderer';
 import TextRenderer from '../components/editor/renderers/TextRenderer';
+import { IoIosColorFilter } from "react-icons/io";
+import { FaRegImage } from "react-icons/fa";
+import { IoColorFillOutline } from "react-icons/io5";
+import { FaRegSave } from "react-icons/fa";
 
 const componentRenderers = {
   text: ({ content, pageStyle }) => <TextRenderer content={content} pageStyle={pageStyle} />,
@@ -410,7 +414,7 @@ const Dashboard = () => {
             user={user}
             pages={pages}
             unsavedChanges={unsavedChanges}
-            savePageStyle={savePageStyle}            
+            savePageStyle={savePageStyle}               
           />
 
           <main className="flex flex-col md:flex-row">
@@ -419,7 +423,7 @@ const Dashboard = () => {
             <div className="md:w-8/12 space-y-4 pt-8 px-8 h-[calc(100vh-70px)] border-r border-gray-200 overflow-y-scroll">
               
               <div className="mb-8 justify-between items-center">
-                <h1 className="text-3xl font-bold text-violet-700">                
+                <h1 className="text-2xl font-bold text-violet-700">                
                   Personalize seu Perfil
                 </h1>
               </div>
@@ -430,274 +434,272 @@ const Dashboard = () => {
                 </div>
               )}
               
-              <div className="mb-4">
-                <label className="mr-2">Selecione a página:</label>
-                <select
-                  value={activePageId || ''}
-                  onChange={e => setActivePageId(e.target.value)}
-                  className="border px-2 py-1 rounded"
-                >
-                  {pages.map(page => (
-                    <option key={page.id} value={page.id}>
-                      {page.slug}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
               {pages.length > 0 ? (
                 <div className="space-y-4">
                   {pages.map((page) => (
                     <div key={page.id}>                      
                       
-                      <Card title="Sua Marca" noShadow>                         
-                        <ImageUploader 
-                          onImageUpload={(imageUrl) => handleLogoUpload(page.id, imageUrl)}
-                          currentImage={pageStyles[page.id]?.logo || ''}
-                        />                        
-                      </Card>                    
-
-                      <Card title="Endereço da Página" noShadow>
-                        
-                        {editingSlug === page.id ? (
-                          <>
-                            <div className="flex items-center mt-4">
-                              <span className="text-xl font-medium text-gray-500 mr-2">hublink.app/</span>
-                              <input
-                                type="text"
-                                value={slugValue}
-                                onChange={(e) => setSlugValue(e.target.value)}
-                                className="max-w-xs flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="minha-pagina"
-                              />
-                            </div>
-                            {slugError && (
-                              <p className="mt-1 text-sm text-red-600">{slugError}</p>
-                            )}
-                            <div className="mt-2 flex space-x-2 mt-4">
-                              <button
-                                onClick={() => saveSlug(page.id)}
-                                className="ml-2 text-violet-900 px-4 py-2 border-2 border-violet-900 rounded-md hover:text-blue-800 text-sm hover:bg-violet-900 hover:text-white"
-                              >
-                                Salvar
-                              </button>
-                              <button
-                                onClick={() => setEditingSlug(null)}
-                                className="px-3 py-1 bg-gray-200 px-4 py-2 text-gray-700 text-sm rounded hover:bg-gray-300"
-                              >
-                                Cancelar
-                              </button>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex items-center mt-4">
-                            <h2 className="text-xl font-medium text-gray-500">
-                              hublink.app/{page.slug}
-                            </h2>
-                            <button
-                              onClick={() => startEditingSlug(page)}
-                              className="ml-2 text-violet-900 px-4 py-2 border-2 border-violet-900 rounded-md hover:text-blue-800 text-sm hover:bg-violet-900 hover:text-white"
-                            >
-                              Alterar endereço
-                            </button>
-                          </div>
-                        )}
-                        
-                      </Card>
-                     
-                      <Card title="Estilo de Fundo" noShadow >                        
-                        <div className="flex space-x-2 mb-4">
-                          <button
-                            className={`px-4 py-2 rounded-md ${
-                              (pageStyles[page.id]?.backgroundType === 'color' || !pageStyles[page.id]?.backgroundType) 
-                                ? 'bg-blue-600 text-white' 
-                                : 'bg-gray-200 text-gray-700'
-                            }`}
-                            onClick={() => updatePageStyle(page.id, 'backgroundType', 'color')}
-                          >
-                            Cor Sólida
-                          </button>
-                          <button
-                            className={`px-4 py-2 rounded-md ${
-                              pageStyles[page.id]?.backgroundType === 'gradient' 
-                                ? 'bg-blue-600 text-white' 
-                                : 'bg-gray-200 text-gray-700'
-                            }`}
-                            onClick={() => updatePageStyle(page.id, 'backgroundType', 'gradient')}
-                          >
-                            Degradê
-                          </button>
-                          <button
-                            className={`px-4 py-2 rounded-md ${
-                              pageStyles[page.id]?.backgroundType === 'image' 
-                                ? 'bg-blue-600 text-white' 
-                                : 'bg-gray-200 text-gray-700'
-                            }`}
-                            onClick={() => updatePageStyle(page.id, 'backgroundType', 'image')}
-                          >
-                            Imagem
-                          </button>
-                        </div>
-                        
-                        {/* Exibir o componente apropriado com base na seleção */}
-                        {pageStyles[page.id]?.backgroundType === 'image' && (
-                          <div className="mb-6">
-                            <h4 className="font-medium text-gray-700 mb-2">Imagem de Fundo</h4>
+                      <Card noShadow noPadding noBorder>
+                        <div className="flex justify-center">
+                          <div className="w-1/2">
                             <ImageUploader 
-                              onImageUpload={(imageUrl) => handleBackgroundImageUpload(page.id, imageUrl)}
-                              currentImage={pageStyles[page.id]?.backgroundImage || ''}
-                            />
+                              onImageUpload={(imageUrl) => handleLogoUpload(page.id, imageUrl)}
+                              currentImage={pageStyles[page.id]?.logo || ''}
+                            />  
+                          </div>                
+                          <div className="w-1/2 flex flex-col justify-center items-start">
+                            {editingSlug === page.id ? (
+                              <div className="flex items-center flex-col items-start">
+                                <div className="flex items-center">
+                                  <span className="text-2xl font-medium text-gray-500 mr-2">hublink.app/</span>
+                                  <input
+                                    type="text"
+                                    value={slugValue}
+                                    onChange={(e) => setSlugValue(e.target.value)}
+                                    className="max-w-[200px] flex-1 px-3 py-1 mt-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="minha-pagina"
+                                  />
+                                </div>
+                                {slugError && (
+                                  <p className="mt-1 text-sm text-red-600">{slugError}</p>
+                                )}
+                                <div className="flex w-full mt-2">
+                                  <button
+                                    onClick={() => saveSlug(page.id)}
+                                    className="mr-2 text-violet-900 px-4 py-1 border-2 border-violet-900 rounded-md hover:text-blue-800 text-sm hover:bg-violet-900 hover:text-white"
+                                  >
+                                    Salvar
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingSlug(null)}
+                                    className="px-3 py-1 bg-gray-200 px-4 py-1 text-gray-700 text-sm rounded hover:bg-gray-300"
+                                  >
+                                    Cancelar
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-start flex-col">
+                                <h2 className="text-2xl font-medium text-gray-500">
+                                  hublink.app/{page.slug}
+                                </h2>
+                                <button
+                                  onClick={() => startEditingSlug(page)}
+                                  className="mt-2 text-violet-900 px-4 py-1 border-2 border-violet-900 rounded-md hover:text-blue-800 text-sm hover:bg-violet-900 hover:text-white"
+                                >
+                                  Alterar endereço
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        
-                        {pageStyles[page.id]?.backgroundType === 'gradient' && (
-                          <div className="mb-6">
-                            <h4 className="font-medium text-gray-700 mb-2">Degradê</h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Cor Inicial
-                                </label>
-                                <div className="flex items-center gap-3">
-                                  <div 
-                                    className="h-10 w-10 rounded border cursor-pointer"
-                                    style={{ backgroundColor: pageStyles[page.id]?.gradientStartColor || '#4f46e5' }}
-                                    onClick={() => setShowColorPicker('gradientStart-' + page.id)}
-                                  ></div>
-                                  <input
-                                    type="text"
-                                    value={pageStyles[page.id]?.gradientStartColor || '#4f46e5'}
-                                    onChange={(e) => updatePageStyle(page.id, 'gradientStartColor', e.target.value)}
-                                    className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
-                                  />
-                                </div>
-                                
-                                {showColorPicker === 'gradientStart-' + page.id && (
-                                  <div className="absolute z-10 mt-2">
-                                    <div 
-                                      className="fixed inset-0" 
-                                      onClick={() => setShowColorPicker(null)}
-                                    ></div>
-                                    <SketchPicker 
-                                      color={pageStyles[page.id]?.gradientStartColor || '#4f46e5'}
-                                      onChange={(color) => {
-                                        updatePageStyle(page.id, 'gradientStartColor', color.hex);
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                              
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  Cor Final
-                                </label>
-                                <div className="flex items-center gap-3">
-                                  <div 
-                                    className="h-10 w-10 rounded border cursor-pointer"
-                                    style={{ backgroundColor: pageStyles[page.id]?.gradientEndColor || '#818cf8' }}
-                                    onClick={() => setShowColorPicker('gradientEnd-' + page.id)}
-                                  ></div>
-                                  <input
-                                    type="text"
-                                    value={pageStyles[page.id]?.gradientEndColor || '#818cf8'}
-                                    onChange={(e) => updatePageStyle(page.id, 'gradientEndColor', e.target.value)}
-                                    className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
-                                  />
-                                </div>
-                                
-                                {showColorPicker === 'gradientEnd-' + page.id && (
-                                  <div className="absolute z-10 mt-2">
-                                    <div 
-                                      className="fixed inset-0" 
-                                      onClick={() => setShowColorPicker(null)}
-                                    ></div>
-                                    <SketchPicker 
-                                      color={pageStyles[page.id]?.gradientEndColor || '#818cf8'}
-                                      onChange={(color) => {
-                                        updatePageStyle(page.id, 'gradientEndColor', color.hex);
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                        </div>                      
+                      </Card>                       
+                     
+                      <Card title="Estilo de Background" noShadow>                        
+                        <div className="flex gap-4">
+                          <div className="w-1/4 flex flex-col gap-8 pr-8">
                             
-                            <div className="mt-4">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Direção do Degradê
-                              </label>
-                              <select
-                                value={pageStyles[page.id]?.gradientDirection || 'to right'}
-                                onChange={(e) => updatePageStyle(page.id, 'gradientDirection', e.target.value)}
-                                className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded"
-                              >
-                                <option value="to right">Horizontal (Esquerda para Direita)</option>
-                                <option value="to left">Horizontal (Direita para Esquerda)</option>
-                                <option value="to bottom">Vertical (Cima para Baixo)</option>
-                                <option value="to top">Vertical (Baixo para Cima)</option>
-                                <option value="to bottom right">Diagonal (Canto Superior Esquerdo)</option>
-                                <option value="to bottom left">Diagonal (Canto Superior Direito)</option>
-                                <option value="to top right">Diagonal (Canto Inferior Esquerdo)</option>
-                                <option value="to top left">Diagonal (Canto Inferior Direito)</option>
-                              </select>
-                            </div>
-                            
-                            <div 
-                              className="mt-4 p-4 rounded border"
-                              style={{ 
-                                background: `linear-gradient(${pageStyles[page.id]?.gradientDirection || 'to right'}, ${pageStyles[page.id]?.gradientStartColor || '#4f46e5'}, ${pageStyles[page.id]?.gradientEndColor || '#818cf8'})`,
-                                height: '80px'
-                              }}
+                            <button
+                              className={`flex flex-col items-center gap-2 justify-center px-4 py-2 rounded-md text-md font-medium border-2  hover:bg-violet-700 hover:text-white ${
+                                (pageStyles[page.id]?.backgroundType === 'color' || !pageStyles[page.id]?.backgroundType) 
+                                  ? 'bg-violet-700 text-white' 
+                                  : 'bg-white text-violet-700 '
+                              }`}
+                              onClick={() => updatePageStyle(page.id, 'backgroundType', 'color')}
                             >
-                            </div>
-                          </div>
-                        )}
-                        
-                        {(pageStyles[page.id]?.backgroundType === 'color' || !pageStyles[page.id]?.backgroundType) && (
-                          <div className="mb-6">
-                            <h4 className="font-medium text-gray-700 mb-2">Cor de Fundo</h4>
-                            <div className="flex items-center gap-3">
-                              <div 
-                                className="h-10 w-10 rounded border cursor-pointer"
-                                style={{ backgroundColor: pageStyles[page.id]?.backgroundColor || '#ffffff' }}
-                                onClick={() => setShowColorPicker('color-' + page.id)}
-                              ></div>
-                              <input
-                                type="text"
-                                value={pageStyles[page.id]?.backgroundColor || '#ffffff'}
-                                onChange={(e) => updatePageStyle(page.id, 'backgroundColor', e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
-                              />
-                            </div>
+                              <IoColorFillOutline size={40}/>
+                              <span>Cor Sólida</span>
+                            </button>
                             
-                            {showColorPicker === 'color-' + page.id && (
-                              <div className="absolute z-10 mt-2">
-                                <div 
-                                  className="fixed inset-0" 
-                                  onClick={() => setShowColorPicker(null)}
-                                ></div>
-                                <SketchPicker 
-                                  color={pageStyles[page.id]?.backgroundColor || '#ffffff'}
-                                  onChange={(color) => {
-                                    updatePageStyle(page.id, 'backgroundColor', color.hex);
-                                  }}
+                            <button
+                              className={`flex flex-col items-center gap-2 justify-center px-4 py-2 rounded-md text-md font-medium border-2 border-violet-700 hover:bg-violet-700 hover:text-white  ${
+                                pageStyles[page.id]?.backgroundType === 'gradient' 
+                                  ? 'bg-violet-700 text-white' 
+                                  : 'bg-white text-violet-700'
+                              }`}
+                              onClick={() => updatePageStyle(page.id, 'backgroundType', 'gradient')}
+                            >
+                              <IoIosColorFilter size={40}/>
+                              <span>Degradê</span>
+                            </button>
+                            
+                            <button
+                              className={`flex flex-col items-center gap-2 justify-center px-4 py-2 rounded-md text-md font-medium border-2 hover:bg-violet-700 hover:text-white ${
+                                pageStyles[page.id]?.backgroundType === 'image' 
+                                  ? 'bg-violet-700 text-white' 
+                                  : 'bg-white text-violet-700'
+                              }`}
+                              onClick={() => updatePageStyle(page.id, 'backgroundType', 'image')}
+                            >
+                              <FaRegImage size={40}/>
+                              <span>Imagem</span>
+                            </button>
+
+                          </div> 
+
+                        <div className="w-3/4 flex items-center justify-center">                            
+                            {/* Exibir o componente apropriado com base na seleção */}
+                            {pageStyles[page.id]?.backgroundType === 'image' && (
+                              <div className="mb-6">
+                                <h4 className="font-medium text-gray-700 mb-2">Imagem de Fundo</h4>
+                                <ImageUploader 
+                                  onImageUpload={(imageUrl) => handleBackgroundImageUpload(page.id, imageUrl)}
+                                  currentImage={pageStyles[page.id]?.backgroundImage || ''}
                                 />
                               </div>
                             )}
+                            
+                            {pageStyles[page.id]?.backgroundType === 'gradient' && (
+                              <div className="w-full flex gap-8">                                
+                                
+                                <div className="flex flex-col gap-8 w-1/2">                               
+                                    
+                                    <div>
+                                      <label className="block text-md font-medium text-gray-700 mb-1">                                      
+                                        Cor Inicial
+                                      </label>
+                                      <div className="flex items-center gap-3">
+                                        <div 
+                                          className="h-10 w-10 rounded border cursor-pointer"
+                                          style={{ backgroundColor: pageStyles[page.id]?.gradientStartColor || '#4f46e5' }}
+                                          onClick={() => setShowColorPicker('gradientStart-' + page.id)}
+                                        ></div>
+                                        <input
+                                          type="text"
+                                          value={pageStyles[page.id]?.gradientStartColor || '#4f46e5'}
+                                          onChange={(e) => updatePageStyle(page.id, 'gradientStartColor', e.target.value)}
+                                          className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+                                        />
+                                    </div>
+                                    
+                                    {showColorPicker === 'gradientStart-' + page.id && (
+                                      <div className="absolute z-10 mt-2">
+                                        <div 
+                                          className="fixed inset-0" 
+                                          onClick={() => setShowColorPicker(null)}
+                                        ></div>
+                                        <SketchPicker 
+                                          color={pageStyles[page.id]?.gradientStartColor || '#4f46e5'}
+                                          onChange={(color) => {
+                                            updatePageStyle(page.id, 'gradientStartColor', color.hex);
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                    
+                                    <label className="block text-md font-medium text-gray-700 mt-4 mb-1">
+                                      Cor Final
+                                    </label>
+                                    <div className="flex items-center gap-3">
+                                      <div 
+                                        className="h-10 w-10 rounded border cursor-pointer"
+                                        style={{ backgroundColor: pageStyles[page.id]?.gradientEndColor || '#818cf8' }}
+                                        onClick={() => setShowColorPicker('gradientEnd-' + page.id)}
+                                      ></div>
+                                      <input
+                                        type="text"
+                                        value={pageStyles[page.id]?.gradientEndColor || '#818cf8'}
+                                        onChange={(e) => updatePageStyle(page.id, 'gradientEndColor', e.target.value)}
+                                        className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+                                      />
+                                    </div>
+                                
+                                    <div className="mt-4">
+                                      <label className="block text-md font-medium text-gray-700 mb-1">
+                                        Direção do Degradê
+                                      </label>
+                                      <select
+                                        value={pageStyles[page.id]?.gradientDirection || 'to right'}
+                                        onChange={(e) => updatePageStyle(page.id, 'gradientDirection', e.target.value)}
+                                        className="w-full md:w-64 px-3 py-2 border border-gray-300 rounded"
+                                      >
+                                        <option value="to right">Horizontal (Esquerda para Direita)</option>
+                                        <option value="to left">Horizontal (Direita para Esquerda)</option>
+                                        <option value="to bottom">Vertical (Cima para Baixo)</option>
+                                        <option value="to top">Vertical (Baixo para Cima)</option>
+                                        <option value="to bottom right">Diagonal (Canto Superior Esquerdo)</option>
+                                        <option value="to bottom left">Diagonal (Canto Superior Direito)</option>
+                                        <option value="to top right">Diagonal (Canto Inferior Esquerdo)</option>
+                                        <option value="to top left">Diagonal (Canto Inferior Direito)</option>
+                                      </select>
+                                    </div>
+                                 
+                                    
+                                    
+                                    {showColorPicker === 'gradientEnd-' + page.id && (
+                                      <div className="absolute z-10 mt-2">
+                                        <div 
+                                          className="fixed inset-0" 
+                                          onClick={() => setShowColorPicker(null)}
+                                        ></div>
+                                        <SketchPicker 
+                                          color={pageStyles[page.id]?.gradientEndColor || '#818cf8'}
+                                          onChange={(color) => {
+                                            updatePageStyle(page.id, 'gradientEndColor', color.hex);
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>                                
+                                <div className="w-1/2  rounded border-2"
+                                  style={{ 
+                                    background: `linear-gradient(${pageStyles[page.id]?.gradientDirection || 'to right'}, 
+                                    ${pageStyles[page.id]?.gradientStartColor || '#4f46e5'}, 
+                                    ${pageStyles[page.id]?.gradientEndColor || '#818cf8'})`
+                                  }}
+                                >
+                                </div>
+                              </div>
+                            )}
+                            
+                            {(pageStyles[page.id]?.backgroundType === 'color' || !pageStyles[page.id]?.backgroundType) && (
+                              <div className="mb-6">
+                                <h4 className="font-medium text-gray-700 mb-2">Cor de Fundo</h4>
+                                <div className="flex items-center gap-3">
+                                  <div 
+                                    className="h-10 w-10 rounded border cursor-pointer"
+                                    style={{ backgroundColor: pageStyles[page.id]?.backgroundColor || '#ffffff' }}
+                                    onClick={() => setShowColorPicker('color-' + page.id)}
+                                  ></div>
+                                  <input
+                                    type="text"
+                                    value={pageStyles[page.id]?.backgroundColor || '#ffffff'}
+                                    onChange={(e) => updatePageStyle(page.id, 'backgroundColor', e.target.value)}
+                                    className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+                                  />
+                                </div>
+                                
+                                {showColorPicker === 'color-' + page.id && (
+                                  <div className="absolute z-10 mt-2">
+                                    <div 
+                                      className="fixed inset-0" 
+                                      onClick={() => setShowColorPicker(null)}
+                                    ></div>
+                                    <SketchPicker 
+                                      color={pageStyles[page.id]?.backgroundColor || '#ffffff'}
+                                      onChange={(color) => {
+                                        updatePageStyle(page.id, 'backgroundColor', color.hex);
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>                        
                       </Card>
 
                       {/* Card para Fonte e Texto */}
-                      <Card title="Configuração de Fonte e Texto">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                          <div>
+                      <Card title="Configuração de Fonte e Texto" noShadow>
+                        <div className="flex gap-8">
+                          
+                          <div className="w-1/3">
                             <h4 className="font-medium text-gray-700 mb-2">Família da Fonte</h4>
                             <select
                               value={pageStyles[page.id]?.fontFamily || defaultStyle.fontFamily}
                               onChange={(e) => updatePageStyle(page.id, 'fontFamily', e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-violet-700 focus:border-transparent"
                             >
                               {availableFonts.map((font) => (
                                 <option key={font.value} value={font.value}>
@@ -706,45 +708,11 @@ const Dashboard = () => {
                               ))}
                             </select>
                           </div>
-                          
-                          <div>
-                            <h4 className="font-medium text-gray-700 mb-2">Cor do Texto</h4>
-                            <div className="flex items-center gap-3">
-                              <div 
-                                className="h-10 w-10 rounded border cursor-pointer"
-                                style={{ backgroundColor: pageStyles[page.id]?.textColor || '#333333' }}
-                                onClick={() => setShowColorPicker('text-' + page.id)}
-                              ></div>
-                              <input
-                                type="text"
-                                value={pageStyles[page.id]?.textColor || '#333333'}
-                                onChange={(e) => updatePageStyle(page.id, 'textColor', e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
-                              />
-                            </div>
-                            
-                            {showColorPicker === 'text-' + page.id && (
-                              <div className="absolute z-10 mt-2">
-                                <div 
-                                  className="fixed inset-0" 
-                                  onClick={() => setShowColorPicker(null)}
-                                ></div>
-                                <SketchPicker 
-                                  color={pageStyles[page.id]?.textColor || '#333333'}
-                                  onChange={(color) => {
-                                    updatePageStyle(page.id, 'textColor', color.hex);
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div>
-                            <label className="block text-sm text-gray-600 mb-2">
+                                                
+                          <div className="w-1/3">
+                            <h4 className="font-medium text-gray-700 mb-2">
                               Tamanho da Fonte: {pageStyles[page.id]?.fontSize || 16}px
-                            </label>
+                            </h4>                            
                             <input
                               type="range"
                               min="12"
@@ -759,12 +727,12 @@ const Dashboard = () => {
                             </div>
                           </div>
                           
-                          <div>
+                          <div className="w-1/3">
                             <h4 className="font-medium text-gray-700 mb-2">Peso da Fonte</h4>
                             <select
                               value={pageStyles[page.id]?.fontWeight || 'normal'}
                               onChange={(e) => updatePageStyle(page.id, 'fontWeight', e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-violet-700 focus:border-transparent"
                             >
                               <option value="normal">Normal</option>
                               <option value="bold">Negrito</option>
@@ -774,78 +742,103 @@ const Dashboard = () => {
                       </Card>
 
                       {/* Card para Configuração dos Links */}
-                      <Card title="Configuração dos Links" >
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                          <div>
-                            <h4 className="font-medium text-gray-700 mb-2">Cor de Fundo dos Links</h4>
-                            <div className="flex items-center gap-3">
-                              <div 
-                                className="h-10 w-10 rounded border cursor-pointer"
-                                style={{ backgroundColor: pageStyles[page.id]?.linkBackgroundColor || '#3b82f6' }}
-                                onClick={() => setShowColorPicker('linkBackground-' + page.id)}
-                              ></div>
-                              <input
-                                type="text"
-                                value={pageStyles[page.id]?.linkBackgroundColor || '#3b82f6'}
-                                onChange={(e) => updatePageStyle(page.id, 'linkBackgroundColor', e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
-                              />
-                            </div>
+                      <Card title="Configuração dos Links" noShadow>
+                        <div className="flex flex-col gap-8">
+                          
+                          <div className="flex gap-8 w-full">
                             
-                            {showColorPicker === 'linkBackground-' + page.id && (
-                              <div className="absolute z-10 mt-2">
+                            <div className="w-1/3">
+                              <h4 className="font-medium text-gray-700 mb-2">Cor de Fundo dos Links</h4>
+                              <div className="flex items-center gap-3">
                                 <div 
-                                  className="fixed inset-0" 
-                                  onClick={() => setShowColorPicker(null)}
+                                  className="h-10 w-10 rounded border cursor-pointer"
+                                  style={{ backgroundColor: pageStyles[page.id]?.linkBackgroundColor || '#3b82f6' }}
+                                  onClick={() => setShowColorPicker('linkBackground-' + page.id)}
                                 ></div>
-                                <SketchPicker 
-                                  color={pageStyles[page.id]?.linkBackgroundColor || '#3b82f6'}
-                                  onChange={(color) => {
-                                    updatePageStyle(page.id, 'linkBackgroundColor', color.hex);
-                                  }}
+                                <input
+                                  type="text"
+                                  value={pageStyles[page.id]?.linkBackgroundColor || '#3b82f6'}
+                                  onChange={(e) => updatePageStyle(page.id, 'linkBackgroundColor', e.target.value)}
+                                  className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
                                 />
                               </div>
-                            )}
+                              {showColorPicker === 'linkBackground-' + page.id && (
+                                <div className="absolute z-10 mt-2">
+                                  <div 
+                                    className="fixed inset-0" 
+                                    onClick={() => setShowColorPicker(null)}
+                                  ></div>
+                                  <SketchPicker 
+                                    color={pageStyles[page.id]?.linkBackgroundColor || '#3b82f6'}
+                                    onChange={(color) => {
+                                      updatePageStyle(page.id, 'linkBackgroundColor', color.hex);
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </div>{/* cor de fundo*/}
+
+                            <div className="w-1/3">
+                              <h4 className="font-medium text-gray-700 mb-2">Cor do Texto dos Links</h4>
+                              <div className="flex items-center gap-3">
+                                <div 
+                                  className="h-10 w-10 rounded border cursor-pointer"
+                                  style={{ backgroundColor: pageStyles[page.id]?.linkTextColor || '#ffffff' }}
+                                  onClick={() => setShowColorPicker('linkText-' + page.id)}
+                                ></div>
+                                <input
+                                  type="text"
+                                  value={pageStyles[page.id]?.linkTextColor || '#ffffff'}
+                                  onChange={(e) => updatePageStyle(page.id, 'linkTextColor', e.target.value)}
+                                  className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
+                                />
+                              </div>
+                              
+                              {showColorPicker === 'linkText-' + page.id && (
+                                <div className="absolute z-10 mt-2">
+                                  <div 
+                                    className="fixed inset-0" 
+                                    onClick={() => setShowColorPicker(null)}
+                                  ></div>
+                                  <SketchPicker 
+                                    color={pageStyles[page.id]?.linkTextColor || '#ffffff'}
+                                    onChange={(color) => {
+                                      updatePageStyle(page.id, 'linkTextColor', color.hex);
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </div>{/* cor de texto*/}    
+                            
+                            <div className="w-1/3">
+                              <h4 className="font-medium text-gray-700 mb-4">
+                                Raio das Bordas: {pageStyles[page.id]?.linkBorderRadius || 8}px
+                              </h4>                              
+                              <input
+                                type="range"
+                                min="0"
+                                max="20"
+                                value={pageStyles[page.id]?.linkBorderRadius || 8}
+                                onChange={(e) => updatePageStyle(page.id, 'linkBorderRadius', parseInt(e.target.value))}
+                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                              />
+                              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>Bordas retas</span>
+                                <span>Muito arredondado</span>
+                              </div>                              
+                            </div>{/* Configuração de Bordas */}
+                            
                           </div>
                           
-                          <div>
-                            <h4 className="font-medium text-gray-700 mb-2">Cor do Texto dos Links</h4>
-                            <div className="flex items-center gap-3">
-                              <div 
-                                className="h-10 w-10 rounded border cursor-pointer"
-                                style={{ backgroundColor: pageStyles[page.id]?.linkTextColor || '#ffffff' }}
-                                onClick={() => setShowColorPicker('linkText-' + page.id)}
-                              ></div>
-                              <input
-                                type="text"
-                                value={pageStyles[page.id]?.linkTextColor || '#ffffff'}
-                                onChange={(e) => updatePageStyle(page.id, 'linkTextColor', e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded text-sm w-32"
-                              />
-                            </div>
-                            
-                            {showColorPicker === 'linkText-' + page.id && (
-                              <div className="absolute z-10 mt-2">
-                                <div 
-                                  className="fixed inset-0" 
-                                  onClick={() => setShowColorPicker(null)}
-                                ></div>
-                                <SketchPicker 
-                                  color={pageStyles[page.id]?.linkTextColor || '#ffffff'}
-                                  onChange={(color) => {
-                                    updatePageStyle(page.id, 'linkTextColor', color.hex);
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </div>
+                          
                         </div>
                         
                         {/* Configurações de Sombra */}
-                        <div className="mb-6">
-                          <h4 className="font-medium text-gray-700 mb-4">Configuração da Sombra</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <div>
+                        <h4 className="font-medium text-gray-700 mb-4 mt-8">Configuração da Sombra</h4>
+                        <div className="flex gap-8">                                                    
+                          <div className="w-full flex gap-8">
+                            
+                            <div className="w-1/4">
                               <label className="block text-sm text-gray-600 mb-2">Cor da Sombra</label>
                               <div className="flex items-center gap-3">
                                 <div 
@@ -857,10 +850,9 @@ const Dashboard = () => {
                                   type="text"
                                   value={pageStyles[page.id]?.linkShadowColor || '#000000'}
                                   onChange={(e) => updatePageStyle(page.id, 'linkShadowColor', e.target.value)}
-                                  className="px-3 py-2 border border-gray-300 rounded text-sm w-20"
+                                  className="px-3 py-2 border border-gray-300 rounded text-sm w-[135px]"
                                 />
-                              </div>
-                              
+                              </div>                              
                               {showColorPicker === 'linkShadow-' + page.id && (
                                 <div className="absolute z-10 mt-2">
                                   <div 
@@ -875,9 +867,9 @@ const Dashboard = () => {
                                   />
                                 </div>
                               )}
-                            </div>
+                            </div>{/* cor da sombra*/}
                             
-                            <div>
+                            <div className="w-1/4">
                               <label className="block text-sm text-gray-600 mb-2">
                                 Intensidade: {pageStyles[page.id]?.linkShadowIntensity || 4}
                               </label>
@@ -895,7 +887,7 @@ const Dashboard = () => {
                               </div>
                             </div>
                             
-                            <div>
+                            <div className="w-1/4">
                               <label className="block text-sm text-gray-600 mb-2">
                                 Desfoque: {pageStyles[page.id]?.linkShadowBlur || 4}
                               </label>
@@ -911,9 +903,9 @@ const Dashboard = () => {
                                 <span>Dura</span>
                                 <span>Suave</span>
                               </div>
-                            </div>
+                            </div>{/* desfoque*/}
                             
-                            <div>
+                            <div className="w-1/4">
                               <label className="block text-sm text-gray-600 mb-2">
                                 Opacidade: {pageStyles[page.id]?.linkShadowOpacity || 20}%
                               </label>
@@ -930,77 +922,23 @@ const Dashboard = () => {
                                 <span>Sutil</span>
                                 <span>Forte</span>
                               </div>
-                            </div>
+                            </div>{/* opacidade*/}
+
                           </div>
                         </div>
-                        
-                        {/* Configuração de Bordas */}
-                        <div className="mb-6">
-                          <h4 className="font-medium text-gray-700 mb-4">Configuração das Bordas</h4>
-                          <div>
-                            <label className="block text-sm text-gray-600 mb-2">
-                              Raio das Bordas: {pageStyles[page.id]?.linkBorderRadius || 8}px
-                            </label>
-                            <input
-                              type="range"
-                              min="0"
-                              max="20"
-                              value={pageStyles[page.id]?.linkBorderRadius || 8}
-                              onChange={(e) => updatePageStyle(page.id, 'linkBorderRadius', parseInt(e.target.value))}
-                              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                            />
-                            <div className="flex justify-between text-xs text-gray-500 mt-1">
-                              <span>Bordas retas</span>
-                              <span>Muito arredondado</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Preview do link atualizado */}
-                        <div className="mt-4">
-                          <h4 className="font-medium text-gray-700 mb-2">Prévia do Link</h4>
-                          <div 
-                            className="inline-block px-6 py-3 text-center transition-all duration-200"
-                            style={{
-                              backgroundColor: pageStyles[page.id]?.linkBackgroundColor || '#3b82f6',
-                              color: pageStyles[page.id]?.linkTextColor || pageStyles[page.id]?.textColor || '#ffffff',
-                              borderRadius: `${pageStyles[page.id]?.linkBorderRadius || 8}px`,
-                              fontFamily: pageStyles[page.id]?.fontFamily || defaultStyle.fontFamily,
-                              fontSize: `${pageStyles[page.id]?.fontSize || 16}px`,
-                              fontWeight: pageStyles[page.id]?.fontWeight === 'bold' ? '700' : '400',
-                              boxShadow: (pageStyles[page.id]?.linkShadowIntensity || 4) > 0 
-                                ? (() => {
-                                    const intensity = pageStyles[page.id]?.linkShadowIntensity || 4;
-                                    const blur = pageStyles[page.id]?.linkShadowBlur || 4;
-                                    const opacity = (pageStyles[page.id]?.linkShadowOpacity || 20) / 100;
-                                    const color = pageStyles[page.id]?.linkShadowColor || '#000000';
-                                    const offsetY = Math.ceil(intensity / 2);
-                                    
-                                    // Converter hex para RGB e aplicar opacidade
-                                    const hex = color.replace('#', '');
-                                    const r = parseInt(hex.substr(0, 2), 16);
-                                    const g = parseInt(hex.substr(2, 2), 16);
-                                    const b = parseInt(hex.substr(4, 2), 16);
-                                    
-                                    return `0 ${offsetY}px ${blur}px rgba(${r}, ${g}, ${b}, ${opacity})`;
-                                  })()
-                                : 'none'
-                            }}
-                          >
-                            Exemplo de Link
-                          </div>
-                        </div>
+
                       </Card>
 
                       {/* Card de Ações */}
-                      <Card >
+                      <Card noPadding noShadow noBorder>
                         <div className="flex space-x-3">
                           <button
                             onClick={() => savePageStyle(page.id)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                            className="flex items-center px-4 py-2 font-medium text-white rounded-3xl focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2 cursor-pointer text-md bg-violet-700 hover:bg-violet-900"
                             disabled={!unsavedChanges[page.id]}
                           >
-                            Salvar Alterações
+                            <FaRegSave className="mr-2" size={19}/>
+                            <span>Salvar Alterações</span>
                           </button>                         
                         </div>
                       </Card>
