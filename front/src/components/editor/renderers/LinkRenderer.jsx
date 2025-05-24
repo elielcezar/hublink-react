@@ -48,48 +48,57 @@ const LinkRenderer = ({ content, pageStyle }) => {
 
   // Função para renderizar o conteúdo do link
   const renderLinkContent = () => {
-    if (!imageUrl) {
-      return (
-        <span>
-          {text}
-        </span>
-      );
-    }
-
-    const imageElement = (
-      <img 
-        src={imageUrl} 
-        alt={text}
-        className="w-8 h-8 object-cover rounded flex-shrink-0"
-      />
-    );
 
     const textElement = (
-      <span className="truncate">
+      <p className="w-full leading-tight min-h-10 flex items-center justify-center">
         {text}
-      </span>
+      </p>
     );
+
+    if (!imageUrl) {
+      return (
+        <>
+          {textElement}
+        </>
+      );
+    }   
 
     if (imagePosition === 'top') {
       return (
-        <div className="flex flex-col items-center space-y-2">
-          {imageElement}
-          {textElement}
+        <div className="flex flex-col items-center space-y-2 px-4">
+          <img 
+            src={imageUrl} 
+            alt={text}
+            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+          />
+          <p className="w-full leading-tight min-h-14 sm:min-h-10 flex items-center justify-center">
+            {text}
+          </p>
         </div>
       );
     } else if (imagePosition === 'right') {
       return (
         <div className="flex items-center justify-between space-x-3">
+          <img 
+            src={imageUrl} 
+            alt={text}
+            className="w-10 h-10 object-cover rounded-lg flex-shrink-0"
+          />
           {textElement}
-          {imageElement}
         </div>
       );
     } else {
       // Default: left
       return (
         <div className="flex items-center space-x-3">
-          {imageElement}
-          {textElement}
+          <img 
+            src={imageUrl} 
+            alt={text}
+            className="w-10 h-10 object-cover rounded-lg flex-shrink-0"
+          />
+          <p className="w-[calc(100%-7rem)] leading-tight min-h-10 flex items-center justify-center">
+            {text}
+          </p>
         </div>
       );
     }
@@ -116,7 +125,7 @@ const LinkRenderer = ({ content, pageStyle }) => {
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className="block w-full py-3 px-4 text-center transition-all duration-200 hover:opacity-90 active:scale-95"
+        className="min-h-14 block w-full p-2 text-center transition-all duration-200 hover:opacity-90 active:scale-95"
         style={{
           backgroundColor: backgroundColor,
           color: textColor,

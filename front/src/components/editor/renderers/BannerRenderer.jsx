@@ -15,7 +15,7 @@ const BannerRenderer = ({ content }) => {
   );
 
   return (
-    <div className="banner-renderer w-full mb-4 px-2">
+    <div className="banner-renderer w-full mb-4">
       <div className="relative">
         {content.url ? (
           <a 

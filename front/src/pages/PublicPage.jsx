@@ -237,7 +237,7 @@ const PublicPage = () => {
       {/* Adicionar o componente de rastreamento */}
       {page && <AnalyticsTracker pageId={page.id} gaId={page.user?.gaId} pageComponents={components} />}
       
-      <div className="px-4 py-6 w-full sm:max-w-[40vw] mx-auto">
+      <div className="px-4 py-6 w-full sm:max-w-[65vw] md:max-w-[65vw] lg:max-w-[40vw] mx-auto">
         {/* Conteúdo da landing page */}
         <header className="text-center mb-6">
           {pageStyle.logo && (
@@ -245,7 +245,7 @@ const PublicPage = () => {
               <img 
                 src={pageStyle.logo} 
                 alt="Logo" 
-                className="max-h-36 object-contain"
+                className="max-w-[24vw] sm:max-w-[15vw] lg:max-w-[10vw] object-contain rounded-full"
                 onError={(e) => {
                   console.error(`Erro ao carregar logo: ${pageStyle.logo}`);
                   e.target.style.display = 'none';
@@ -315,7 +315,7 @@ const PublicPage = () => {
           })()}
         </main>
         
-        <footer className="mt-16 pt-8 border-t border-gray-200 text-center text-gray-500 text-sm">
+        <footer className="mt-16 pt-8 border-t border-gray-200 text-center text-white text-sm">
           <p>Criado com HubLink</p>
         </footer>
       </div>

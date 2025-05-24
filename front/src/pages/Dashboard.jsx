@@ -6,27 +6,11 @@ import api from '../config/apiConfig';
 import { SketchPicker } from 'react-color';
 import ImageUploader from '../components/editor/forms/ImageUploader';
 import Card from '../components/Card';
-import CarouselRenderer from '../components/editor/renderers/CarouselRenderer';
-import LinkRenderer from '../components/editor/renderers/LinkRenderer';
-import SocialRenderer from '../components/editor/renderers/SocialRenderer';
-import BannerRenderer from '../components/editor/renderers/BannerRenderer';
-import IconRenderer from '../components/editor/renderers/IconRenderer';
-import TextRenderer from '../components/editor/renderers/TextRenderer';
-import VideoRenderer from '../components/editor/renderers/VideoRenderer';
+import PagePreview from '../components/PagePreview';
 import { IoIosColorFilter } from "react-icons/io";
 import { FaRegImage } from "react-icons/fa";
 import { IoColorFillOutline } from "react-icons/io5";
 import { FaRegSave } from "react-icons/fa";
-
-const componentRenderers = {
-  text: ({ content, pageStyle }) => <TextRenderer content={content} pageStyle={pageStyle} />,
-  link: ({ content, pageStyle }) => <LinkRenderer content={content} pageStyle={pageStyle} />,
-  banner: ({ content, pageStyle }) => <BannerRenderer content={content} pageStyle={pageStyle} />,
-  carousel: ({ content, pageStyle }) => <CarouselRenderer content={content} pageStyle={pageStyle} />,
-  social: ({ content, pageStyle }) => <SocialRenderer content={content} pageStyle={pageStyle} />,
-  icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />,
-  video: ({ content, pageStyle }) => <VideoRenderer content={content} pageStyle={pageStyle} />
-};
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -36,6 +20,7 @@ const Dashboard = () => {
   const [editingSlug, setEditingSlug] = useState(null);
   const [slugValue, setSlugValue] = useState('');
   const [slugError, setSlugError] = useState('');
+  const [pageStyle, setPageStyle] = useState(defaultStyle);
   const navigate = useNavigate();
   
   // Novos estados para estilo da página
@@ -61,30 +46,6 @@ const Dashboard = () => {
 
   // Adicione um novo estado para rastrear páginas com alterações não salvas
   const [unsavedChanges, setUnsavedChanges] = useState({});
-
-  // Adicione esta propriedade a todos os objetos de estilo padrão
-  // Modifique o estilo padrão em vários lugares no código
-  const defaultStyle = {
-    backgroundColor: '#ffffff',
-    fontFamily: 'Inter, sans-serif',
-    fontSize: 16,
-    fontWeight: 'normal',
-    linkColor: '#3b82f6',
-    linkBackgroundColor: '#3b82f6',
-    linkTextColor: '#ffffff',
-    linkShadowColor: '#000000',
-    linkShadowIntensity: 4,
-    linkShadowBlur: 4,
-    linkShadowOpacity: 20,
-    linkBorderRadius: 8,
-    textColor: '#333333',
-    backgroundImage: null,
-    logo: null,
-    backgroundType: 'color', // 'color', 'image' ou 'gradient'
-    gradientStartColor: '#4f46e5',
-    gradientEndColor: '#818cf8',
-    gradientDirection: 'to right' // direção padrão do gradiente
-  };
 
   const [components, setComponents] = useState([]);
 
@@ -185,12 +146,21 @@ const Dashboard = () => {
 
         const response = await api.get(`/api/pages/${activePageId}`);
 
-        const parsedComponents = response.data.components.map(comp => ({
+        // Carregar o estilo da página
+        const styleResponse = await api.get(`/api/pages/${activePageId}/style`);
+        const loadedPageStyle = styleResponse.data?.style || defaultStyle;
+        
+        // Garantir que todas as propriedades necessárias estejam presentes
+        const completeStyle = {
+          ...defaultStyle,
+          ...loadedPageStyle
+        };
+        
+        setPageStyle(completeStyle);
+        setComponents(response.data.components.map(comp => ({
           ...comp,
           content: typeof comp.content === 'string' ? JSON.parse(comp.content) : comp.content
-        }));
-
-        setComponents(parsedComponents);
+        })));
       } catch (error) {
         console.error('Erro ao buscar dados da página:', error);
         setError('Erro ao carregar a página. Verifique se você tem permissão para editá-la.');
@@ -205,6 +175,50 @@ const Dashboard = () => {
 
     fetchPageData();
   }, [activePageId, navigate]);
+
+  // Sincronizar pageStyle com pageStyles[activePageId] para atualizar o preview em tempo real
+  useEffect(() => {
+    if (activePageId && pageStyles[activePageId]) {
+      const completeStyle = {
+        ...defaultStyle,
+        ...pageStyles[activePageId]
+      };
+      setPageStyle(completeStyle);
+    }
+  }, [activePageId, pageStyles]);
+
+  // Aplicar estilos diretamente ao elemento de preview (similar ao PageEditor)
+  useEffect(() => {
+    if (pageStyle) {
+      // Buscar o elemento de preview 
+      const previewElement = document.getElementById('page-preview-container');
+      
+      if (previewElement) {
+        // Aplicar cor de fundo ou imagem de fundo
+        if (pageStyle.backgroundType === 'image' && pageStyle.backgroundImage) {
+          previewElement.style.backgroundImage = `url(${pageStyle.backgroundImage})`;
+          previewElement.style.backgroundSize = 'cover';
+          previewElement.style.backgroundPosition = 'center';
+          previewElement.style.backgroundRepeat = 'no-repeat';
+          previewElement.style.backgroundColor = '';
+        } else if (pageStyle.backgroundType === 'gradient') {
+          previewElement.style.backgroundImage = '';
+          previewElement.style.background = `linear-gradient(${pageStyle.gradientDirection || 'to right'}, ${pageStyle.gradientStartColor || '#4f46e5'}, ${pageStyle.gradientEndColor || '#818cf8'})`;
+        } else {
+          previewElement.style.backgroundImage = '';
+          previewElement.style.background = '';
+          previewElement.style.backgroundColor = pageStyle.backgroundColor || '#ffffff';
+        }
+        
+        // Aplicar fonte e cor do texto
+        previewElement.style.fontFamily = pageStyle.fontFamily || 'Inter, sans-serif';
+        previewElement.style.color = pageStyle.textColor || '#333333';
+        
+        // Forçar re-render dos componentes
+        console.log('PageStyle atualizado no Dashboard:', pageStyle);
+      }
+    }
+  }, [pageStyle]);
 
   // Função para iniciar a edição do slug
   const startEditingSlug = (page) => {
@@ -357,41 +371,7 @@ const Dashboard = () => {
     });
   };
 
-  // Função para obter o estilo de fundo
-  const getBackgroundStyle = (pageId) => {
-    const style = pageStyles[pageId] || defaultStyle;
-    
-    if (style.backgroundType === 'image' && style.backgroundImage) {
-      return {
-        backgroundImage: `url(${style.backgroundImage})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat'
-      };
-    } else if (style.backgroundType === 'gradient') {
-      const direction = style.gradientDirection || 'to right';
-      const startColor = style.gradientStartColor || '#4f46e5';
-      const endColor = style.gradientEndColor || '#818cf8';
-      return {
-        background: `linear-gradient(${direction}, ${startColor}, ${endColor})`
-      };
-    } else {
-      return {
-        backgroundColor: style.backgroundColor || '#ffffff'
-      };
-    }
-  };
-
-  // Função para obter o estilo de fonte global
-  const getFontStyle = (pageId) => {
-    const style = pageStyles[pageId] || defaultStyle;
-    return {
-      fontFamily: style.fontFamily || defaultStyle.fontFamily,
-      fontSize: `${style.fontSize || 16}px`,
-      fontWeight: style.fontWeight || 'normal',
-      color: style.textColor || defaultStyle.textColor
-    };
-  };
+  
 
   if (loading) {
     return (
@@ -962,94 +942,14 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* Prévia - Direita */}
+            {/* Prévia */}
             <div className="w-full md:w-4/12 flex flex-col justify-center items-center h-[calc(100vh-70px)] border border-gray-200">
-              
-                <div 
-                  id="page-preview-container"
-                  className="bg-gray-50 border-[12px] border-black rounded-[30px] w-[300px] h-[600px] overflow-hidden mx-auto"
-                  style={{
-                    ...getBackgroundStyle(activePageId),
-                    ...getFontStyle(activePageId)
-                  }}
-                >
-                  <div className="preview-content h-full py-6 px-3 overflow-y-auto overflow-x-hidden">
-                    {pageStyles[activePageId]?.logo && (
-                      <header className="text-center mb-6">
-                        <div className="flex justify-center">
-                          <img 
-                            src={pageStyles[activePageId].logo} 
-                            alt="Logo" 
-                            className="max-h-36 object-contain"
-                          />
-                        </div>
-                      </header>
-                    )}
-                    
-                    <div className="flex flex-col">
-                      {/* Agrupar componentes por linha baseado na largura */}
-                      {(() => {
-                        const rows = [];
-                        let currentRow = [];
-                        let currentRowWidth = 0;
-
-                        components.forEach((component, index) => {
-                          const isLink = component.type === 'link';
-                          const width = isLink ? parseInt(component.content?.width || '100') : 100;
-
-                          if (width === 100 || !isLink) {
-                            // Finalizar linha atual se houver
-                            if (currentRow.length > 0) {
-                              rows.push(currentRow);
-                              currentRow = [];
-                              currentRowWidth = 0;
-                            }
-                            // Adicionar componente em linha própria
-                            rows.push([component]);
-                          } else {
-                            // Verificar se cabe na linha atual
-                            if (currentRowWidth + width <= 100) {
-                              currentRow.push(component);
-                              currentRowWidth += width;
-                              
-                              // Se chegou a 100% ou é o último componente, finalizar linha
-                              if (currentRowWidth === 100 || index === components.length - 1) {
-                                rows.push(currentRow);
-                                currentRow = [];
-                                currentRowWidth = 0;
-                              }
-                            } else {
-                              // Não cabe, finalizar linha atual e começar nova
-                              if (currentRow.length > 0) {
-                                rows.push(currentRow);
-                              }
-                              currentRow = [component];
-                              currentRowWidth = width;
-                            }
-                          }
-                        });
-
-                        // Finalizar última linha se houver
-                        if (currentRow.length > 0) {
-                          rows.push(currentRow);
-                        }
-
-                        return rows.map((row, rowIndex) => (
-                          <div key={rowIndex} className={row.length > 1 ? "mb-4 w-full" : "mb-4 w-full"}>
-                            {row.map((component) => 
-                              componentRenderers[component.type]({ 
-                                content: component.content, 
-                                pageStyle: pageStyles[activePageId] || defaultStyle 
-                              })
-                            )}
-                          </div>
-                        ));
-                      })()}
-                    </div>
-                  </div>
-                </div>
-              
+              <PagePreview 
+                components={components} 
+                pageStyle={pageStyle || defaultStyle} 
+              />
             </div>
+            
 
           </main>
         </div>
@@ -1057,5 +957,26 @@ const Dashboard = () => {
     </>
   );
 };
+
+// Mova o defaultStyle para fora do componente (pode ficar no escopo do módulo)
+const defaultStyle = {
+  backgroundColor: '#ffffff',
+  fontFamily: 'Inter, sans-serif',
+  linkColor: '#3b82f6',
+  linkBackgroundColor: '#3b82f6',
+  linkTextColor: '#ffffff',
+  linkShadowColor: '#000000',
+  linkShadowIntensity: 4,
+  linkShadowBlur: 4,
+  linkShadowOpacity: 20,
+  linkBorderRadius: 8,
+  textColor: '#333333',
+  backgroundImage: null,
+  logo: null,
+  backgroundType: 'color',
+  gradientStartColor: '#4f46e5',
+  gradientEndColor: '#818cf8',
+  gradientDirection: 'to right'
+}; 
 
 export default Dashboard; 

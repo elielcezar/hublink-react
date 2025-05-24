@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import logo from '../assets/logo.png';
 import { MdOutlineDesignServices } from "react-icons/md";
 import { GoGear } from "react-icons/go";
-import { FaChartBar } from "react-icons/fa";
 import { TbLogout } from "react-icons/tb";
 import { FiEdit3 } from "react-icons/fi";
 import { useNavigate, Link, useLocation } from 'react-router-dom';

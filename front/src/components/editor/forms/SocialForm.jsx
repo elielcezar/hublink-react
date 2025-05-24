@@ -1,24 +1,9 @@
 import React, { useState } from 'react';
-import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify } from 'react-icons/fa';
+import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify, FaWhatsapp, FaFacebook } from 'react-icons/fa';
 import TitleField from './TitleField';
 import { SketchPicker } from 'react-color';
-
-// Componente de ícone personalizado para o Kwai
-const KwaiIcon = ({ className = "" }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width="1em" 
-    height="1em" 
-    viewBox="0 0 24 24" 
-    fill="none"
-    className={className}
-  >
-    <path 
-      d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM16.5 8.5L14.5 10.5L12.5 8.5L10.5 10.5L8.5 8.5V15.5L10.5 13.5L12.5 15.5L14.5 13.5L16.5 15.5V8.5Z" 
-      fill="currentColor"
-    />
-  </svg>
-);
+import KawaiIcon from '../../KawaiIcon';
+import XIcon from '../../XIcon';
 
 const SocialForm = ({ content, onChange }) => {
   const [showColorPicker, setShowColorPicker] = useState(false);
@@ -31,12 +16,14 @@ const SocialForm = ({ content, onChange }) => {
   };
 
   const socialNetworks = [
-    { key: 'instagram', label: 'Instagram', icon: <FaInstagram className="text-pink-600" /> },
-    { key: 'x', label: 'X (Twitter)', icon: <FaTwitter className="text-blue-400" /> },
-    { key: 'youtube', label: 'YouTube', icon: <FaYoutube className="text-red-600" /> },
-    { key: 'tiktok', label: 'TikTok', icon: <FaTiktok className="text-black" /> },
-    { key: 'spotify', label: 'Spotify', icon: <FaSpotify className="text-green-600" /> },
-    { key: 'kwai', label: 'Kwai', icon: <KwaiIcon className="text-red-500" /> }
+    { key: 'whatsapp', label: 'Whatsapp', icon: <FaWhatsapp className="text-green-600" size={24}/> },
+    { key: 'facebook', label: 'Facebook', icon: <FaFacebook className="text-blue-600" size={24}/> },
+    { key: 'instagram', label: 'Instagram', icon: <FaInstagram className="text-pink-600" size={24}/> },
+    { key: 'x', label: 'X (Twitter)', icon: <XIcon color="#000000" size={24}/> },
+    { key: 'youtube', label: 'YouTube', icon: <FaYoutube className="text-red-600" size={24}/> },
+    { key: 'tiktok', label: 'TikTok', icon: <FaTiktok className="text-black" size={24}/> },
+    { key: 'spotify', label: 'Spotify', icon: <FaSpotify className="text-green-600" size={24}/> },
+    { key: 'kwai', label: 'Kwai', icon: <KawaiIcon color="#ff7e00" size={24} /> }
   ];
 
   return (

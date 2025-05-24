@@ -1,33 +1,20 @@
 import React from 'react';
-import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify } from 'react-icons/fa';
-
-// Componente de ícone personalizado para o Kwai
-const KwaiIcon = ({ color, size = 30 }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none"
-    style={{ color }}
-  >
-    <path 
-      d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM16.5 8.5L14.5 10.5L12.5 8.5L10.5 10.5L8.5 8.5V15.5L10.5 13.5L12.5 15.5L14.5 13.5L16.5 15.5V8.5Z" 
-      fill="currentColor"
-    />
-  </svg>
-);
+import { FaInstagram, FaYoutube, FaTiktok, FaSpotify, FaWhatsapp, FaFacebook } from 'react-icons/fa';
+import KawaiIcon from '../../KawaiIcon';
+import XIcon from '../../XIcon';
 
 const SocialRenderer = ({ content }) => {
   const iconColor = content.iconColor || '#0077B5';
   
   const socialLinks = [
-    { type: 'instagram', url: content.instagram, icon: <FaInstagram size={30} style={{color: iconColor}} /> },
-    { type: 'x', url: content.x, icon: <FaTwitter size={30} style={{color: iconColor}} /> },
-    { type: 'youtube', url: content.youtube, icon: <FaYoutube size={30} style={{color: iconColor}} /> },
     { type: 'tiktok', url: content.tiktok, icon: <FaTiktok size={30} style={{color: iconColor}} /> },    
-    { type: 'spotify', url: content.spotify, icon: <FaSpotify size={30} style={{color: iconColor}} /> },    
-    { type: 'kwai', url: content.kwai, icon: <KwaiIcon color={iconColor} /> }
+    { type: 'kwai', url: content.kwai, icon: <KawaiIcon color={iconColor} size={30} /> },
+    { type: 'whatsapp', url: content.whatsapp, icon: <FaWhatsapp size={30} style={{color: iconColor}} /> },
+    { type: 'instagram', url: content.instagram, icon: <FaInstagram size={30} style={{color: iconColor}} /> },
+    { type: 'youtube', url: content.youtube, icon: <FaYoutube size={30} style={{color: iconColor}} /> },
+    { type: 'x', url: content.x, icon: <XIcon color={iconColor} size={30} /> },
+    { type: 'spotify', url: content.spotify, icon: <FaSpotify size={30} style={{color: iconColor}} /> },
+    { type: 'facebook', url: content.facebook, icon: <FaFacebook size={30} style={{color: iconColor}} /> }    
   ];
   
   const availableSocialLinks = socialLinks.filter(link => link.url);

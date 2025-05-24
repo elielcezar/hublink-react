@@ -22,6 +22,7 @@ const Card = ({
   children,
   title,
   subtitle,
+  icon,
   className = '',
   noPadding = false,
   noShadow = false,
@@ -52,7 +53,7 @@ const Card = ({
   const headerClasses = `
     ${noPadding ? '' : 'px-4 py-3'}
     border-b border-gray-200    
-    bg-gray-50 text-violet-700 text-lg font-medium mb-6 pb-4
+    bg-gray-50 text-violet-700 text-md font-medium mb-6
     ${headerClassName}
   `;
 
@@ -69,9 +70,12 @@ const Card = ({
       {(title || subtitle || actions) && (
         <div className={headerClasses}>
           <div className="flex justify-between items-center">
-            <div>
-              {title && <h3>{title}</h3>}
-              {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+            <div className="flex items-center">              
+              {icon && <div className="mr-2">{icon}</div>}
+              <div className="flex flex-col">
+                {title && <h3>{title}</h3>}
+                {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+              </div>
             </div>
             {actions && <div className="flex space-x-2">{actions}</div>}
           </div>
