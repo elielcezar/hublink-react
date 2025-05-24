@@ -69,7 +69,7 @@ const PagePreview = ({ components = [], pageStyle = defaultStyle }) => {
     <>
       <div 
         id="page-preview-container"
-        className="bg-gray-50 border-[12px] border-black rounded-[30px] w-[300px] h-[600px] overflow-hidden mx-auto"
+        className="bg-gray-50 border-[12px] border-black rounded-[30px] w-[300px] h-[600px] overflow-hidden mx-auto max-h-[80vh]"
         style={{
           ...getBackgroundStyle(pageStyle),
           fontFamily: pageStyle?.fontFamily || defaultStyle.fontFamily,
