@@ -12,6 +12,7 @@ import SocialRenderer from '../components/editor/renderers/SocialRenderer';
 import BannerRenderer from '../components/editor/renderers/BannerRenderer';
 import IconRenderer from '../components/editor/renderers/IconRenderer';
 import TextRenderer from '../components/editor/renderers/TextRenderer';
+import VideoRenderer from '../components/editor/renderers/VideoRenderer';
 import { IoIosColorFilter } from "react-icons/io";
 import { FaRegImage } from "react-icons/fa";
 import { IoColorFillOutline } from "react-icons/io5";
@@ -23,7 +24,8 @@ const componentRenderers = {
   banner: ({ content, pageStyle }) => <BannerRenderer content={content} pageStyle={pageStyle} />,
   carousel: ({ content, pageStyle }) => <CarouselRenderer content={content} pageStyle={pageStyle} />,
   social: ({ content, pageStyle }) => <SocialRenderer content={content} pageStyle={pageStyle} />,
-  icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />
+  icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />,
+  video: ({ content, pageStyle }) => <VideoRenderer content={content} pageStyle={pageStyle} />
 };
 
 const Dashboard = () => {

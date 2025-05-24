@@ -1,6 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import api from '../config/apiConfig';
+
+import { SiSimpleanalytics } from "react-icons/si";
+import { FaTable } from "react-icons/fa";
+
 import MenuDashboard from '../components/MenuDashboard';
 import { 
   Chart as ChartJS, 
@@ -13,7 +17,7 @@ import {
   Legend,
   BarElement
 } from 'chart.js';
-import { Line } from 'react-chartjs-2';
+import { Bar } from 'react-chartjs-2';
 import html2pdf from 'html2pdf.js';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -190,8 +194,8 @@ const PageAnalytics = () => {
         {
           label: 'Visitas',
           data: visitsData,
-          borderColor: 'rgb(59, 130, 246)', // Azul
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          borderColor: 'rgb(139, 92, 246)', // Roxo
+          backgroundColor: 'rgba(139, 92, 246, 0.1)',
           borderWidth: 2,
           pointRadius: 3,
           pointHoverRadius: 5,
@@ -202,8 +206,8 @@ const PageAnalytics = () => {
         {
           label: 'Cliques',
           data: clicksData,
-          borderColor: 'rgb(34, 197, 94)', // Verde
-          backgroundColor: 'rgba(34, 197, 94, 0.1)',
+          borderColor: 'rgb(139, 92, 246)', // Verde
+          backgroundColor: 'rgb(139, 92, 246)',
           borderWidth: 2,
           pointRadius: 3,
           pointHoverRadius: 5,
@@ -572,9 +576,9 @@ const PageAnalytics = () => {
         <div className="w-full mx-auto mt-10 px-4 sm:px-6 lg:px-8" ref={reportRef}>
           <div className="mb-6 flex flex-col sm:flex-row sm:justify-between sm:items-center">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Analytics: {page.title}</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
               <p className="text-sm text-gray-500">
-                <span className="font-medium">URL:</span> {window.location.origin}/{page.slug}
+                {window.location.origin}/{page.slug}
               </p>
             </div>
             
@@ -582,7 +586,7 @@ const PageAnalytics = () => {
               <select
                 value={period}
                 onChange={(e) => setPeriod(e.target.value)}
-                className="bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="bg-white border border-gray-300 text-gray-700 py-2 px-3 rounded-md shadow-sm focus:outline-none focus:ring-violet-700 focus:border-violet-700"
               >
                 <option value="7d">Últimos 7 dias</option>
                 <option value="30d">Últimos 30 dias</option>
@@ -592,21 +596,15 @@ const PageAnalytics = () => {
               
               <button
                 onClick={downloadAsPDF}
-                className="bg-blue-50 border border-blue-300 text-blue-700 py-2 px-4 rounded-md shadow-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center"
+                className="border border-violet-700 text-violet-700 py-2 px-4 rounded-md shadow-sm hover:bg-violet-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-700 flex items-center"
                 title="Baixar como PDF"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clipRule="evenodd" />
                 </svg>
                 Baixar PDF
-              </button>
+              </button>              
               
-              <Link
-                to="/dashboard"
-                className="bg-white border border-gray-300 text-gray-700 py-2 px-4 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Voltar
-              </Link>
             </div>
           </div>          
           
@@ -614,24 +612,24 @@ const PageAnalytics = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-sm font-medium text-gray-500 mb-1">Total de Visitas</h3>
-              <p className="text-3xl font-bold text-blue-600">{formatNumber(analytics.summary.totalVisits)}</p>
+              <p className="text-3xl font-bold text-violet-700">{formatNumber(analytics.summary.totalVisits)}</p>
             </div>
             
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-sm font-medium text-gray-500 mb-1">Total de Cliques</h3>
-              <p className="text-3xl font-bold text-green-600">{formatNumber(analytics.summary.totalClicks)}</p>
+              <p className="text-3xl font-bold text-violet-700">{formatNumber(analytics.summary.totalClicks)}</p>
             </div>
             
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-sm font-medium text-gray-500 mb-1">Tempo Médio</h3>
-              <p className="text-3xl font-bold text-orange-600">
+              <p className="text-3xl font-bold text-violet-700">
                 {Math.round(analytics.summary.avgTimeSpent)}s
               </p>
             </div>
             
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-sm font-medium text-gray-500 mb-1">Taxa de Rejeição</h3>
-              <p className="text-3xl font-bold text-red-600">
+              <p className="text-3xl font-bold text-violet-700">
                 {Math.round(analytics.summary.bounceRate)}%
               </p>
             </div>
@@ -640,41 +638,37 @@ const PageAnalytics = () => {
           {/* Tráfego por Dias */}
           <div className="bg-white rounded-lg shadow mb-6">
             <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
-              <h2 className="text-lg font-medium text-gray-900">Tráfego por Dia</h2>
+              <h2 className="text-lg font-medium text-violet-700">Tráfego por Dia</h2>
               <div className="flex space-x-2">
                 <button
                   onClick={() => setViewMode('chart')}
-                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
                     viewMode === 'chart' 
-                      ? 'bg-blue-100 text-blue-700' 
+                      ? 'bg-violet-100 text-violet-700' 
                       : 'text-gray-500 hover:bg-gray-100'
                   }`}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zm6-4a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zm6-3a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                  </svg>
-                  Gráfico
+                  <SiSimpleanalytics />
+                  <span>Gráfico</span>
                 </button>
                 <button
                   onClick={() => setViewMode('table')}
-                  className={`px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
+                  className={`flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200 ${
                     viewMode === 'table' 
-                      ? 'bg-blue-100 text-blue-700' 
+                      ? 'bg-violet-100 text-violet-700' 
                       : 'text-gray-500 hover:bg-gray-100'
                   }`}
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM9 8H4v2h5V8z" clipRule="evenodd" />
-                  </svg>
-                  Tabela
+                  <FaTable />
+                  <span>Tabela</span>
                 </button>
               </div>
             </div>
             <div className="p-6">
               {analytics.dailyStats.length > 0 ? (
                 <div className={`transition-opacity duration-300 ${viewMode === 'chart' ? 'opacity-100' : 'opacity-0 hidden'}`}>
-                  <div className="w-full h-72">
-                    <Line data={prepareChartData()} options={chartOptions} />
+                  <div className="w-full h-72">                    
+                    <Bar data={prepareChartData()} options={chartOptions} />
                   </div>
                 </div>
               ) : null}
@@ -727,17 +721,16 @@ const PageAnalytics = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            
+          
             
             {/* Componentes mais clicados */}
-            <div className="bg-white rounded-lg shadow mb-6">
+            <div className="w-full bg-white rounded-lg shadow mb-6">
               <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center">
-                <h2 className="text-lg font-medium text-gray-900">Componentes mais clicados</h2>
+                <h2 className="text-lg font-medium text-violet-700">Componentes mais clicados</h2>
                 {analytics.componentClicks.length > 3 && (
                   <button
                     onClick={() => setShowAllComponents(!showAllComponents)}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium focus:outline-none flex items-center"
+                    className="text-sm text-violet-700 hover:text-violet-800 font-medium focus:outline-none flex items-center"
                   >
                     {showAllComponents ? (
                       <>
@@ -809,7 +802,7 @@ const PageAnalytics = () => {
                       <div className="mt-4 text-center">
                         <button
                           onClick={() => setShowAllComponents(true)}
-                          className="text-sm text-blue-600 hover:text-blue-800 font-medium focus:outline-none"
+                          className="text-sm text-violet-700 hover:text-violet-800 font-medium focus:outline-none"
                         >
                           Mostrar todos os {analytics.componentClicks.length} componentes
                         </button>
@@ -823,17 +816,16 @@ const PageAnalytics = () => {
                 )}
               </div>
             </div>
-          </div>
+
           
-          {/* Fontes de Tráfego */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
           <div className="bg-white rounded-lg shadow mb-6">
             <div className="px-6 py-5 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Fontes de Tráfego</h2>
+              <h2 className="text-lg font-medium text-violet-700">Principais Cidades</h2>
             </div>
             <div className="p-6">
-              
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  
+
                   <div>
                   {analytics?.geoData && analytics.geoData.length > 0 ? (
                     <>
@@ -863,7 +855,7 @@ const PageAnalytics = () => {
                           ))}
                         </MapContainer>
                       </div>
-                      <div className="text-sm text-gray-600 italic text-center">
+                      <div className="text-sm text-gray-600 italic text-center mb-8">
                         Os dados de localização são aproximados e baseados no endereço IP dos visitantes.
                       </div>
                     </>
@@ -876,194 +868,209 @@ const PageAnalytics = () => {
                     </div>
                   )}
 
-                        {/* Cidades */}
-                        <div className="bg-white rounded-lg shadow">
-                    <div className="px-6 py-5 border-b border-gray-200">
-                      <h2 className="text-lg font-medium text-gray-900">Principais Cidades</h2>
+                    {/* Cidades */}
+                    <div>                      
+                      <div>
+                        {analytics?.cityStats && analytics.cityStats.length > 0 ? (
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                              <thead>
+                                <tr>
+                                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Cidade
+                                  </th>
+                                  <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    País
+                                  </th>
+                                  <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Visitas
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {analytics.cityStats.map((city, i) => (
+                                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {city.city}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                      {translateCountry(city.country)}
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
+                                      {formatNumber(city.count)}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ) : (
+                          <p className="text-center text-gray-500 py-8">Sem dados para este período</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="p-6">
-                      {analytics?.cityStats && analytics.cityStats.length > 0 ? (
-                        <div className="overflow-x-auto">
-                          <table className="min-w-full divide-y divide-gray-200">
-                            <thead>
-                              <tr>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Cidade
-                                </th>
-                                <th className="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  País
-                                </th>
-                                <th className="px-6 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Visitas
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                              {analytics.cityStats.map((city, i) => (
+                    
+                  </div>
+                  <div>                                  
+                  </div>            
+                            
+            </div>
+          </div> 
+
+          <div className="bg-white rounded-lg shadow mb-6">
+            <div className="px-6 py-5 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-violet-700">Fontes de Tráfego</h2>
+            </div>
+            <div className="p-6">                 
+                  <div>                    
+                    {/* Dispositivos */}
+                    <div className="mb-6">
+                      <div className="pb-5 border-gray-200">
+                        <h2 className="text-md font-medium text-gray-900">Dispositivos</h2>
+                      </div>
+                      <div>
+                        {analytics.deviceStats.length > 0 ? (
+                          <div className="space-y-4">
+                            {analytics.deviceStats.map((item, index) => {
+                              const percentage = analytics.summary.totalVisits > 0 
+                                ? (item.count / analytics.summary.totalVisits) * 100 
+                                : 0;
+                              
+                              // Cores para os diferentes tipos de dispositivos
+                              const colors = {
+                                desktop: 'bg-violet-700',
+                                mobile: 'bg-green-500',
+                                tablet: 'bg-purple-500',
+                                desconhecido: 'bg-gray-500'
+                              };
+                              
+                              // Nomes em português
+                              const deviceNames = {
+                                desktop: 'Desktop',
+                                mobile: 'Celular',
+                                tablet: 'Tablet',
+                                desconhecido: 'Desconhecido'
+                              };
+                              
+                              return (
+                                <div key={index}>
+                                  <div className="flex justify-between mb-1">
+                                    <span className="text-sm font-medium text-gray-700">
+                                      {deviceNames[item.device] || item.device}
+                                    </span>
+                                    <span className="text-sm font-medium text-gray-700">
+                                      {Math.round(percentage)}% ({item.count})
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                    <div 
+                                      className={`${colors[item.device] || 'bg-gray-500'} h-2.5 rounded-full`} 
+                                      style={{ width: `${percentage}%` }}
+                                    ></div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p className="text-center text-gray-500">Sem dados para este período</p>
+                        )}
+                      </div>
+                    </div>
+                  {analytics?.trafficSources && analytics.trafficSources?.length > 0 ? (
+                    <>
+                    {/* Gráfico de Tipos de Fontes */}
+                    <div className="mb-6">
+                        <div className="py-5 border-gray-200">
+                          <h2 className="text-md font-medium text-gray-900">Tipos de Origem</h2>
+                        </div>
+                        <div className="space-y-4">
+                        {analytics.trafficSources
+                          .filter(item => item.type === 'category')
+                          .map((item, index) => {
+                            const percentage = analytics.summary.totalVisits > 0 
+                              ? (item.count / analytics.summary.totalVisits) * 100 
+                              : 0;
+                            
+                            // Cores para os diferentes tipos de tráfego
+                            const colors = {
+                              direct: 'bg-violet-700',
+                              social: 'bg-pink-500',
+                              search: 'bg-green-500',
+                              referral: 'bg-purple-500',
+                              email: 'bg-yellow-500',
+                              unknown: 'bg-gray-500'
+                            };
+                            
+                            // Tradução dos tipos
+                            const typeNames = {
+                              direct: 'Acesso Direto',
+                              social: 'Redes Sociais',
+                              search: 'Buscadores',
+                              referral: 'Sites Referência',
+                              email: 'Email/Newsletter',
+                              unknown: 'Desconhecido'
+                            };
+                            
+                            return (
+                              <div key={index}>
+                                <div className="flex justify-between mb-1">
+                                  <span className="text-sm font-medium text-gray-700">
+                                    {typeNames[item.source] || item.source}
+                                  </span>
+                                  <span className="text-sm font-medium text-gray-700">
+                                    {Math.round(percentage)}% ({item.count})
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                                  <div 
+                                    className={`${colors[item.source] || 'bg-gray-500'} h-2.5 rounded-full`} 
+                                    style={{ width: `${percentage}%` }}
+                                  ></div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>                  
+                      
+                      {/* Tabela de Referenciadores Específicos */}
+                      <div className="bg-white rounded-lg">
+                        <div className="py-5 border-b border-gray-200">
+                          <h2 className="text-md font-medium text-gray-900">Sites Referenciadores</h2>
+                        </div>
+                        <div className="space-y-4">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead>
+                            <tr>
+                              <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Origem
+                              </th>
+                              <th className="px-4 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Visitas
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {analytics.trafficSources
+                              .filter(item => item.type === 'referrer')
+                              .sort((a, b) => b.count - a.count)
+                              .slice(0, 10)
+                              .map((referer, i) => (
                                 <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {city.city}
+                                  <td className="px-4 py-3 text-sm text-gray-900 truncate max-w-[220px]">
+                                    {referer.source || 'Direto'}
                                   </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {translateCountry(city.country)}
-                                  </td>
-                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">
-                                    {formatNumber(city.count)}
+                                  <td className="px-4 py-3 text-sm text-gray-900 text-right">
+                                    {formatNumber(referer.count)}
                                   </td>
                                 </tr>
                               ))}
-                            </tbody>
-                          </table>
+                          </tbody>
+                        </table>
                         </div>
-                      ) : (
-                        <p className="text-center text-gray-500 py-8">Sem dados para este período</p>
-                      )}
-                    </div>
-                  </div>
-                    
-                  </div>
-
-                  
-                  <div>
-                    {/* Dispositivos */}
-            <div className="bg-white rounded-lg shadow">
-              <div className="px-6 py-5 border-b border-gray-200">
-                <h2 className="text-lg font-medium text-gray-900">Dispositivos</h2>
-              </div>
-              <div className="p-6">
-                {analytics.deviceStats.length > 0 ? (
-                  <div className="space-y-4">
-                    {analytics.deviceStats.map((item, index) => {
-                      const percentage = analytics.summary.totalVisits > 0 
-                        ? (item.count / analytics.summary.totalVisits) * 100 
-                        : 0;
-                      
-                      // Cores para os diferentes tipos de dispositivos
-                      const colors = {
-                        desktop: 'bg-blue-500',
-                        mobile: 'bg-green-500',
-                        tablet: 'bg-purple-500',
-                        desconhecido: 'bg-gray-500'
-                      };
-                      
-                      // Nomes em português
-                      const deviceNames = {
-                        desktop: 'Desktop',
-                        mobile: 'Celular',
-                        tablet: 'Tablet',
-                        desconhecido: 'Desconhecido'
-                      };
-                      
-                      return (
-                        <div key={index}>
-                          <div className="flex justify-between mb-1">
-                            <span className="text-sm font-medium text-gray-700">
-                              {deviceNames[item.device] || item.device}
-                            </span>
-                            <span className="text-sm font-medium text-gray-700">
-                              {Math.round(percentage)}% ({item.count})
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <div 
-                              className={`${colors[item.device] || 'bg-gray-500'} h-2.5 rounded-full`} 
-                              style={{ width: `${percentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-center text-gray-500">Sem dados para este período</p>
-                )}
-              </div>
-            </div>
-                  {analytics?.trafficSources && analytics.trafficSources?.length > 0 ? (
-                  <>
-                  {/* Gráfico de Tipos de Fontes */}
-                  <h3 className="text-sm font-medium text-gray-700 mb-4">Tipos de Origem</h3>
-                    <div className="space-y-4">
-                      {analytics.trafficSources
-                        .filter(item => item.type === 'category')
-                        .map((item, index) => {
-                          const percentage = analytics.summary.totalVisits > 0 
-                            ? (item.count / analytics.summary.totalVisits) * 100 
-                            : 0;
-                          
-                          // Cores para os diferentes tipos de tráfego
-                          const colors = {
-                            direct: 'bg-blue-500',
-                            social: 'bg-pink-500',
-                            search: 'bg-green-500',
-                            referral: 'bg-purple-500',
-                            email: 'bg-yellow-500',
-                            unknown: 'bg-gray-500'
-                          };
-                          
-                          // Tradução dos tipos
-                          const typeNames = {
-                            direct: 'Acesso Direto',
-                            social: 'Redes Sociais',
-                            search: 'Buscadores',
-                            referral: 'Sites Referência',
-                            email: 'Email/Newsletter',
-                            unknown: 'Desconhecido'
-                          };
-                          
-                          return (
-                            <div key={index}>
-                              <div className="flex justify-between mb-1">
-                                <span className="text-sm font-medium text-gray-700">
-                                  {typeNames[item.source] || item.source}
-                                </span>
-                                <span className="text-sm font-medium text-gray-700">
-                                  {Math.round(percentage)}% ({item.count})
-                                </span>
-                              </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                <div 
-                                  className={`${colors[item.source] || 'bg-gray-500'} h-2.5 rounded-full`} 
-                                  style={{ width: `${percentage}%` }}
-                                ></div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                    </div>
-                    {/* Tabela de Referenciadores Específicos */}
-                    <h3 className="text-sm font-medium text-gray-700 mb-4">Sites Referenciadores</h3>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full divide-y divide-gray-200">
-                        <thead>
-                          <tr>
-                            <th className="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Origem
-                            </th>
-                            <th className="px-4 py-3 bg-gray-50 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Visitas
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                          {analytics.trafficSources
-                            .filter(item => item.type === 'referrer')
-                            .sort((a, b) => b.count - a.count)
-                            .slice(0, 10)
-                            .map((referer, i) => (
-                              <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                <td className="px-4 py-3 text-sm text-gray-900 truncate max-w-[220px]">
-                                  {referer.source || 'Direto'}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-gray-900 text-right">
-                                  {formatNumber(referer.count)}
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                    </div>  
-                    </> 
+                      </div>
+                      </> 
                     ) : (
                       <div className="text-center py-12 text-gray-500">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1076,9 +1083,16 @@ const PageAnalytics = () => {
                   </div>
 
             
-                </div>              
+                            
             </div>
-          </div>          
+          </div>       
+
+          </div>
+          {/* Fim do grid */}
+          
+          
+          {/* Fontes de Tráfego */}
+                
           
           {/* Seção para Configurar Google Analytics */}
           <div className="bg-white rounded-lg shadow mb-8">
@@ -1092,7 +1106,7 @@ const PageAnalytics = () => {
               
               <Link
                 to="/settings/analytics"
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-700"
               >
                 <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />

@@ -6,6 +6,7 @@ import { FaChartBar } from "react-icons/fa";
 import { TbLogout } from "react-icons/tb";
 import { FiEdit3 } from "react-icons/fi";
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { MdOutlineAnalytics } from "react-icons/md";
 import api from '../config/apiConfig';
 
 export default function MenuDashboard() {
@@ -120,7 +121,7 @@ export default function MenuDashboard() {
                   isActive('/analytics') ? 'bg-violet-900' : ''
                 }`}
               >
-                <FaChartBar size={36} />
+                <MdOutlineAnalytics size={36} />
               </Link>
               {activeTooltip === 'analytics' && (
                 <div className="absolute left-full ml-2 px-3 py-2 bg-gray-800 text-white text-sm rounded whitespace-nowrap z-50 -translate-y-12">

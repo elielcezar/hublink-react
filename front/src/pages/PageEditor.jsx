@@ -242,6 +242,9 @@ const PageEditor = () => {
       // Adicionar ao início da lista em vez do final
       setComponents(prevComponents => [newComponent, ...prevComponents]);
       setHasUnsavedChanges(true); // Marcar que há alterações não salvas
+      
+      // Expandir automaticamente o formulário de edição do novo componente
+      setExpandedComponent(tempId);
     } catch (error) {
       console.error('Erro ao adicionar componente:', error);
       setError('Falha ao adicionar componente. Por favor, tente novamente.');
