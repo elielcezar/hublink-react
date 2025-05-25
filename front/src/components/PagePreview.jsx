@@ -73,7 +73,8 @@ const PagePreview = ({ components = [], pageStyle = defaultStyle }) => {
         style={{
           ...getBackgroundStyle(pageStyle),
           fontFamily: pageStyle?.fontFamily || defaultStyle.fontFamily,
-          color: pageStyle?.textColor || defaultStyle.textColor
+          //color: pageStyle?.textColor || defaultStyle.textColor
+          //color: defaultStyle.textColor
         }}
       >
         <div className="preview-content h-full py-6 px-3 overflow-y-auto overflow-x-hidden">

@@ -12,6 +12,27 @@ import { FaRegImage } from "react-icons/fa";
 import { IoColorFillOutline } from "react-icons/io5";
 import { FaRegSave } from "react-icons/fa";
 
+// Mova o defaultStyle para fora do componente (pode ficar no escopo do módulo)
+const defaultStyle = {
+  backgroundColor: '#ffffff',
+  fontFamily: 'Inter, sans-serif',
+  linkColor: '#3b82f6',
+  linkBackgroundColor: '#3b82f6',
+  linkTextColor: '#ffffff',
+  linkShadowColor: '#000000',
+  linkShadowIntensity: 4,
+  linkShadowBlur: 4,
+  linkShadowOpacity: 20,
+  linkBorderRadius: 8,
+  textColor: '#333333',
+  backgroundImage: null,
+  logo: null,
+  backgroundType: 'color',
+  gradientStartColor: '#4f46e5',
+  gradientEndColor: '#818cf8',
+  gradientDirection: 'to right'
+}; 
+
 const Dashboard = () => {
   const [user, setUser] = useState(null);
   const [pages, setPages] = useState([]);
@@ -212,7 +233,8 @@ const Dashboard = () => {
         
         // Aplicar fonte e cor do texto
         previewElement.style.fontFamily = pageStyle.fontFamily || 'Inter, sans-serif';
-        previewElement.style.color = pageStyle.textColor || '#333333';
+        //previewElement.style.color = pageStyle.textColor || '#333333';        
+        //previewElement.style.color = '#333333';        
         
         // Forçar re-render dos componentes
         console.log('PageStyle atualizado no Dashboard:', pageStyle);
@@ -958,25 +980,6 @@ const Dashboard = () => {
   );
 };
 
-// Mova o defaultStyle para fora do componente (pode ficar no escopo do módulo)
-const defaultStyle = {
-  backgroundColor: '#ffffff',
-  fontFamily: 'Inter, sans-serif',
-  linkColor: '#3b82f6',
-  linkBackgroundColor: '#3b82f6',
-  linkTextColor: '#ffffff',
-  linkShadowColor: '#000000',
-  linkShadowIntensity: 4,
-  linkShadowBlur: 4,
-  linkShadowOpacity: 20,
-  linkBorderRadius: 8,
-  textColor: '#333333',
-  backgroundImage: null,
-  logo: null,
-  backgroundType: 'color',
-  gradientStartColor: '#4f46e5',
-  gradientEndColor: '#818cf8',
-  gradientDirection: 'to right'
-}; 
+
 
 export default Dashboard; 

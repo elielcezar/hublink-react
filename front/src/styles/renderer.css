@@ -1,0 +1,27 @@
+.text-renderer a{
+    font-weight: bold;
+    text-decoration: underline;
+}
+
+.text-renderer p.ql-align-center{
+    text-align: center;
+}
+.text-renderer p.ql-align-right{
+    text-align: right;
+}
+.text-renderer p.ql-align-left{
+    text-align: left;
+}
+.text-renderer ul,
+.text-renderer ol{
+    margin-left: 20px;
+    list-style-type: disc;
+}
+.text-renderer ul li.ql-align-center,
+.text-renderer ol li.ql-align-center{
+    text-align: center;
+}
+.text-renderer ul li.ql-align-right,
+.text-renderer ol li.ql-align-right{
+    text-align: right;
+}

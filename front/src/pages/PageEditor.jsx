@@ -34,6 +34,29 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+
+// Mova o defaultStyle para fora do componente (pode ficar no escopo do módulo)
+const defaultStyle = {
+  backgroundColor: '#ffffff',
+  fontFamily: 'Inter, sans-serif',
+  linkColor: '#3b82f6',
+  linkBackgroundColor: '#3b82f6',
+  linkTextColor: '#ffffff',
+  linkShadowColor: '#000000',
+  linkShadowIntensity: 4,
+  linkShadowBlur: 4,
+  linkShadowOpacity: 20,
+  linkBorderRadius: 8,
+  textColor: '#333333',
+  backgroundImage: null,
+  logo: null,
+  backgroundType: 'color',
+  gradientStartColor: '#4f46e5',
+  gradientEndColor: '#818cf8',
+  gradientDirection: 'to right'
+};
+
+
 // Valores padrão para novos componentes
 const defaultComponentValues = {
   text: { 
@@ -195,7 +218,7 @@ const PageEditor = () => {
         
         // Aplicar fonte e cor do texto
         previewElement.style.fontFamily = pageStyle.fontFamily || 'Inter, sans-serif';
-        previewElement.style.color = pageStyle.textColor || '#333333';
+        //previewElement.style.color = pageStyle.textColor || '#333333';
         
         // Forçar re-render dos componentes
         console.log('PageStyle atualizado:', pageStyle);
@@ -596,27 +619,6 @@ const PageEditor = () => {
       </div>
     </div>
   );
-};
-
-// Mova o defaultStyle para fora do componente (pode ficar no escopo do módulo)
-const defaultStyle = {
-  backgroundColor: '#ffffff',
-  fontFamily: 'Inter, sans-serif',
-  linkColor: '#3b82f6',
-  linkBackgroundColor: '#3b82f6',
-  linkTextColor: '#ffffff',
-  linkShadowColor: '#000000',
-  linkShadowIntensity: 4,
-  linkShadowBlur: 4,
-  linkShadowOpacity: 20,
-  linkBorderRadius: 8,
-  textColor: '#333333',
-  backgroundImage: null,
-  logo: null,
-  backgroundType: 'color',
-  gradientStartColor: '#4f46e5',
-  gradientEndColor: '#818cf8',
-  gradientDirection: 'to right'
 };
 
 export default PageEditor; 

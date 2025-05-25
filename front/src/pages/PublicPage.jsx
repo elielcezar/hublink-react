@@ -139,7 +139,7 @@ const PublicPage = () => {
   useEffect(() => {
     if (pageStyle) {
       // Aplicar a fonte e cor do texto
-      document.body.style.color = pageStyle.textColor || '#333333';
+      //document.body.style.color = pageStyle.textColor || '#333333';
       document.body.style.fontFamily = pageStyle.fontFamily || 'Inter, sans-serif';
       
       // Aplicar fundo com base no tipo selecionado

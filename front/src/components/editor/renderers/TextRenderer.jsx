@@ -1,4 +1,6 @@
 import React from 'react';
+import '../../../styles/renderer.css';
+
 
 const TextRenderer = ({ content }) => {
   return (
