@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
   const sessionStartRef = useRef(Date.now());
-  const lastScrollPositionRef = useRef(0);
+  //const lastScrollPositionRef = useRef(0);
   const visitorIdRef = useRef(null);
   const hasTrackedPageviewRef = useRef(false);
   const componentsMapRef = useRef(new Map());
@@ -226,7 +226,7 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
   }, [pageId]);
   
   // Rastrear rolagem da página
-  useEffect(() => {
+  /*useEffect(() => {
     const handleScroll = () => {
       const scrollPosition = window.scrollY;
       const documentHeight = document.documentElement.scrollHeight;
@@ -251,7 +251,7 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-  }, [pageId]);
+  }, [pageId]);*/
   
   // Rastreamento de cliques globais para detectar cliques em componentes
   useEffect(() => {

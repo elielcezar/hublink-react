@@ -1,0 +1,266 @@
+{
+  "users": [
+    {
+      "id": 2,
+      "email": "hubmuffato@gmail.com",
+      "name": "Muffato",
+      "password": "$2b$10$ALq4hNfU8ehKvnnVMlNDi.yfMQm2P5s8bEwkLwJ/0lKwMhA7PjtU.",
+      "gaId": "G-WE0HNWZN2C",
+      "createdAt": "2025-04-10T23:10:17.086Z",
+      "updatedAt": "2025-05-24T20:26:32.373Z",
+      "role": "admin"
+    },
+    {
+      "id": 5,
+      "email": "eliel@megamidia.com.br",
+      "name": "Eliel Cezar 2",
+      "password": "$2b$10$upx/ELSX6vaJ0zcmMCmbQuoIzmDN64ZjHHBoF0yE1Q9dIbb/ZXUju",
+      "gaId": null,
+      "createdAt": "2025-05-21T13:07:17.075Z",
+      "updatedAt": "2025-05-22T12:59:52.524Z",
+      "role": "user"
+    },
+    {
+      "id": 6,
+      "email": "lero@gmail.com",
+      "name": "Eliel 2",
+      "password": "$2b$10$1CODSth49RLLNbAQs1jmPOZlZu1uIsfemfHgw3pwdq.xJLsLtDama",
+      "gaId": null,
+      "createdAt": "2025-05-21T19:32:35.997Z",
+      "updatedAt": "2025-05-21T19:32:35.997Z",
+      "role": "user"
+    }
+  ],
+  "pages": [
+    {
+      "id": 1,
+      "title": "Teste",
+      "slug": "hubmuffato",
+      "published": true,
+      "createdAt": "2025-04-10T23:26:31.451Z",
+      "updatedAt": "2025-05-25T10:45:45.372Z",
+      "userId": 2,
+      "style": {
+        "logo": "/uploads/image-1748010765878-188582685.jpg",
+        "fontSize": 15,
+        "linkColor": "#ffffff",
+        "textColor": "#d0021b",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontWeight": "bold",
+        "linkShadow": true,
+        "linkTextColor": "#090000",
+        "backgroundType": "gradient",
+        "linkShadowBlur": 0,
+        "backgroundColor": "#fbfbfb",
+        "backgroundImage": "",
+        "linkShadowColor": "#ffffff",
+        "gradientEndColor": "#ea6262",
+        "linkBorderRadius": 12,
+        "gradientDirection": "to bottom",
+        "linkShadowOpacity": 35,
+        "gradientStartColor": "#ffffff",
+        "linkBackgroundColor": "#ffffff",
+        "linkShadowIntensity": 10
+      },
+      "components": [
+        {
+          "id": 37,
+          "type": "social",
+          "order": 0,
+          "content": "{\"title\":\"Redes Sociais 2\",\"instagram\":\"https://www.instagram.com/super_muffato/\",\"x\":\"https://www.twitter.com/supermuffato\",\"youtube\":\"https://www.youtube.com/SuperMuffato-FazBemfeito\",\"tiktok\":\"https://www.tiktok.com/@super_muffato\",\"kwai\":\"https://www.kwai.com/@supermuffato\",\"spotify\":\"\",\"iconColor\":\"#000000\",\"whatsapp\":\"https://api.whatsapp.com/send?phone=5508002008110&text=Oi\",\"facebook\":\"https://www.facebook.com/supermuffato\"}",
+          "createdAt": "2025-05-15T16:58:45.059Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 60,
+          "type": "banner",
+          "order": 1,
+          "content": "{\"title\":\"Banner 1\",\"imageUrl\":\"/uploads/image-1748010892942-658695566.png\",\"altText\":\"\",\"caption\":\"\",\"url\":\"https://clubefato.supermuffato.com.br/\"}",
+          "createdAt": "2025-05-23T14:35:05.700Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 61,
+          "type": "link",
+          "order": 2,
+          "content": "{\"title\":\"Baixe o App\",\"text\":\"Baixe o App\",\"url\":\"https://apps.apple.com/br/app/super-muffato/id1040965567\",\"style\":\"primary\",\"width\":\"100\",\"imageUrl\":\"/uploads/image-1748011016562-93503899.png\",\"imagePosition\":\"left\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-05-23T14:37:08.899Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 62,
+          "type": "link",
+          "order": 3,
+          "content": "{\"title\":\"Atendimento\",\"text\":\"Atendimento\",\"url\":\"https://api.whatsapp.com/send?phone=5508002008110&text=Oi\",\"style\":\"primary\",\"width\":\"100\",\"imageUrl\":\"/uploads/image-1748011056540-196637577.png\",\"imagePosition\":\"left\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-05-23T14:37:39.589Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 63,
+          "type": "link",
+          "order": 4,
+          "content": "{\"title\":\"Receba Nossas Ofertas\",\"text\":\"Receba Nossas Ofertas\",\"url\":\"https://www.supermuffato.com.br/whatsapp\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"/uploads/image-1748011144096-995323522.png\",\"imagePosition\":\"top\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-05-23T14:40:15.438Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 64,
+          "type": "link",
+          "order": 5,
+          "content": "{\"title\":\"Faça seu Cadastro\",\"text\":\"Faça seu Cadastro\",\"url\":\"https://clubefato.supermuffato.com.br/\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"/uploads/image-1748011199960-628814629.png\",\"imagePosition\":\"top\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-05-23T14:40:15.507Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 67,
+          "type": "link",
+          "order": 7,
+          "content": "{\"title\":\"Peça seu Cartão\",\"text\":\"Peça seu Cartão Crediffato\",\"url\":\"https://crediffato.com.br/\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"/uploads/image-1748110011194-860869919.png\",\"imagePosition\":\"top\"}",
+          "createdAt": "2025-05-24T17:54:37.708Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 68,
+          "type": "link",
+          "order": 6,
+          "content": "{\"title\":\"Compre pelo site\",\"text\":\"Compre pelo site\",\"url\":\"https://www.supermuffato.com.br/\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"/uploads/image-1748110005045-970412994.png\",\"imagePosition\":\"top\"}",
+          "createdAt": "2025-05-24T17:54:37.882Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 69,
+          "type": "link",
+          "order": 11,
+          "content": "{\"title\":\"Trabalhe conosco\",\"text\":\"Trabalhe conosco\",\"url\":\"https://grupomuffatovagas.gupy.io/\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"/uploads/image-1748110047888-964080771.png\",\"imagePosition\":\"top\"}",
+          "createdAt": "2025-05-24T18:03:19.786Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 70,
+          "type": "link",
+          "order": 10,
+          "content": "{\"title\":\"Selinhos de descontos incríveis\",\"text\":\"Selinhos de descontos incríveis\",\"url\":\"https://selinhosdedescontosincriveis.supermuffato.com.br/\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"/uploads/image-1748110043854-582425416.png\",\"imagePosition\":\"top\"}",
+          "createdAt": "2025-05-24T18:03:19.964Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 71,
+          "type": "link",
+          "order": 9,
+          "content": "{\"title\":\"Lojas Físicas\",\"text\":\"Lojas Físicas\",\"url\":\"https://www.supermuffato.com.br/lojas-fisicas\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"/uploads/image-1748109988875-429482056.png\",\"imagePosition\":\"top\"}",
+          "createdAt": "2025-05-24T18:03:20.098Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 72,
+          "type": "link",
+          "order": 8,
+          "content": "{\"title\":\"Receba em até 60 minutos\",\"text\":\"Receba em até 60 minutos\",\"url\":\"https://www.supermuffato.com.br/detectAppMuffatoExpress\",\"style\":\"primary\",\"width\":\"50\",\"imageUrl\":\"/uploads/image-1748110017073-785403362.png\",\"imagePosition\":\"top\"}",
+          "createdAt": "2025-05-24T18:03:20.233Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        },
+        {
+          "id": 74,
+          "type": "text",
+          "order": 12,
+          "content": "{\"title\":\"Bloco de Texto\",\"text\":\"<p class=\\\"ql-align-center\\\"><br></p><p class=\\\"ql-align-center\\\"><strong style=\\\"color: rgb(0, 0, 0);\\\"><a href=\\\"https://crediffato.com.br/\\\" rel=\\\"noopener noreferrer\\\" target=\\\"_blank\\\">Crediffato</a></strong></p><p class=\\\"ql-align-center\\\"><strong style=\\\"color: rgb(0, 0, 0);\\\"><a href=\\\"https://clubedaculinaria.supermuffato.com.br/\\\" rel=\\\"noopener noreferrer\\\" target=\\\"_blank\\\">Receitas</a></strong></p><p class=\\\"ql-align-center\\\"><strong style=\\\"color: rgb(0, 0, 0);\\\"><a href=\\\"https://www.grupomuffato.com.br/imprensa\\\" rel=\\\"noopener noreferrer\\\" target=\\\"_blank\\\">Imprensa</a></strong></p><p class=\\\"ql-align-center\\\"><strong style=\\\"color: rgb(0, 0, 0);\\\"><a href=\\\"https://www.grupomuffato.com.br/\\\" rel=\\\"noopener noreferrer\\\" target=\\\"_blank\\\">Grupo Muffato</a></strong></p>\"}",
+          "createdAt": "2025-05-24T21:44:11.213Z",
+          "updatedAt": "2025-05-25T10:49:05.997Z",
+          "pageId": 1
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "megamidia",
+      "slug": "mega",
+      "published": true,
+      "createdAt": "2025-05-21T13:07:17.140Z",
+      "updatedAt": "2025-05-22T18:41:48.918Z",
+      "userId": 5,
+      "style": {
+        "logo": "/uploads/image-1747939307191-321452966.png",
+        "linkColor": "#3b82f6",
+        "textColor": "#333333",
+        "fontFamily": "Inter, sans-serif",
+        "gradientEnd": "#610808",
+        "gradientStart": "#ff0000",
+        "backgroundType": "gradient",
+        "backgroundColor": "#fd0101",
+        "backgroundImage": "/uploads/image-1747935797743-243870410.jfif",
+        "gradientEndColor": "#076e6e",
+        "gradientDirection": "to bottom right",
+        "gradientStartColor": "#18a0a0"
+      },
+      "components": [
+        {
+          "id": 40,
+          "type": "banner",
+          "order": 0,
+          "content": "{\"title\":\"Teste Banner - Gil\",\"imageUrl\":\"/uploads/image-1747849345735-896116021.gif\",\"altText\":\"\",\"caption\":\"\",\"url\":\"https://www.atacadao.com.br/\"}",
+          "createdAt": "2025-05-21T14:24:09.005Z",
+          "updatedAt": "2025-05-22T14:55:35.474Z",
+          "pageId": 3
+        },
+        {
+          "id": 41,
+          "type": "link",
+          "order": 2,
+          "content": "{\"title\":\"Link\",\"text\":\"Clique aqui\",\"url\":\"https://\",\"style\":\"primary\",\"width\":\"100\",\"imageUrl\":\"/uploads/image-1747837792293-724882045.png\",\"imagePosition\":\"left\",\"backgroundColor\":\"#ffffff\",\"textColor\":\"#000000\"}",
+          "createdAt": "2025-05-21T14:29:45.823Z",
+          "updatedAt": "2025-05-22T14:55:35.474Z",
+          "pageId": 3
+        },
+        {
+          "id": 55,
+          "type": "icon",
+          "order": 1,
+          "content": "{\"title\":\"Botão\",\"text\":\"Texto do Botão\",\"url\":\"https://\",\"imageUrl\":\"\",\"height\":\"medium\",\"width\":\"100\",\"overlayColor\":\"rgba(0, 0, 0, 0.4)\",\"textColor\":\"#ffffff\"}",
+          "createdAt": "2025-05-21T18:11:58.922Z",
+          "updatedAt": "2025-05-22T14:55:35.474Z",
+          "pageId": 3
+        },
+        {
+          "id": 56,
+          "type": "social",
+          "order": 3,
+          "content": "{\"title\":\"Redes Sociais\",\"instagram\":\"\",\"x\":\"\",\"youtube\":\"\",\"tiktok\":\"\",\"kwai\":\"\",\"spotify\":\"\",\"iconColor\":\"#0077B5\"}",
+          "createdAt": "2025-05-21T18:11:59.057Z",
+          "updatedAt": "2025-05-22T14:55:35.474Z",
+          "pageId": 3
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Página de Eliel 2",
+      "slug": "lerolero",
+      "published": true,
+      "createdAt": "2025-05-21T19:32:36.037Z",
+      "updatedAt": "2025-05-21T19:32:36.037Z",
+      "userId": 6,
+      "style": {
+        "logo": null,
+        "linkColor": "#3b82f6",
+        "textColor": "#333333",
+        "fontFamily": "Inter, sans-serif",
+        "backgroundType": "color",
+        "backgroundColor": "#ffffff",
+        "backgroundImage": null
+      },
+      "components": []
+    }
+  ]
+}
