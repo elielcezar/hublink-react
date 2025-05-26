@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify, FaWhatsapp, FaFacebook } from 'react-icons/fa';
+import { FaInstagram, FaTwitter, FaYoutube, FaTiktok, FaSpotify, FaWhatsapp, FaFacebook, FaLinkedin } from 'react-icons/fa';
 import TitleField from './TitleField';
 import { SketchPicker } from 'react-color';
 import KawaiIcon from '../../KawaiIcon';
@@ -19,6 +19,7 @@ const SocialForm = ({ content, onChange }) => {
     { key: 'whatsapp', label: 'Whatsapp', icon: <FaWhatsapp className="text-green-600" size={24}/> },
     { key: 'facebook', label: 'Facebook', icon: <FaFacebook className="text-blue-600" size={24}/> },
     { key: 'instagram', label: 'Instagram', icon: <FaInstagram className="text-pink-600" size={24}/> },
+    { key: 'linkedin', label: 'Linkedin', icon: <FaLinkedin className="text-blue-600" size={24}/> },
     { key: 'x', label: 'X (Twitter)', icon: <XIcon color="#000000" size={24}/> },
     { key: 'youtube', label: 'YouTube', icon: <FaYoutube className="text-red-600" size={24}/> },
     { key: 'tiktok', label: 'TikTok', icon: <FaTiktok className="text-black" size={24}/> },

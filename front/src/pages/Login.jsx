@@ -83,7 +83,7 @@ const Login = () => {
           <div className="text-center p-10">
             <h1 className="text-4xl font-bold text-white mb-4">HubLink</h1>
             <p className="text-white text-lg">
-              Conectando pessoas através de páginas
+              Conectando pessoas
             </p>
           </div>
         </div>

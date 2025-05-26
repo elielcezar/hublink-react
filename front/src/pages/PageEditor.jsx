@@ -15,6 +15,7 @@ import { RiCarouselView } from "react-icons/ri";
 import { IoShareSocialSharp } from "react-icons/io5";
 import { LuSquareMousePointer } from "react-icons/lu";
 import { FaYoutube } from "react-icons/fa";
+import { RxDividerHorizontal } from "react-icons/rx";
 
 import SortableItem from '../components/editor/forms/SortableItem';
 
@@ -117,6 +118,14 @@ const defaultComponentValues = {
     title: 'Vídeo',
     videoUrl: '',
     caption: ''
+  },
+  hr: {
+    title: 'Linha Separadora',
+    thickness: 1,
+    width: '100',
+    color: '#e5e7eb',
+    style: 'solid',
+    margin: 20
   }
 };
 
@@ -506,8 +515,8 @@ const PageEditor = () => {
                 </h1>
               </div>
               <div className="bg-violet-800 p-4 rounded-lg shadow-md">               
-                <div className="grid grid-cols-2 sm:grid-cols-7 gap-2">
-                <button
+                <div className="grid grid-cols-2 sm:grid-cols-8 gap-2">
+                  <button
                     onClick={() => addComponent('link', defaultComponentValues.link)}
                     disabled={saving}
                     className="flex flex-col items-center justify-center items-center px-2 py-3 text-white bg-violet-500 font-medium text-md rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
@@ -563,7 +572,15 @@ const PageEditor = () => {
                   >
                     <GrTextAlignLeft className="mr-2" size={24} />
                     Texto
-                  </button> 
+                  </button>
+                  <button
+                    onClick={() => addComponent('hr', defaultComponentValues.hr)}
+                    disabled={saving}
+                    className="flex flex-col items-center justify-center items-center px-2 py-3 text-white bg-violet-500 font-medium text-md rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 hover:bg-white hover:text-violet-950 transition-all duration-300"
+                  >
+                    <RxDividerHorizontal className="mr-2" size={24} />
+                    Separador
+                  </button>
                 </div>
               </div>
               
@@ -590,6 +607,7 @@ const PageEditor = () => {
                             onDelete={deleteComponent}
                             saving={saving}
                             handleComponentUpdate={handleComponentUpdate}
+                            pageStyle={pageStyle}
                           />
                         ))}
                     </SortableContext>

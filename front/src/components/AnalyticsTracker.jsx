@@ -289,7 +289,8 @@ const AnalyticsTracker = ({ pageId, gaId = null, pageComponents = [] }) => {
           'icon-renderer',
           'text-renderer',
           'banner-renderer',
-          'carousel-renderer'
+          'carousel-renderer',
+          'hr-renderer'
         ];
         
         // Buscar o wrapper de componente mais próximo

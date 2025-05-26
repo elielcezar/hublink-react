@@ -1,8 +1,21 @@
+.text-renderer h1{
+    font-size: 1.75rem;
+    font-weight: bold;
+}
+.text-renderer h1.ql-align-center{
+    text-align: center;
+}
+.text-renderer h2{
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+.text-renderer h2.ql-align-center{
+    text-align: center;
+}
 .text-renderer a{
     font-weight: bold;
     text-decoration: underline;
 }
-
 .text-renderer p.ql-align-center{
     text-align: center;
 }

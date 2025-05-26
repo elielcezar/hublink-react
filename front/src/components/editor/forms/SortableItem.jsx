@@ -8,23 +8,26 @@ import CarouselForm from './CarouselForm';
 import SocialForm from './SocialForm';
 import IconForm from './IconForm';
 import VideoForm from './VideoForm';
+import HrForm from './HrForm';
 import { GrTextAlignLeft } from "react-icons/gr";
 import { HiLink } from "react-icons/hi";
 import { FaImage, FaShareAlt, FaIcons } from "react-icons/fa";
 import { FaImages } from "react-icons/fa";
 import { FaYoutube } from "react-icons/fa";
+import { RxDividerHorizontal } from "react-icons/rx";
 
 
 
 // Formulários para edição dos componentes
 const componentForms = {
-  text: ({ content, onChange }) => <TextForm content={content} onChange={onChange} />,
+  text: ({ content, onChange, pageStyle }) => <TextForm content={content} onChange={onChange} pageStyle={pageStyle} />,
   link: ({ content, onChange }) => <LinkForm content={content} onChange={onChange} />,
   banner: ({ content, onChange }) => <BannerForm content={content} onChange={onChange} />,
   carousel: ({ content, onChange }) => <CarouselForm content={content} onChange={onChange} />,
   social: ({ content, onChange }) => <SocialForm content={content} onChange={onChange} />,
   icon: ({ content, onChange }) => <IconForm content={content} onChange={onChange} />,
-  video: ({ content, onChange }) => <VideoForm content={content} onChange={onChange} />
+  video: ({ content, onChange }) => <VideoForm content={content} onChange={onChange} />,
+  hr: ({ content, onChange }) => <HrForm content={content} onChange={onChange} />
 };
 
 // Função para determinar o título padrão para cada tipo de componente
@@ -36,7 +39,8 @@ const getComponentDefaultTitle = (type) => {
     carousel: 'Carrossel',
     social: 'Redes Sociais',
     icon: 'Ícone',
-    video: 'Vídeo'
+    video: 'Vídeo',
+    hr: 'Linha Separadora'
   };
   return defaults[type] || 'Componente';
 };
@@ -49,12 +53,13 @@ const getComponentDefaultIcon = (type) => {
     carousel: <FaImages className="mr-2 text-violet-700" size={20} />,
     social: <FaShareAlt className="mr-2 text-violet-700" size={20} />,
     icon: <FaIcons className="mr-2" size={20} />,
-    video: <FaYoutube className="mr-2 text-violet-700" size={20} />
+    video: <FaYoutube className="mr-2 text-violet-700" size={20} />,
+    hr: <RxDividerHorizontal className="mr-2 text-violet-700" size={20} />
   };
   return defaults[type] || 'Componente';
 };
 
-const SortableItem = ({ component, index, expandedComponent, setExpandedComponent, onDelete, saving, handleComponentUpdate }) => {
+const SortableItem = ({ component, index, expandedComponent, setExpandedComponent, onDelete, saving, handleComponentUpdate, pageStyle }) => {
   const {
     attributes,
     listeners,
@@ -115,7 +120,8 @@ const SortableItem = ({ component, index, expandedComponent, setExpandedComponen
         <div className="border-t border-gray-200 p-4">
           {componentForms[component.type]({
             content: component.content,
-            onChange: (newContent) => handleComponentUpdate(component.id, newContent)
+            onChange: (newContent) => handleComponentUpdate(component.id, newContent),
+            pageStyle: pageStyle
           })}
         </div>
       )}

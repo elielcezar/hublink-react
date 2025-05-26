@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import Quill from 'quill';
 import 'quill/dist/quill.snow.css';
 
-const RichTextEditor = ({ value, onChange, placeholder = "Digite seu texto aqui..." }) => {
+const RichTextEditor = ({ value, onChange, placeholder = "Digite seu texto aqui...", pageStyle }) => {
   const editorRef = useRef(null);
   const quillRef = useRef(null);
 
@@ -10,6 +10,7 @@ const RichTextEditor = ({ value, onChange, placeholder = "Digite seu texto aqui.
     if (editorRef.current && !quillRef.current) {
       // Configuração da toolbar
       const toolbarOptions = [
+        [{ header: [1, 2, false] }],
         ['bold', 'italic', 'underline'],
         [{ 'align': '' }, { 'align': 'center' }, { 'align': 'right' }],
         [{ 'list': 'bullet' }],
@@ -57,6 +58,28 @@ const RichTextEditor = ({ value, onChange, placeholder = "Digite seu texto aqui.
     }
   }, [value]);
 
+  // Função para gerar o estilo de background com base no pageStyle
+  const getBackgroundStyle = () => {
+    if (!pageStyle) return {};
+
+    if (pageStyle.backgroundType === 'image' && pageStyle.backgroundImage) {
+      return {
+        backgroundImage: `url(${pageStyle.backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      };
+    } else if (pageStyle.backgroundType === 'gradient') {
+      return {
+        background: `linear-gradient(${pageStyle.gradientDirection || 'to right'}, ${pageStyle.gradientStartColor || '#4f46e5'}, ${pageStyle.gradientEndColor || '#818cf8'})`
+      };
+    } else {
+      return {
+        backgroundColor: pageStyle.backgroundColor || '#ffffff'
+      };
+    }
+  };
+
   return (
     <div 
       className="quill-wrapper"
@@ -73,6 +96,20 @@ const RichTextEditor = ({ value, onChange, placeholder = "Digite seu texto aqui.
           font-size: 14px;
           line-height: 1.5;
           padding: 12px;
+          ${pageStyle ? `
+            background-color: ${pageStyle.backgroundColor || '#ffffff'};
+            ${pageStyle.backgroundType === 'image' && pageStyle.backgroundImage ? `
+              background-image: url(${pageStyle.backgroundImage});
+              background-size: cover;
+              background-position: center;
+              background-repeat: no-repeat;
+            ` : ''}
+            ${pageStyle.backgroundType === 'gradient' ? `
+              background: linear-gradient(${pageStyle.gradientDirection || 'to right'}, 
+                ${pageStyle.gradientStartColor || '#4f46e5'}, 
+                ${pageStyle.gradientEndColor || '#818cf8'});
+            ` : ''}
+          ` : ''}
         }
         
         .quill-wrapper .ql-toolbar.ql-snow {
