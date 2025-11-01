@@ -24,7 +24,7 @@ if (!fs.existsSync(uploadsDir)) {
 
 // Middleware
 app.use(cors({
-  origin: ['https://hublink.ecwd.pro', 'http://hublink.ecwd.pro', 'http://localhost:3000', 'http://localhost:5173'],
+  origin: ['https://hublink.ecwd.cloud', 'http://hublink.ecwd.cloud', 'http://localhost:3000', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
