@@ -9,6 +9,7 @@ import CarouselRenderer from '../components/editor/renderers/CarouselRenderer';
 import BannerRenderer from '../components/editor/renderers/BannerRenderer';
 import SocialRenderer from '../components/editor/renderers/SocialRenderer';
 import VideoRenderer from '../components/editor/renderers/VideoRenderer';
+import HrRenderer from '../components/editor/renderers/HrRenderer';
 import AnalyticsTracker from '../components/AnalyticsTracker';
 
 // Adicionar o defaultStyle no início do arquivo
@@ -46,7 +47,9 @@ const componentRenderers = {
 
   icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />,
 
-  video: ({ content, pageStyle }) => <VideoRenderer content={content} pageStyle={pageStyle} />
+  video: ({ content, pageStyle }) => <VideoRenderer content={content} pageStyle={pageStyle} />,
+  
+  hr: ({ content, pageStyle }) => <HrRenderer content={content} pageStyle={pageStyle} />
 };
 
 const PublicPage = () => {
@@ -300,7 +303,7 @@ const PublicPage = () => {
         </main>
         
         <footer className="mt-16 pt-8 border-t border-gray-200 text-center text-white text-sm">
-          <p>Criado com HubLink</p>
+          <p><a href="https://www.megamidia.com.br/" target="_blank">Powered by MegaMidia</a></p>
         </footer>
       </div>
     </div>

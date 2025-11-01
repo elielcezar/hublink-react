@@ -8,7 +8,8 @@ const componentRenderers = {
   carousel: ({ content, pageStyle }) => <CarouselRenderer content={content} pageStyle={pageStyle} />,
   social: ({ content, pageStyle }) => <SocialRenderer content={content} pageStyle={pageStyle} />,
   icon: ({ content, pageStyle }) => <IconRenderer content={content} pageStyle={pageStyle} />,
-  video: ({ content, pageStyle }) => <VideoRenderer content={content} pageStyle={pageStyle} />
+  video: ({ content, pageStyle }) => <VideoRenderer content={content} pageStyle={pageStyle} />,
+  hr: ({ content, pageStyle }) => <HrRenderer content={content} pageStyle={pageStyle} />
 };
 
 // Importar os renderers
@@ -19,6 +20,7 @@ import BannerRenderer from './editor/renderers/BannerRenderer';
 import IconRenderer from './editor/renderers/IconRenderer';
 import TextRenderer from './editor/renderers/TextRenderer';
 import VideoRenderer from './editor/renderers/VideoRenderer';
+import HrRenderer from './editor/renderers/HrRenderer';
 
 import '../styles/preview.css';
 

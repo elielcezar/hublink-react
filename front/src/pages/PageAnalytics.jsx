@@ -779,7 +779,9 @@ const PageAnalytics = () => {
                               banner: 'Banner',
                               carousel: 'Carrossel',
                               social: 'Redes Sociais',
-                              icon: 'Ícone'
+                              icon: 'Ícone',
+                              video: 'Vídeo',
+                              hr: 'Linha Separadora'
                             };
                             
                             return (

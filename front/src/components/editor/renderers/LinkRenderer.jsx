@@ -108,6 +108,7 @@ const LinkRenderer = ({ content, pageStyle }) => {
   const getShadowStyle = () => {
     if (shadowIntensity === 0) return 'none';
     
+    const offsetX = Math.ceil(shadowIntensity / 2);
     const offsetY = Math.ceil(shadowIntensity / 2);
     const opacity = shadowOpacity / 100;
     
@@ -116,7 +117,7 @@ const LinkRenderer = ({ content, pageStyle }) => {
     const g = parseInt(hex.substr(2, 2), 16);
     const b = parseInt(hex.substr(4, 2), 16);
     
-    return `0 ${offsetY}px ${shadowBlur}px rgba(${r}, ${g}, ${b}, ${opacity})`;
+    return `${offsetX}px ${offsetY}px ${shadowBlur}px rgba(${r}, ${g}, ${b}, ${opacity})`;
   };
 
   return (

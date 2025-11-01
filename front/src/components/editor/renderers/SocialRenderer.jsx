@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaInstagram, FaYoutube, FaTiktok, FaSpotify, FaWhatsapp, FaFacebook } from 'react-icons/fa';
+import { FaInstagram, FaYoutube, FaTiktok, FaSpotify, FaWhatsapp, FaFacebook, FaLinkedin } from 'react-icons/fa';
 import KawaiIcon from '../../KawaiIcon';
 import XIcon from '../../XIcon';
 
@@ -12,6 +12,7 @@ const SocialRenderer = ({ content }) => {
     { type: 'whatsapp', url: content.whatsapp, icon: <FaWhatsapp size={30} style={{color: iconColor}} /> },
     { type: 'instagram', url: content.instagram, icon: <FaInstagram size={30} style={{color: iconColor}} /> },
     { type: 'youtube', url: content.youtube, icon: <FaYoutube size={30} style={{color: iconColor}} /> },
+    { type: 'linkedin', url: content.linkedin, icon: <FaLinkedin size={30} style={{color: iconColor}} /> },
     { type: 'x', url: content.x, icon: <XIcon color={iconColor} size={30} /> },
     { type: 'spotify', url: content.spotify, icon: <FaSpotify size={30} style={{color: iconColor}} /> },
     { type: 'facebook', url: content.facebook, icon: <FaFacebook size={30} style={{color: iconColor}} /> }    

@@ -2,7 +2,7 @@ import React from 'react';
 import TitleField from './TitleField';
 import RichTextEditor from './RichTextEditor';
 
-const TextForm = ({ content, onChange }) => {
+const TextForm = ({ content, onChange, pageStyle }) => {
   return (
     <>
       <TitleField 
@@ -18,6 +18,7 @@ const TextForm = ({ content, onChange }) => {
           value={content.text}
           onChange={(newText) => onChange({ ...content, text: newText })}
           placeholder="Digite seu conteúdo aqui..."
+          pageStyle={pageStyle}
         />
         <p className="mt-1 text-xs text-gray-500">
           Você pode usar tags HTML para formatar o texto.
